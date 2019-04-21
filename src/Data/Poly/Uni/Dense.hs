@@ -14,6 +14,8 @@ module Data.Poly.Uni.Dense
   , unPoly
   , toPoly
   , toPoly'
+  , eval
+  , eval'
   ) where
 
 import Prelude hiding (negate)
@@ -131,3 +133,11 @@ convolution zer add mul xs ys
     lenXs = V.length xs
     lenYs = V.length ys
     lenZs = lenXs + lenYs - 1
+
+eval :: Num a => Poly a -> a -> a
+eval (Poly cs) x = fst $
+  V.foldl' (\(acc, xn) cn -> (acc + cn * xn, x * xn)) (0, 1) cs
+
+eval' :: Semiring a => Poly a -> a -> a
+eval' (Poly cs) x = fst $
+  V.foldl' (\(acc, xn) cn -> (acc `plus` cn `times` xn, x `times` xn)) (zero, one) cs
