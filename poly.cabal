@@ -1,0 +1,51 @@
+name: poly
+version: 0.1.0.0
+synopsis: Polynomials
+description:
+  A type to represent polynomials with Num and Semiring instances.
+homepage: https://github.com/Bodigrim/poly#readme
+license: BSD3
+license-file: LICENSE
+author: Andrew Lelechenko
+maintainer: andrew.lelechenko@gmail.com
+copyright: 2019 Andrew Lelechenko
+category: Math, Numerical
+build-type: Simple
+extra-source-files: README.md
+cabal-version: >=1.10
+tested-with: GHC ==7.10.3 GHC ==8.0.2 GHC ==8.2.2 GHC ==8.4.4 GHC ==8.6.4
+extra-source-files:
+  changelog.md
+
+source-repository head
+  type: git
+  location: https://github.com/Bodigrim/poly
+
+library
+  hs-source-dirs: src
+  exposed-modules:
+    Data.Poly
+  other-modules:
+    Data.Poly.Uni.Dense
+  build-depends:
+    base >= 4.8 && < 5,
+    semirings,
+    vector
+  default-language: Haskell2010
+  ghc-options: -Wall
+
+test-suite poly-tests
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  build-depends:
+    base >=4.8 && <5,
+    poly,
+    QuickCheck >=2.10,
+    quickcheck-classes >=0.6.1,
+    semirings,
+    tasty,
+    tasty-quickcheck,
+    vector
+  default-language: Haskell2010
+  hs-source-dirs: test
+  ghc-options: -Wall
