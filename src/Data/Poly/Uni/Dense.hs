@@ -22,12 +22,12 @@ module Data.Poly.Uni.Dense
   , var'
   ) where
 
-import Prelude hiding (negate)
 import Control.Monad
 import Control.Monad.ST
 import Data.List (foldl')
 import Data.Semigroup (stimes)
-import Data.Semiring (Semiring(..), Ring(..), Add(..))
+import Data.Semiring (Semiring(..), Add(..))
+import qualified Data.Semiring as Semiring
 import Data.Vector (Vector)
 import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as MV
@@ -77,8 +77,9 @@ toPoly' :: (Eq a, Semiring a) => Vector a -> Poly a
 toPoly' = Poly . dropWhileEnd (== zero)
 
 instance (Eq a, Num a) => Num (Poly a) where
-  Poly xs + Poly ys = toPoly $ zipOrCopy (+) xs ys
-  Poly xs - Poly ys = toPoly $ zipOrCopy (-) xs ys
+  Poly xs + Poly ys = toPoly $ plusPoly (+) xs ys
+  Poly xs - Poly ys = toPoly $ minusPoly negate (-) xs ys
+  negate (Poly xs) = Poly $ V.map negate xs
   abs = id
   signum = const 1
   fromInteger n = case fromInteger n of
@@ -91,11 +92,11 @@ instance (Eq a, Semiring a) => Semiring (Poly a) where
   one
     | (one :: a) == zero = zero
     | otherwise = Poly $ V.singleton one
-  plus (Poly xs) (Poly ys) = toPoly' $ zipOrCopy plus xs ys
+  plus (Poly xs) (Poly ys) = toPoly' $ plusPoly plus xs ys
   times (Poly xs) (Poly ys) = toPoly' $ convolution zero plus times xs ys
 
-instance (Eq a, Ring a) => Ring (Poly a) where
-  negate (Poly xs) = Poly $ V.map negate xs
+instance (Eq a, Semiring.Ring a) => Semiring.Ring (Poly a) where
+  negate (Poly xs) = Poly $ V.map Semiring.negate xs
 
 dropWhileEnd :: (a -> Bool) -> Vector a -> Vector a
 dropWhileEnd p xs = V.slice 0 (go (V.length xs)) xs
@@ -103,20 +104,41 @@ dropWhileEnd p xs = V.slice 0 (go (V.length xs)) xs
     go 0 = 0
     go n = if p (xs V.! (n - 1)) then go (n - 1) else n
 
-zipOrCopy :: (a -> a -> a) -> Vector a -> Vector a -> Vector a
-zipOrCopy f xs ys = runST $ do
+plusPoly :: (a -> a -> a) -> Vector a -> Vector a -> Vector a
+plusPoly add xs ys = runST $ do
   zs <- MV.new (max lenXs lenYs)
   case lenXs `compare` lenYs of
     LT -> do
       forM_ [0 .. lenXs - 1] $ \i ->
-        MV.write zs i (f (xs V.! i) (ys V.! i))
+        MV.write zs i (add (xs V.! i) (ys V.! i))
       V.copy (MV.slice lenXs (lenYs - lenXs) zs) (V.slice lenXs (lenYs - lenXs) ys)
     EQ -> do
       forM_ [0 .. lenXs - 1] $ \i ->
-        MV.write zs i (f (xs V.! i) (ys V.! i))
+        MV.write zs i (add (xs V.! i) (ys V.! i))
     GT -> do
       forM_ [0 .. lenYs - 1] $ \i ->
-        MV.write zs i (f (xs V.! i) (ys V.! i))
+        MV.write zs i (add (xs V.! i) (ys V.! i))
+      V.copy (MV.slice lenYs (lenXs - lenYs) zs) (V.slice lenYs (lenXs - lenYs) xs)
+  V.unsafeFreeze zs
+  where
+    lenXs = V.length xs
+    lenYs = V.length ys
+
+minusPoly :: (a -> a) -> (a -> a -> a) -> Vector a -> Vector a -> Vector a
+minusPoly neg sub xs ys = runST $ do
+  zs <- MV.new (max lenXs lenYs)
+  case lenXs `compare` lenYs of
+    LT -> do
+      forM_ [0 .. lenXs - 1] $ \i ->
+        MV.write zs i (sub (xs V.! i) (ys V.! i))
+      forM_ [lenXs .. lenYs - 1] $ \i ->
+        MV.write zs i (neg (ys V.! i))
+    EQ -> do
+      forM_ [0 .. lenXs - 1] $ \i ->
+        MV.write zs i (sub (xs V.! i) (ys V.! i))
+    GT -> do
+      forM_ [0 .. lenYs - 1] $ \i ->
+        MV.write zs i (sub (xs V.! i) (ys V.! i))
       V.copy (MV.slice lenYs (lenXs - lenYs) zs) (V.slice lenYs (lenXs - lenYs) xs)
   V.unsafeFreeze zs
   where
