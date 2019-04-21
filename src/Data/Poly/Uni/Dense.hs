@@ -18,6 +18,8 @@ module Data.Poly.Uni.Dense
   , eval'
   , deriv
   , deriv'
+  , var
+  , var'
   ) where
 
 import Prelude hiding (negate)
@@ -154,3 +156,13 @@ deriv' :: (Eq a, Semiring a) => Poly a -> Poly a
 deriv' (Poly xs)
   | V.null xs = Poly V.empty
   | otherwise = toPoly' $ V.imap (\i x -> getAdd (stimes (i + 1) (Add x))) $ V.tail xs
+
+var :: forall a. (Eq a, Num a) => Poly a
+var
+  | (1 :: a) == 0 = Poly V.empty
+  | otherwise     = Poly $ V.fromList [0, 1]
+
+var' :: forall a. (Eq a, Semiring a) => Poly a
+var'
+  | (one :: a) == zero = Poly V.empty
+  | otherwise          = Poly $ V.fromList [zero, one]
