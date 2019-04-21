@@ -98,20 +98,23 @@ dropWhileEnd p xs = V.slice 0 (go (V.length xs)) xs
 
 zipOrCopy :: (a -> a -> a) -> Vector a -> Vector a -> Vector a
 zipOrCopy f xs ys = runST $ do
-  zs <- MV.new lenZs
-  forM_ [0 .. lenZs - 1] $ \i ->
-    MV.write zs i (f (xs V.! i) (ys V.! i))
-  when (lenXs < lenYs) $
-    forM_ [lenXs .. lenYs - 1] $ \i ->
-      MV.write zs i (ys V.! i)
-  when (lenYs < lenXs) $
-    forM_ [lenYs .. lenXs - 1] $ \i ->
-      MV.write zs i (xs V.! i)
+  zs <- MV.new (max lenXs lenYs)
+  case lenXs `compare` lenYs of
+    LT -> do
+      forM_ [0 .. lenXs - 1] $ \i ->
+        MV.write zs i (f (xs V.! i) (ys V.! i))
+      V.copy (MV.slice lenXs (lenYs - lenXs) zs) (V.slice lenXs (lenYs - lenXs) ys)
+    EQ -> do
+      forM_ [0 .. lenXs - 1] $ \i ->
+        MV.write zs i (f (xs V.! i) (ys V.! i))
+    GT -> do
+      forM_ [0 .. lenYs - 1] $ \i ->
+        MV.write zs i (f (xs V.! i) (ys V.! i))
+      V.copy (MV.slice lenYs (lenXs - lenYs) zs) (V.slice lenYs (lenXs - lenYs) xs)
   V.unsafeFreeze zs
   where
     lenXs = V.length xs
     lenYs = V.length ys
-    lenZs = lenXs `max` lenYs
 
 convolution :: a -> (a -> a -> a) -> (a -> a -> a) -> Vector a -> Vector a -> Vector a
 convolution zer add mul xs ys
