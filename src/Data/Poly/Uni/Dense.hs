@@ -16,13 +16,16 @@ module Data.Poly.Uni.Dense
   , toPoly'
   , eval
   , eval'
+  , deriv
+  , deriv'
   ) where
 
 import Prelude hiding (negate)
 import Control.Monad
 import Control.Monad.ST
 import Data.List (foldl')
-import Data.Semiring (Semiring(..), Ring(..))
+import Data.Semigroup (stimes)
+import Data.Semiring (Semiring(..), Ring(..), Add(..))
 import Data.Vector (Vector)
 import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as MV
@@ -141,3 +144,13 @@ eval (Poly cs) x = fst $
 eval' :: Semiring a => Poly a -> a -> a
 eval' (Poly cs) x = fst $
   V.foldl' (\(acc, xn) cn -> (acc `plus` cn `times` xn, x `times` xn)) (zero, one) cs
+
+deriv :: (Eq a, Num a) => Poly a -> Poly a
+deriv (Poly xs)
+  | V.null xs = Poly V.empty
+  | otherwise = toPoly $ V.imap (\i x -> fromIntegral (i + 1) * x) $ V.tail xs
+
+deriv' :: (Eq a, Semiring a) => Poly a -> Poly a
+deriv' (Poly xs)
+  | V.null xs = Poly V.empty
+  | otherwise = toPoly' $ V.imap (\i x -> getAdd (stimes (i + 1) (Add x))) $ V.tail xs
