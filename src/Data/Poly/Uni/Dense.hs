@@ -12,13 +12,15 @@
 module Data.Poly.Uni.Dense
   ( Poly
   , unPoly
+  -- * Num interface
   , toPoly
-  , toPoly'
   , eval
-  , eval'
   , deriv
-  , deriv'
   , var
+  -- * Semiring interface
+  , toPoly'
+  , eval'
+  , deriv'
   , var'
   ) where
 
