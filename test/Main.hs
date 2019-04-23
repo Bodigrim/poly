@@ -78,6 +78,8 @@ evalTestGroup _ =
     \p q r -> e (p * q) r === e p r * e q r
   , testProperty "eval x p = p" $
     \p -> e X p === p
+  , testProperty "eval (constant c) p = c" $
+    \c p -> e (constant c) p === c
 
   , testProperty "eval' (p + q) r = eval' p r + eval' q r" $
     \p q r -> e' (p + q) r === e' p r + e' q r
@@ -85,6 +87,8 @@ evalTestGroup _ =
     \p q r -> e' (p * q) r === e' p r * e' q r
   , testProperty "eval' x p = p" $
     \p -> e' X' p === p
+  , testProperty "eval' (constant' c) p = c" $
+    \c p -> e' (constant' c) p === c
   ]
 
   where
@@ -99,4 +103,16 @@ derivTests = testGroup "deriv"
     \(p :: Poly V.Vector Integer) -> deriv p === deriv' p
   , testProperty "deriv . integral = id" $
     \(p :: Poly V.Vector Rational) -> deriv (integral p) === p
+  , testProperty "deriv c = 0" $
+    \c -> deriv (constant c :: Poly V.Vector Int) === 0
+  , testProperty "deriv cX = c" $
+    \c -> deriv (constant c * X :: Poly V.Vector Int) === constant c
+  , testProperty "deriv (p + q) = deriv p + deriv q" $
+    \p q -> deriv (p + q) === (deriv p + deriv q :: Poly V.Vector Int)
+  , testProperty "deriv (p * q) = p * deriv q + q * deriv p" $
+    \p q -> deriv (p * q) === (p * deriv q + q * deriv p :: Poly V.Vector Int)
+  -- The following property takes too long for a regular test-suite
+  -- , testProperty "deriv (eval p q) = deriv q * eval (deriv p) q" $
+  --   \(p :: Poly V.Vector Int) (q :: Poly U.Vector Int) ->
+  --     deriv (eval (fmap constant p) q) === deriv q * eval (fmap constant (deriv p)) q
   ]
