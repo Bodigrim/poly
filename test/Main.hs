@@ -13,12 +13,17 @@ import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed as U
 import Test.Tasty
 import Test.Tasty.QuickCheck
-import Test.QuickCheck.Classes
+import Test.QuickCheck.Classes (lawsProperties, semiringLaws, ringLaws)
+
+instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (Poly v a) where
+  arbitrary = toPoly' . G.fromList <$> arbitrary
+  shrink = fmap (toPoly' . G.fromList) . shrink . G.toList . unPoly
 
 main :: IO ()
 main = defaultMain $ testGroup "All"
     [ arithmeticTests
     , semiringTests
+    , evalTests
     ]
 
 semiringTests :: TestTree
@@ -33,10 +38,6 @@ semiringTests
   , semiringLaws (Proxy :: Proxy (Poly V.Vector Integer))
   ,     ringLaws (Proxy :: Proxy (Poly V.Vector Integer))
   ]
-
-instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (Poly v a) where
-  arbitrary = toPoly' . G.fromList <$> arbitrary
-  shrink = fmap (toPoly' . G.fromList) . shrink . G.toList . unPoly
 
 arithmeticTests :: TestTree
 arithmeticTests = testGroup "Arithmetic"
@@ -57,3 +58,36 @@ subRef :: Num a => [a] -> [a] -> [a]
 subRef [] ys = map negate ys
 subRef xs [] = xs
 subRef (x : xs) (y : ys) = (x - y) : subRef xs ys
+
+evalTests :: TestTree
+evalTests = testGroup "eval" $ concat
+  [ evalTestGroup (Proxy :: Proxy (Poly U.Vector Int8))
+  , evalTestGroup (Proxy :: Proxy (Poly V.Vector Integer))
+  ]
+
+evalTestGroup
+  :: forall v a.
+     (Eq a, Num a, Semiring a, Arbitrary a, Show a, Show (v a), G.Vector v a)
+  => Proxy (Poly v a)
+  -> [TestTree]
+evalTestGroup _ =
+  [ testProperty "eval (p + q) r = eval p r + eval q r" $
+    \p q r -> e (p + q) r === e p r + e q r
+  , testProperty "eval (p * q) r = eval p r * eval q r" $
+    \p q r -> e (p * q) r === e p r * e q r
+  , testProperty "eval x p = p" $
+    \p -> e var p === p
+
+  , testProperty "eval' (p + q) r = eval' p r + eval' q r" $
+    \p q r -> e' (p + q) r === e' p r + e' q r
+  , testProperty "eval' (p * q) r = eval' p r * eval' q r" $
+    \p q r -> e' (p * q) r === e' p r * e' q r
+  , testProperty "eval' x p = p" $
+    \p -> e' var p === p
+  ]
+
+  where
+    e :: Poly v a -> a -> a
+    e = eval
+    e' :: Poly v a -> a -> a
+    e' = eval'
