@@ -221,6 +221,13 @@ constant' c
   | c == zero = Poly G.empty
   | otherwise = Poly $ G.singleton c
 
+data StrictPair a b = !a :*: !b
+
+infixr 1 :*:
+
+fst' :: StrictPair a b -> a
+fst' (a :*: _) = a
+
 -- | Evaluate at a given point.
 --
 -- >>> -- 1 + 3^2 = 10
@@ -230,8 +237,8 @@ constant' c
 -- >>> eval (1 + X^2 :: VPoly (UPoly Int)) (1 + X)
 -- Poly {unPoly = [2,2,1]}
 eval :: (Num a, G.Vector v a) => Poly v a -> a -> a
-eval (Poly cs) x = fst $
-  G.foldl' (\(acc, xn) cn -> (acc + cn * xn, x * xn)) (0, 1) cs
+eval (Poly cs) x = fst' $
+  G.foldl' (\(acc :*: xn) cn -> (acc + cn * xn :*: x * xn)) (0 :*: 1) cs
 
 -- | Evaluate at a given point.
 --
@@ -242,8 +249,8 @@ eval (Poly cs) x = fst $
 -- >>> eval' (1 + X'^2 :: VPoly (UPoly Int)) (1 + X')
 -- Poly {unPoly = [2,2,1]}
 eval' :: (Semiring a, G.Vector v a) => Poly v a -> a -> a
-eval' (Poly cs) x = fst $
-  G.foldl' (\(acc, xn) cn -> (acc `plus` cn `times` xn, x `times` xn)) (zero, one) cs
+eval' (Poly cs) x = fst' $
+  G.foldl' (\(acc :*: xn) cn -> (acc `plus` cn `times` xn :*: x `times` xn)) (zero :*: one) cs
 
 -- | Take a derivative.
 --
