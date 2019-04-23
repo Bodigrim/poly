@@ -19,6 +19,7 @@ module Data.Poly.Uni.Dense
   , eval
   , deriv
   , pattern X
+  , integral
   -- * Semiring interface
   , toPoly'
   , eval'
@@ -206,6 +207,18 @@ deriv' :: (Eq a, Semiring a, G.Vector v a) => Poly v a -> Poly v a
 deriv' (Poly xs)
   | G.null xs = Poly G.empty
   | otherwise = toPoly' $ G.imap (\i x -> getAdd (stimes (i + 1) (Add x))) $ G.tail xs
+
+integral :: (Eq a, Fractional a, G.Vector v a) => Poly v a -> Poly v a
+integral (Poly xs)
+  | G.null xs = Poly G.empty
+  | otherwise = toPoly $ runST $ do
+    zs <- MG.new (lenXs + 1)
+    MG.unsafeWrite zs 0 0
+    forM_ [0 .. lenXs - 1] $ \i ->
+      MG.unsafeWrite zs (i + 1) (G.unsafeIndex xs i * recip (fromIntegral i + 1))
+    G.unsafeFreeze zs
+    where
+      lenXs = G.basicLength xs
 
 pattern X :: (Eq a, Num a, G.Vector v a, Eq (v a)) => Poly v a
 pattern X <- ((==) var -> True)

@@ -24,6 +24,7 @@ main = defaultMain $ testGroup "All"
     [ arithmeticTests
     , semiringTests
     , evalTests
+    , derivTests
     ]
 
 semiringTests :: TestTree
@@ -91,3 +92,11 @@ evalTestGroup _ =
     e = eval
     e' :: Poly v a -> a -> a
     e' = eval'
+
+derivTests :: TestTree
+derivTests = testGroup "deriv"
+  [ testProperty "deriv = deriv'" $
+    \(p :: Poly V.Vector Integer) -> deriv p === deriv' p
+  , testProperty "deriv . integral = id" $
+    \(p :: Poly V.Vector Rational) -> deriv (integral p) === p
+  ]
