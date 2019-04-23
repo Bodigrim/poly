@@ -16,12 +16,14 @@ module Data.Poly.Uni.Dense
   , unPoly
   -- * Num interface
   , toPoly
+  , constant
   , eval
   , deriv
   , pattern X
   , integral
   -- * Semiring interface
   , toPoly'
+  , constant'
   , eval'
   , deriv'
   , pattern X'
@@ -189,6 +191,15 @@ convolution zer add mul xs ys
     lenXs = G.basicLength xs
     lenYs = G.basicLength ys
     lenZs = lenXs + lenYs - 1
+
+constant :: (Eq a, Num a, G.Vector v a) => a -> Poly v a
+constant 0 = Poly G.empty
+constant c = Poly $ G.singleton c
+
+constant' :: (Eq a, Semiring a, G.Vector v a) => a -> Poly v a
+constant' c
+  | c == zero = Poly G.empty
+  | otherwise = Poly $ G.singleton c
 
 eval :: (Num a, G.Vector v a) => Poly v a -> a -> a
 eval (Poly cs) x = fst $
