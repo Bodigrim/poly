@@ -9,6 +9,8 @@ import Data.Poly
 import Data.Proxy
 import Data.Semiring (Semiring)
 import qualified Data.Vector as V
+import qualified Data.Vector.Generic as G
+import qualified Data.Vector.Unboxed as U
 import Test.Tasty
 import Test.Tasty.QuickCheck
 import Test.QuickCheck.Classes
@@ -24,17 +26,17 @@ semiringTests
   = testGroup "Semiring"
   $ map (uncurry testProperty)
   $ concatMap lawsProperties
-  [ semiringLaws (Proxy :: Proxy (Poly ()))
-  ,     ringLaws (Proxy :: Proxy (Poly ()))
-  , semiringLaws (Proxy :: Proxy (Poly Int8))
-  ,     ringLaws (Proxy :: Proxy (Poly Int8))
-  , semiringLaws (Proxy :: Proxy (Poly Integer))
-  ,     ringLaws (Proxy :: Proxy (Poly Integer))
+  [ semiringLaws (Proxy :: Proxy (Poly U.Vector ()))
+  ,     ringLaws (Proxy :: Proxy (Poly U.Vector ()))
+  , semiringLaws (Proxy :: Proxy (Poly U.Vector Int8))
+  ,     ringLaws (Proxy :: Proxy (Poly U.Vector Int8))
+  , semiringLaws (Proxy :: Proxy (Poly V.Vector Integer))
+  ,     ringLaws (Proxy :: Proxy (Poly V.Vector Integer))
   ]
 
-instance (Eq a, Semiring a, Arbitrary a) => Arbitrary (Poly a) where
-  arbitrary = toPoly' . V.fromList <$> arbitrary
-  shrink = fmap (toPoly' . V.fromList) . shrink . V.toList . unPoly
+instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (Poly v a) where
+  arbitrary = toPoly' . G.fromList <$> arbitrary
+  shrink = fmap (toPoly' . G.fromList) . shrink . G.toList . unPoly
 
 arithmeticTests :: TestTree
 arithmeticTests = testGroup "Arithmetic"
