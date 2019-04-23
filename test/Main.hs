@@ -67,7 +67,7 @@ evalTests = testGroup "eval" $ concat
 
 evalTestGroup
   :: forall v a.
-     (Eq a, Num a, Semiring a, Arbitrary a, Show a, Show (v a), G.Vector v a)
+     (Eq a, Num a, Semiring a, Arbitrary a, Show a, Eq (v a), Show (v a), G.Vector v a)
   => Proxy (Poly v a)
   -> [TestTree]
 evalTestGroup _ =
@@ -76,14 +76,14 @@ evalTestGroup _ =
   , testProperty "eval (p * q) r = eval p r * eval q r" $
     \p q r -> e (p * q) r === e p r * e q r
   , testProperty "eval x p = p" $
-    \p -> e var p === p
+    \p -> e X p === p
 
   , testProperty "eval' (p + q) r = eval' p r + eval' q r" $
     \p q r -> e' (p + q) r === e' p r + e' q r
   , testProperty "eval' (p * q) r = eval' p r * eval' q r" $
     \p q r -> e' (p * q) r === e' p r * e' q r
   , testProperty "eval' x p = p" $
-    \p -> e' var p === p
+    \p -> e' X' p === p
   ]
 
   where

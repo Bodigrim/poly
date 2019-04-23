@@ -7,7 +7,9 @@
 -- Dense polynomials of one variable.
 --
 
+{-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ViewPatterns        #-}
 
 module Data.Poly.Uni.Dense
   ( Poly
@@ -16,12 +18,12 @@ module Data.Poly.Uni.Dense
   , toPoly
   , eval
   , deriv
-  , var
+  , pattern X
   -- * Semiring interface
   , toPoly'
   , eval'
   , deriv'
-  , var'
+  , pattern X'
   ) where
 
 import Control.Monad
@@ -205,12 +207,20 @@ deriv' (Poly xs)
   | G.null xs = Poly G.empty
   | otherwise = toPoly' $ G.imap (\i x -> getAdd (stimes (i + 1) (Add x))) $ G.tail xs
 
-var :: forall a v. (Eq a, Num a, G.Vector v a) => Poly v a
+pattern X :: (Eq a, Num a, G.Vector v a, Eq (v a)) => Poly v a
+pattern X <- ((==) var -> True)
+  where X = var
+
+var :: forall a v. (Eq a, Num a, G.Vector v a, Eq (v a)) => Poly v a
 var
   | (1 :: a) == 0 = Poly G.empty
   | otherwise     = Poly $ G.fromList [0, 1]
 
-var' :: forall a v. (Eq a, Semiring a, G.Vector v a) => Poly v a
+pattern X' :: (Eq a, Semiring a, G.Vector v a, Eq (v a)) => Poly v a
+pattern X' <- ((==) var' -> True)
+  where X' = var'
+
+var' :: forall a v. (Eq a, Semiring a, G.Vector v a, Eq (v a)) => Poly v a
 var'
   | (one :: a) == zero = Poly G.empty
   | otherwise          = Poly $ G.fromList [zero, one]
