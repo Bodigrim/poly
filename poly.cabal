@@ -26,19 +26,26 @@ library
   exposed-modules:
     Data.Poly
     Data.Poly.Semiring
+    Data.Poly.Sparse
+    Data.Poly.Sparse.Semiring
   other-modules:
     Data.Poly.Uni.Dense
+    Data.Poly.Uni.Sparse
   build-depends:
     base >= 4.9 && < 5,
     primitive,
     semirings,
-    vector
+    vector,
+    vector-algorithms
   default-language: Haskell2010
   ghc-options: -Wall
 
 test-suite poly-tests
   type: exitcode-stdio-1.0
   main-is: Main.hs
+  other-modules:
+    Dense
+    Sparse
   build-depends:
     base >=4.9 && <5,
     poly,
