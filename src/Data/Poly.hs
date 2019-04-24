@@ -7,8 +7,26 @@
 -- Polynomials.
 --
 
+{-# LANGUAGE PatternSynonyms     #-}
+
 module Data.Poly
-  ( module Data.Poly.Uni.Dense
+  ( Poly
+  , VPoly
+  , UPoly
+  , unPoly
+  -- * Num interface
+  , toPoly
+  , constant
+  , pattern X
+  , eval
+  , deriv
+  , integral
+  -- * Semiring interface
+  , toPoly'
+  , constant'
+  , pattern X'
+  , eval'
+  , deriv'
   ) where
 
-import Data.Poly.Uni.Dense
+import Data.Poly.Uni.Dense hiding (quotRem)
