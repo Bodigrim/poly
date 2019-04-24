@@ -4,6 +4,7 @@
 
 module Main where
 
+import Prelude hiding (quotRem)
 import Data.Int
 import Data.Poly
 import Data.Proxy
@@ -25,6 +26,7 @@ main = defaultMain $ testGroup "All"
     , semiringTests
     , evalTests
     , derivTests
+    , quotRemTests
     ]
 
 semiringTests :: TestTree
@@ -115,4 +117,11 @@ derivTests = testGroup "deriv"
   -- , testProperty "deriv (eval p q) = deriv q * eval (deriv p) q" $
   --   \(p :: Poly V.Vector Int) (q :: Poly U.Vector Int) ->
   --     deriv (eval (fmap constant p) q) === deriv q * eval (fmap constant (deriv p)) q
+  ]
+
+quotRemTests :: TestTree
+quotRemTests = testGroup "quotRem"
+  [ testProperty "(q, r) = x `quotRem` y ==> q * y + r == x" $
+    \(x :: Poly U.Vector Int) y -> let (q, r) = x `quotRem` y in
+      y === 0 .||. q * y + r === x
   ]

@@ -24,6 +24,7 @@ module Data.Poly.Uni.Dense
   , eval
   , deriv
   , integral
+  , quotRem
   -- * Semiring interface
   , toPoly'
   , constant'
@@ -32,6 +33,8 @@ module Data.Poly.Uni.Dense
   , deriv'
   ) where
 
+import Prelude hiding (quotRem)
+import Control.Exception
 import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
@@ -222,6 +225,42 @@ convolution zer add mul xs ys
     lenXs = G.basicLength xs
     lenYs = G.basicLength ys
     lenZs = lenXs + lenYs - 1
+
+-- | This is just a proof of concept,
+-- which should be replaced by a proper 'Euclidean' interface.
+quotRem
+  :: (Integral a, G.Vector v a)
+  => Poly v a
+  -> Poly v a
+  -> (Poly v a, Poly v a)
+quotRem (Poly xs) (Poly ys) = (toPoly qs, toPoly rs)
+  where
+    (qs, rs) = quotRem' xs ys
+
+quotRem'
+  :: (Integral a, G.Vector v a)
+  => v a
+  -> v a
+  -> (v a, v a)
+quotRem' xs ys
+  | G.null ys = throw DivideByZero
+  | G.basicLength xs < G.basicLength ys = (G.empty, xs)
+  | otherwise = runST $ do
+    let lenXs = G.basicLength xs
+        lenYs = G.basicLength ys
+        lenQs = lenXs - lenYs + 1
+    qs <- MG.new lenQs
+    rs <- MG.new lenXs
+    G.unsafeCopy rs xs
+    forM_ [lenQs - 1, lenQs - 2 .. 0] $ \i -> do
+      let j = lenXs - 1 + i - (lenQs - 1)
+      r <- MG.unsafeRead rs j
+      let q = r `quot` G.unsafeLast ys
+      MG.unsafeWrite qs i q
+      forM_ [0 .. lenYs - 1] $ \k -> do
+        MG.unsafeModify rs (\c -> c - q * G.unsafeIndex ys k) (j + k - lenYs + 1)
+    (,) <$> G.unsafeFreeze qs <*> G.unsafeFreeze rs
+
 
 -- | Create a polynomial from a constant term.
 --
