@@ -7,7 +7,6 @@
 -- Dense polynomials of one variable.
 --
 
-{-# LANGUAGE DeriveFunctor       #-}
 {-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns        #-}
@@ -68,7 +67,7 @@ newtype Poly v a = Poly
   -- ^ Convert 'Poly' to a vector of coefficients
   -- (first element corresponds to a constant term).
   }
-  deriving (Eq, Ord, Functor)
+  deriving (Eq, Ord)
 
 instance (Show a, G.Vector v a) => Show (Poly v a) where
   show (Poly xs)

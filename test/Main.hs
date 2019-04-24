@@ -116,7 +116,8 @@ derivTests = testGroup "deriv"
   -- The following property takes too long for a regular test-suite
   -- , testProperty "deriv (eval p q) = deriv q * eval (deriv p) q" $
   --   \(p :: Poly V.Vector Int) (q :: Poly U.Vector Int) ->
-  --     deriv (eval (fmap constant p) q) === deriv q * eval (fmap constant (deriv p)) q
+  --     deriv (eval (toPoly $ fmap constant $ unPoly p) q) ===
+  --       deriv q * eval (toPoly $ fmap constant $ unPoly $ deriv p) q
   ]
 
 quotRemTests :: TestTree
