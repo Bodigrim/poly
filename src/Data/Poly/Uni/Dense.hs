@@ -38,7 +38,7 @@ import Control.Exception
 import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
-import Data.List (foldl')
+import Data.List (foldl', intersperse)
 import Data.Semigroup (stimes)
 import Data.Semiring (Semiring(..), Add(..))
 import qualified Data.Semiring as Semiring
@@ -50,21 +50,35 @@ import qualified Data.Vector.Unboxed as U
 -- | Polynomials of one variable with coefficients from @a@,
 -- backed by a 'G.Vector' @v@ (boxed, unboxed, storable, etc.).
 --
--- >>> :set -XOverloadedLists
--- >>> -- (1 + x) * (-1 + x) = (-1 + x^2)
--- >>> toPoly [1,1] * toPoly [-1,1] :: VPoly Integer
--- Poly {unPoly = [-1,0,1]}
+-- Use pattern 'X' and 'Num' instance for construction:
 --
--- >>> :set -XOverloadedLists
--- >>> -- (1 + x) + (1 - x) = 2
--- >>> toPoly [1,1] + toPoly [1,-1] :: UPoly Int
--- Poly {unPoly = [2]}
+-- >>> (X + 1) + (X - 1) :: VPoly Integer
+-- 2*X + 0
+-- >>> (X + 1) * (X - 1) :: UPoly Int
+-- 1*X^2 + 0*X + (-1)
+--
+-- Polynomials are stored normalized, without leading
+-- zero coefficients, so 0 * 'X' + 1 equals to 1.
+--
+-- 'Ord' instance does not make much sense mathematically,
+-- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
+--
 newtype Poly v a = Poly
   { unPoly :: v a
   -- ^ Convert 'Poly' to a vector of coefficients
   -- (first element corresponds to a constant term).
   }
-  deriving (Eq, Ord, Show, Functor)
+  deriving (Eq, Ord, Functor)
+
+instance (Show a, G.Vector v a) => Show (Poly v a) where
+  show (Poly xs)
+    | G.null xs = "0"
+    | otherwise = concat $ intersperse " + "
+      $ G.ifoldl (\acc i c -> showCoeff i c : acc) [] xs
+    where
+      showCoeff 0 c = showsPrec 7 c ""
+      showCoeff 1 c = showsPrec 7 c "*X"
+      showCoeff i c = showsPrec 7 c ("*X^" <> show i)
 
 -- | Polynomials backed by boxed vectors.
 type VPoly = Poly V.Vector
@@ -77,9 +91,9 @@ type UPoly = Poly U.Vector
 --
 -- >>> :set -XOverloadedLists
 -- >>> toPoly [1,2,3] :: VPoly Integer
--- Poly {unPoly = [1,2,3]}
+-- 3*X^2 + 2*X + 1
 -- >>> toPoly [0,0,0] :: UPoly Int
--- Poly {unPoly = []}
+-- 0
 toPoly :: (Eq a, Num a, G.Vector v a) => v a -> Poly v a
 toPoly = Poly . dropWhileEnd (== 0)
 
@@ -88,9 +102,9 @@ toPoly = Poly . dropWhileEnd (== 0)
 --
 -- >>> :set -XOverloadedLists
 -- >>> toPoly' [1,2,3] :: VPoly Integer
--- Poly {unPoly = [1,2,3]}
+-- 3*X^2 + 2*X + 1
 -- >>> toPoly' [0,0,0] :: UPoly Int
--- Poly {unPoly = []}
+-- 0
 toPoly' :: (Eq a, Semiring a, G.Vector v a) => v a -> Poly v a
 toPoly' = Poly . dropWhileEnd (== zero)
 
@@ -263,21 +277,11 @@ quotRem' xs ys
 
 
 -- | Create a polynomial from a constant term.
---
--- >>> constant 42 :: UPoly Int
--- Poly {unPoly = [42]}
--- >>> constant 0 :: UPoly Int
--- Poly {unPoly = []}
 constant :: (Eq a, Num a, G.Vector v a) => a -> Poly v a
 constant 0 = Poly G.empty
 constant c = Poly $ G.singleton c
 
 -- | Create a polynomial from a constant term.
---
--- >>> constant' True :: UPoly Bool
--- Poly {unPoly = [True]}
--- >>> constant' False :: UPoly Bool
--- Poly {unPoly = []}
 constant' :: (Eq a, Semiring a, G.Vector v a) => a -> Poly v a
 constant' c
   | c == zero = Poly G.empty
@@ -292,33 +296,28 @@ fst' (a :*: _) = a
 
 -- | Evaluate at a given point.
 --
--- >>> -- 1 + 3^2 = 10
--- >>> eval (1 + X^2 :: UPoly Int) 3
+-- >>> eval (X^2 + 1 :: UPoly Int) 3
 -- 10
--- >>> -- 1 + (1 + x)^2 = 2 + 2 * x + x^2
--- >>> eval (1 + X^2 :: VPoly (UPoly Int)) (1 + X)
--- Poly {unPoly = [2,2,1]}
+-- >>> eval (X^2 + 1 :: VPoly (UPoly Int)) (X + 1)
+-- 1*X^2 + 2*X + 2
 eval :: (Num a, G.Vector v a) => Poly v a -> a -> a
 eval (Poly cs) x = fst' $
   G.foldl' (\(acc :*: xn) cn -> (acc + cn * xn :*: x * xn)) (0 :*: 1) cs
 
 -- | Evaluate at a given point.
 --
--- >>> -- 1 + 3^2 = 10
--- >>> eval' (1 + X'^2 :: UPoly Int) 3
+-- >>> eval (X'^2 + 1 :: UPoly Int) 3
 -- 10
--- >>> -- 1 + (1 + x)^2 = 2 + 2 * x + x^2
--- >>> eval' (1 + X'^2 :: VPoly (UPoly Int)) (1 + X')
--- Poly {unPoly = [2,2,1]}
+-- >>> eval (X'^2 + 1 :: VPoly (UPoly Int)) (X' + 1)
+-- 1*X^2 + 2*X + 2
 eval' :: (Semiring a, G.Vector v a) => Poly v a -> a -> a
 eval' (Poly cs) x = fst' $
   G.foldl' (\(acc :*: xn) cn -> (acc `plus` cn `times` xn :*: x `times` xn)) (zero :*: one) cs
 
 -- | Take a derivative.
 --
--- >>> -- (3 * x + x^3)' = 3 + 3 * x^2
--- >>> deriv (3 * X + X^3) :: UPoly Int
--- Poly {unPoly = [3,0,3]}
+-- >>> deriv (X^3 + 3 * X) :: UPoly Int
+-- 3*X^2 + 0*X + 3
 deriv :: (Eq a, Num a, G.Vector v a) => Poly v a -> Poly v a
 deriv (Poly xs)
   | G.null xs = Poly G.empty
@@ -326,9 +325,8 @@ deriv (Poly xs)
 
 -- | Take a derivative.
 --
--- >>> -- (3 * x + x^3)' = 3 + 3 * x^2
--- >>> deriv' (3 * X' + X'^3) :: UPoly Int
--- Poly {unPoly = [3,0,3]}
+-- >>> deriv' (X'^3 + 3 * X') :: UPoly Int
+-- 3*X^2 + 0*X + 3
 deriv' :: (Eq a, Semiring a, G.Vector v a) => Poly v a -> Poly v a
 deriv' (Poly xs)
   | G.null xs = Poly G.empty
@@ -337,8 +335,8 @@ deriv' (Poly xs)
 -- | Compute an indefinite integral of a polynomial,
 -- setting constant term to zero.
 --
--- >>> integral (constant 3.0 + constant 3.0 * X^2) :: UPoly Double
--- Poly {unPoly = [0.0,3.0,0.0,1.0]}
+-- >>> integral (constant 3.0 * X^2 + constant 3.0) :: UPoly Double
+-- 1.0*X^3 + 0.0*X^2 + 3.0*X + 0.0
 integral :: (Eq a, Fractional a, G.Vector v a) => Poly v a -> Poly v a
 integral (Poly xs)
   | G.null xs = Poly G.empty
