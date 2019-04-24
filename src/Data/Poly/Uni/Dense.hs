@@ -33,6 +33,7 @@ module Data.Poly.Uni.Dense
   ) where
 
 import Control.Monad
+import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.List (foldl')
 import Data.Semigroup (stimes)
@@ -112,7 +113,11 @@ instance (Eq a, Semiring a, G.Vector v a) => Semiring (Poly v a) where
 instance (Eq a, Semiring.Ring a, G.Vector v a) => Semiring.Ring (Poly v a) where
   negate (Poly xs) = Poly $ G.map Semiring.negate xs
 
-dropWhileEnd :: G.Vector v a => (a -> Bool) -> v a -> v a
+dropWhileEnd
+  :: G.Vector v a
+  => (a -> Bool)
+  -> v a
+  -> v a
 dropWhileEnd p xs = G.basicUnsafeSlice 0 (go (G.basicLength xs)) xs
   where
     go 0 = 0
@@ -125,7 +130,20 @@ plusPoly
   -> v a
   -> v a
 plusPoly add xs ys = runST $ do
-  zs <- MG.new (max lenXs lenYs)
+  zs <- MG.new (G.basicLength xs `max` G.basicLength ys)
+  plusPolyM add xs ys zs
+  G.unsafeFreeze zs
+
+plusPolyM
+  :: (PrimMonad m, G.Vector v a)
+  => (a -> a -> a)
+  -> v a
+  -> v a
+  -> G.Mutable v (PrimState m) a
+  -> m ()
+plusPolyM add xs ys zs = do
+  let lenXs = G.basicLength xs
+      lenYs = G.basicLength ys
   case lenXs `compare` lenYs of
     LT -> do
       forM_ [0 .. lenXs - 1] $ \i ->
@@ -142,10 +160,6 @@ plusPoly add xs ys = runST $ do
       G.unsafeCopy
         (MG.basicUnsafeSlice lenYs (lenXs - lenYs) zs)
         (G.basicUnsafeSlice  lenYs (lenXs - lenYs) xs)
-  G.unsafeFreeze zs
-  where
-    lenXs = G.basicLength xs
-    lenYs = G.basicLength ys
 
 minusPoly
   :: G.Vector v a
@@ -155,7 +169,21 @@ minusPoly
   -> v a
   -> v a
 minusPoly neg sub xs ys = runST $ do
-  zs <- MG.new (max lenXs lenYs)
+  zs <- MG.new (G.basicLength xs `max` G.basicLength ys)
+  minusPolyM neg sub xs ys zs
+  G.unsafeFreeze zs
+
+minusPolyM
+  :: (PrimMonad m, G.Vector v a)
+  => (a -> a)
+  -> (a -> a -> a)
+  -> v a
+  -> v a
+  -> G.Mutable v (PrimState m) a
+  -> m ()
+minusPolyM neg sub xs ys zs = do
+  let lenXs = G.basicLength xs
+      lenYs = G.basicLength ys
   case lenXs `compare` lenYs of
     LT -> do
       forM_ [0 .. lenXs - 1] $ \i ->
@@ -171,10 +199,6 @@ minusPoly neg sub xs ys = runST $ do
       G.unsafeCopy
         (MG.basicUnsafeSlice lenYs (lenXs - lenYs) zs)
         (G.basicUnsafeSlice  lenYs (lenXs - lenYs) xs)
-  G.unsafeFreeze zs
-  where
-    lenXs = G.basicLength xs
-    lenYs = G.basicLength ys
 
 convolution
   :: G.Vector v a
@@ -190,8 +214,7 @@ convolution zer add mul xs ys
     zs <- MG.new lenZs
     forM_ [0 .. lenZs - 1] $ \k -> do
       let is = [max (k - lenYs + 1) 0 .. min k (lenXs - 1)]
-          -- js = reverse [max (k - lenXs) 0 .. min k lenYs]
-      let acc = foldl' add zer $ flip map is $ \i ->
+          acc = foldl' add zer $ flip map is $ \i ->
             mul (G.unsafeIndex xs i) (G.unsafeIndex ys (k - i))
       MG.unsafeWrite zs k acc
     G.unsafeFreeze zs
