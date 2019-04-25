@@ -25,6 +25,7 @@ library
   hs-source-dirs: src
   exposed-modules:
     Data.Poly
+    Data.Poly.Semiring
   other-modules:
     Data.Poly.Uni.Dense
   build-depends:

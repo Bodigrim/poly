@@ -7,6 +7,7 @@ module Main where
 import Prelude hiding (quotRem)
 import Data.Int
 import Data.Poly
+import qualified Data.Poly.Semiring as S
 import Data.Proxy
 import Data.Semiring (Semiring)
 import qualified Data.Vector as V
@@ -17,8 +18,8 @@ import Test.Tasty.QuickCheck
 import Test.QuickCheck.Classes (lawsProperties, semiringLaws, ringLaws)
 
 instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (Poly v a) where
-  arbitrary = toPoly' . G.fromList <$> arbitrary
-  shrink = fmap (toPoly' . G.fromList) . shrink . G.toList . unPoly
+  arbitrary = S.toPoly . G.fromList <$> arbitrary
+  shrink = fmap (S.toPoly . G.fromList) . shrink . G.toList . unPoly
 
 main :: IO ()
 main = defaultMain $ testGroup "All"
@@ -88,21 +89,21 @@ evalTestGroup _ =
   , testProperty "eval' (p * q) r = eval' p r * eval' q r" $
     \p q r -> e' (p * q) r === e' p r * e' q r
   , testProperty "eval' x p = p" $
-    \p -> e' X' p === p
-  , testProperty "eval' (constant' c) p = c" $
-    \c p -> e' (constant' c) p === c
+    \p -> e' S.X p === p
+  , testProperty "eval' (S.constant c) p = c" $
+    \c p -> e' (S.constant c) p === c
   ]
 
   where
     e :: Poly v a -> a -> a
     e = eval
     e' :: Poly v a -> a -> a
-    e' = eval'
+    e' = S.eval
 
 derivTests :: TestTree
 derivTests = testGroup "deriv"
-  [ testProperty "deriv = deriv'" $
-    \(p :: Poly V.Vector Integer) -> deriv p === deriv' p
+  [ testProperty "deriv = S.deriv" $
+    \(p :: Poly V.Vector Integer) -> deriv p === S.deriv p
   , testProperty "deriv . integral = id" $
     \(p :: Poly V.Vector Rational) -> deriv (integral p) === p
   , testProperty "deriv c = 0" $

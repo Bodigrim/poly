@@ -4,7 +4,7 @@
 -- Licence:     BSD3
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
 --
--- Polynomials.
+-- Polynomials with 'Num' instance.
 --
 
 {-# LANGUAGE PatternSynonyms     #-}
@@ -21,12 +21,6 @@ module Data.Poly
   , eval
   , deriv
   , integral
-  -- * Semiring interface
-  , toPoly'
-  , constant'
-  , pattern X'
-  , eval'
-  , deriv'
   ) where
 
 import Data.Poly.Uni.Dense hiding (quotRem)
