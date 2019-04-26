@@ -30,8 +30,11 @@ before_cache:
 
 matrix:
   include:
-    - compiler: "ghc-8.6.4"
-      addons: {apt: {packages: [ghc-ppa-tools,cabal-install-2.4,ghc-8.6.4], sources: [hvr-ghc]}}
+    - compiler: "ghc-8.8.1"
+      env: GHCHEAD=true
+      addons: {apt: {packages: [ghc-ppa-tools,cabal-install-2.4,ghc-8.8.1], sources: [hvr-ghc]}}
+    - compiler: "ghc-8.6.5"
+      addons: {apt: {packages: [ghc-ppa-tools,cabal-install-2.4,ghc-8.6.5], sources: [hvr-ghc]}}
     - compiler: "ghc-8.4.4"
       addons: {apt: {packages: [ghc-ppa-tools,cabal-install-2.4,ghc-8.4.4], sources: [hvr-ghc]}}
     - compiler: "ghc-8.2.2"
@@ -43,6 +46,7 @@ matrix:
       addons: {apt: {packages: [ghc-ppa-tools,cabal-install-head,ghc-head], sources: [hvr-ghc]}}
 
   allow_failures:
+    - compiler: "ghc-8.8.1"
     - compiler: "ghc-head"
 
 before_install:
@@ -65,6 +69,10 @@ install:
   - travis_retry ${CABAL} update -v
   - sed -i.bak 's/^jobs:/-- jobs:/' $CABALHOME/config
   - rm -fv cabal.project cabal.project.local
+  - |
+    if $GHCHEAD; then
+      sed -i.bak 's/-- allow-newer:.*/allow-newer: *:base, *:template-haskell, *:ghc, *:Cabal/' $CABALHOME/config
+    fi
   - grep -Ev -- '^\s*--' $CABALHOME/config | grep -Ev '^\s*$'
   - rm -f cabal.project
   - touch cabal.project
