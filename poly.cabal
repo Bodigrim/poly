@@ -1,5 +1,5 @@
 name: poly
-version: 0.1.0.0
+version: 0.2.0.0
 synopsis: Polynomials
 description:
   Polynomials with `Num` and `Semiring` instances, backed by `Vector`.
