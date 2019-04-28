@@ -4,7 +4,7 @@
 -- Licence:     BSD3
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
 --
--- Polynomials with 'Semiring' instance.
+-- Dense polynomials and a 'Semiring'-based interface.
 --
 
 {-# LANGUAGE PatternSynonyms     #-}

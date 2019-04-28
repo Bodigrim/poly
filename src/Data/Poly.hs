@@ -4,7 +4,7 @@
 -- Licence:     BSD3
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
 --
--- Polynomials with 'Num' instance.
+-- Dense polynomials and a 'Num'-based interface.
 --
 
 {-# LANGUAGE PatternSynonyms     #-}
