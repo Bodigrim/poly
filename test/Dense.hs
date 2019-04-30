@@ -53,6 +53,9 @@ arithmeticTests = testGroup "Arithmetic"
   , testProperty "subtraction matches reference" $
     \(xs :: [Int]) ys -> toPoly (V.fromList (subRef xs ys)) ===
       toPoly (V.fromList xs) - toPoly (V.fromList ys)
+  , testProperty "multiplication matches reference" $
+    \(xs :: [Int]) ys -> toPoly (V.fromList (mulRef xs ys)) ===
+      toPoly (V.fromList xs) * toPoly (V.fromList ys)
   ]
 
 addRef :: Num a => [a] -> [a] -> [a]
@@ -64,6 +67,12 @@ subRef :: Num a => [a] -> [a] -> [a]
 subRef [] ys = map negate ys
 subRef xs [] = xs
 subRef (x : xs) (y : ys) = (x - y) : subRef xs ys
+
+mulRef :: Num a => [a] -> [a] -> [a]
+mulRef xs ys
+  = foldl addRef []
+  $ zipWith (\x zs -> map (* x) zs) xs
+  $ iterate (0 :) ys
 
 evalTests :: TestTree
 evalTests = testGroup "eval" $ concat

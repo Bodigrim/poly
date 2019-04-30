@@ -9,7 +9,9 @@ module Sparse
   ) where
 
 import Prelude hiding (quotRem)
+import Data.Function
 import Data.Int
+import Data.List
 import Data.Poly.Sparse
 import qualified Data.Poly.Sparse.Semiring as S
 import Data.Proxy
@@ -54,6 +56,9 @@ arithmeticTests = testGroup "Arithmetic"
   , testProperty "subtraction matches reference" $
     \(xs :: [(Word, Int)]) ys -> toPoly (V.fromList (subRef xs ys)) ===
       toPoly (V.fromList xs) - toPoly (V.fromList ys)
+  , testProperty "multiplication matches reference" $
+    \(xs :: [(Word, Int)]) ys -> toPoly (V.fromList (mulRef xs ys)) ===
+      toPoly (V.fromList xs) * toPoly (V.fromList ys)
   ]
 
 addRef :: Num a => [(Word, a)] -> [(Word, a)] -> [(Word, a)]
@@ -73,6 +78,13 @@ subRef xs@((xp, xc) : xs') ys@((yp, yc) : ys') =
     LT -> (xp, xc) : subRef xs' ys
     EQ -> (xp, xc - yc) : subRef xs' ys'
     GT -> (yp, negate yc) : subRef xs ys'
+
+mulRef :: Num a => [(Word, a)] -> [(Word, a)] -> [(Word, a)]
+mulRef xs ys
+  = map (\ws -> (fst (head ws), sum (map snd ws)))
+  $ groupBy ((==) `on` fst)
+  $ sortOn fst
+  $ [ (xp + yp, xc * yc) | (xp, xc) <- xs, (yp, yc) <- ys ]
 
 evalTests :: TestTree
 evalTests = testGroup "eval" $ concat
