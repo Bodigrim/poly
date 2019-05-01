@@ -40,8 +40,7 @@ import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.List (intersperse)
 import Data.Ord
-import Data.Semigroup (stimes)
-import Data.Semiring (Semiring(..), Add(..), Mul(..))
+import Data.Semiring (Semiring(..))
 import qualified Data.Semiring as Semiring
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
@@ -173,10 +172,15 @@ instance (Eq a, Semiring a, G.Vector v (Word, a)) => Semiring (Poly v a) where
     | otherwise = Poly $ G.singleton (0, one)
   plus (Poly xs) (Poly ys) = Poly $ plusPoly (/= zero) plus xs ys
   times (Poly xs) (Poly ys) = Poly $ convolution (/= zero) plus times xs ys
+  fromNatural n = if n' == zero then zero else Poly $ G.singleton (0, one)
+    where
+      n' :: a
+      n' = fromNatural n
   {-# INLINE zero #-}
   {-# INLINE one #-}
   {-# INLINE plus #-}
   {-# INLINE times #-}
+  {-# INLINE fromNatural #-}
 
 instance (Eq a, Semiring.Ring a, G.Vector v (Word, a)) => Semiring.Ring (Poly v a) where
   negate (Poly xs) = Poly $ G.map (fmap Semiring.negate) xs
@@ -326,11 +330,8 @@ eval (Poly cs) x = fst3 $ G.foldl' go (Strict3 0 0 1) cs
 eval' :: (Semiring a, G.Vector v (Word, a)) => Poly v a -> a -> a
 eval' (Poly cs) x = fst3 $ G.foldl' go (Strict3 zero 0 one) cs
   where
-    stimes' 0 _ = Mul one
-    stimes' k z = stimes k z
-
     go (Strict3 acc q xq) (p, c) =
-      let xp = xq `times` getMul (stimes' (p - q) (Mul x)) in
+      let xp = xq `times` (if p == q then one else x Semiring.^ (p - q)) in
         Strict3 (acc `plus` c `times` xp) p xp
 {-# INLINE eval' #-}
 
@@ -352,7 +353,7 @@ deriv' (Poly xs)
   | G.null xs = Poly xs
   | otherwise
     = toPoly'
-    $ G.map (\(p, c) -> (p - 1, getAdd (stimes p (Add c))))
+    $ G.map (\(p, c) -> (p - 1, fromNatural (fromIntegral p) `times` c))
     $ if fst (G.head xs) == 0 then G.tail xs else xs
 {-# INLINE deriv' #-}
 

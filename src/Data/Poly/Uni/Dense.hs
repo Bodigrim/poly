@@ -37,8 +37,7 @@ import Control.Exception
 import Control.Monad
 import Control.Monad.ST
 import Data.List (foldl', intersperse)
-import Data.Semigroup (stimes)
-import Data.Semiring (Semiring(..), Add(..))
+import Data.Semiring (Semiring(..))
 import qualified Data.Semiring as Semiring
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
@@ -299,7 +298,7 @@ deriv (Poly xs)
 deriv' :: (Eq a, Semiring a, G.Vector v a) => Poly v a -> Poly v a
 deriv' (Poly xs)
   | G.null xs = Poly G.empty
-  | otherwise = toPoly' $ G.imap (\i x -> getAdd (stimes (i + 1) (Add x))) $ G.tail xs
+  | otherwise = toPoly' $ G.imap (\i x -> fromNatural (fromIntegral (i + 1)) `times` x) $ G.tail xs
 {-# INLINE deriv' #-}
 
 -- | Compute an indefinite integral of a polynomial,
