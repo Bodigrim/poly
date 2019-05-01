@@ -422,22 +422,43 @@ eval' (Poly cs) x = fst3 $ G.foldl' go (Strict3 zero 0 one) cs
 -- >>> deriv (X^3 + 3 * X) :: UPoly Int
 -- 3 * X^2 + 3
 deriv :: (Eq a, Num a, G.Vector v (Word, a)) => Poly v a -> Poly v a
-deriv (Poly xs)
-  | G.null xs = Poly xs
-  | otherwise
-    = toPoly
-    $ G.map (\(p, c) -> (p - 1, c * fromIntegral p))
-    $ if fst (G.head xs) == 0 then G.tail xs else xs
+deriv (Poly xs) = Poly $ derivPoly
+  (/= 0)
+  (\p c -> fromIntegral p * c)
+  xs
 {-# INLINE deriv #-}
 
 deriv' :: (Eq a, Semiring a, G.Vector v (Word, a)) => Poly v a -> Poly v a
-deriv' (Poly xs)
-  | G.null xs = Poly xs
-  | otherwise
-    = toPoly'
-    $ G.map (\(p, c) -> (p - 1, fromNatural (fromIntegral p) `times` c))
-    $ if fst (G.head xs) == 0 then G.tail xs else xs
+deriv' (Poly xs) = Poly $ derivPoly
+  (/= zero)
+  (\p c -> fromNatural (fromIntegral p) `times` c)
+  xs
 {-# INLINE deriv' #-}
+
+derivPoly
+  :: G.Vector v (Word, a)
+  => (a -> Bool)
+  -> (Word -> a -> a)
+  -> v (Word, a)
+  -> v (Word, a)
+derivPoly p mul xs
+  | G.null xs = G.empty
+  | otherwise = runST $ do
+    let lenXs = G.basicLength xs
+    zs <- MG.basicUnsafeNew lenXs
+    let go ix iz
+          | ix == lenXs = pure iz
+          | (xp, xc) <- G.unsafeIndex xs ix
+          = do
+            let zc = xp `mul` xc
+            if xp > 0 && p zc then do
+              MG.unsafeWrite zs iz (xp - 1, zc)
+              go (ix + 1) (iz + 1)
+            else
+              go (ix + 1) iz
+    lenZs <- go 0 0
+    G.unsafeFreeze $ MG.basicUnsafeSlice 0 lenZs zs
+{-# INLINE derivPoly #-}
 
 -- | Compute an indefinite integral of a polynomial,
 -- setting constant term to zero.
