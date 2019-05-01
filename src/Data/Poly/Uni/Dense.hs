@@ -240,8 +240,8 @@ quotRem' xs ys
     let lenXs = G.basicLength xs
         lenYs = G.basicLength ys
         lenQs = lenXs - lenYs + 1
-    qs <- MG.new lenQs
-    rs <- MG.new lenXs
+    qs <- MG.basicUnsafeNew lenQs
+    rs <- MG.basicUnsafeNew lenXs
     G.unsafeCopy rs xs
     forM_ [lenQs - 1, lenQs - 2 .. 0] $ \i -> do
       let j = lenXs - 1 + i - (lenQs - 1)
@@ -311,7 +311,7 @@ integral :: (Eq a, Fractional a, G.Vector v a) => Poly v a -> Poly v a
 integral (Poly xs)
   | G.null xs = Poly G.empty
   | otherwise = toPoly $ runST $ do
-    zs <- MG.new (lenXs + 1)
+    zs <- MG.basicUnsafeNew (lenXs + 1)
     MG.unsafeWrite zs 0 0
     forM_ [0 .. lenXs - 1] $ \i ->
       MG.unsafeWrite zs (i + 1) (G.unsafeIndex xs i * recip (fromIntegral i + 1))

@@ -189,7 +189,7 @@ plusPoly
   -> v (Word, a)
   -> v (Word, a)
 plusPoly p add xs ys = runST $ do
-  zs <- MG.new (lenXs + lenYs)
+  zs <- MG.basicUnsafeNew (lenXs + lenYs)
   let go ix iy iz
         | ix == lenXs, iy == lenYs = pure iz
         | ix == lenXs = do
@@ -234,7 +234,7 @@ minusPoly
   -> v (Word, a)
   -> v (Word, a)
 minusPoly p neg sub xs ys = runST $ do
-  zs <- MG.new (lenXs + lenYs)
+  zs <- MG.basicUnsafeNew (lenXs + lenYs)
   let go ix iy iz
         | ix == lenXs, iy == lenYs = pure iz
         | ix == lenXs = do
@@ -281,7 +281,7 @@ convolution
 convolution p add mul xs ys
   | G.null xs || G.null ys = G.empty
   | otherwise = runST $ do
-    zs <- MG.new (lenXs * lenYs)
+    zs <- MG.basicUnsafeNew (lenXs * lenYs)
     forM_ [0 .. lenXs - 1] $ \ix -> do
       let (xp, xc) = G.unsafeIndex xs ix
       forM_ [0 .. lenYs - 1] $ \iy -> do
