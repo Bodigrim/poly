@@ -7,7 +7,6 @@
 -- Sparse polynomials of one variable.
 --
 
-{-# LANGUAGE DeriveFunctor        #-}
 {-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE PatternSynonyms      #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
@@ -69,7 +68,6 @@ newtype Poly v a = Poly
   -- ^ Convert 'Poly' to a vector of coefficients
   -- (first element corresponds to a constant term).
   }
-  deriving (Functor)
 
 deriving instance Eq   (v (Word, a)) => Eq   (Poly v a)
 deriving instance Ord  (v (Word, a)) => Ord  (Poly v a)
