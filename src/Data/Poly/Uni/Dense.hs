@@ -116,6 +116,8 @@ instance (Eq a, Num a, G.Vector v a) => Num (Poly v a) where
   Poly xs * Poly ys = toPoly $ convolution 0 (+) (*) xs ys
   {-# INLINE (+) #-}
   {-# INLINE (-) #-}
+  {-# INLINE negate #-}
+  {-# INLINE fromInteger #-}
   {-# INLINE (*) #-}
 
 instance (Eq a, Semiring a, G.Vector v a) => Semiring (Poly v a) where
@@ -125,6 +127,10 @@ instance (Eq a, Semiring a, G.Vector v a) => Semiring (Poly v a) where
     | otherwise = Poly $ G.singleton one
   plus (Poly xs) (Poly ys) = toPoly' $ plusPoly plus xs ys
   times (Poly xs) (Poly ys) = toPoly' $ convolution zero plus times xs ys
+  {-# INLINE zero #-}
+  {-# INLINE one #-}
+  {-# INLINE plus #-}
+  {-# INLINE times #-}
 
 instance (Eq a, Semiring.Ring a, G.Vector v a) => Semiring.Ring (Poly v a) where
   negate (Poly xs) = Poly $ G.map Semiring.negate xs
@@ -273,10 +279,12 @@ fst' (a :*: _) = a
 eval :: (Num a, G.Vector v a) => Poly v a -> a -> a
 eval (Poly cs) x = fst' $
   G.foldl' (\(acc :*: xn) cn -> (acc + cn * xn :*: x * xn)) (0 :*: 1) cs
+{-# INLINE eval #-}
 
 eval' :: (Semiring a, G.Vector v a) => Poly v a -> a -> a
 eval' (Poly cs) x = fst' $
   G.foldl' (\(acc :*: xn) cn -> (acc `plus` cn `times` xn :*: x `times` xn)) (zero :*: one) cs
+{-# INLINE eval' #-}
 
 -- | Take a derivative.
 --
@@ -286,11 +294,13 @@ deriv :: (Eq a, Num a, G.Vector v a) => Poly v a -> Poly v a
 deriv (Poly xs)
   | G.null xs = Poly G.empty
   | otherwise = toPoly $ G.imap (\i x -> fromIntegral (i + 1) * x) $ G.tail xs
+{-# INLINE deriv #-}
 
 deriv' :: (Eq a, Semiring a, G.Vector v a) => Poly v a -> Poly v a
 deriv' (Poly xs)
   | G.null xs = Poly G.empty
   | otherwise = toPoly' $ G.imap (\i x -> getAdd (stimes (i + 1) (Add x))) $ G.tail xs
+{-# INLINE deriv' #-}
 
 -- | Compute an indefinite integral of a polynomial,
 -- setting constant term to zero.
@@ -308,6 +318,7 @@ integral (Poly xs)
     G.unsafeFreeze zs
     where
       lenXs = G.basicLength xs
+{-# INLINE integral #-}
 
 -- | Create an identity polynomial.
 pattern X :: (Eq a, Num a, G.Vector v a, Eq (v a)) => Poly v a
@@ -318,6 +329,7 @@ var :: forall a v. (Eq a, Num a, G.Vector v a, Eq (v a)) => Poly v a
 var
   | (1 :: a) == 0 = Poly G.empty
   | otherwise     = Poly $ G.fromList [0, 1]
+{-# INLINE var #-}
 
 -- | Create an identity polynomial.
 pattern X' :: (Eq a, Semiring a, G.Vector v a, Eq (v a)) => Poly v a
@@ -328,3 +340,4 @@ var' :: forall a v. (Eq a, Semiring a, G.Vector v a, Eq (v a)) => Poly v a
 var'
   | (one :: a) == zero = Poly G.empty
   | otherwise          = Poly $ G.fromList [zero, one]
+{-# INLINE var' #-}

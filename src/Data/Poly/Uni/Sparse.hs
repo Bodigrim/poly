@@ -160,6 +160,11 @@ instance (Eq a, Num a, G.Vector v (Word, a)) => Num (Poly v a) where
     0 -> Poly $ G.empty
     m -> Poly $ G.singleton (0, m)
   Poly xs * Poly ys = Poly $ convolution (/= 0) (+) (*) xs ys
+  {-# INLINE (+) #-}
+  {-# INLINE (-) #-}
+  {-# INLINE negate #-}
+  {-# INLINE fromInteger #-}
+  {-# INLINE (*) #-}
 
 instance (Eq a, Semiring a, G.Vector v (Word, a)) => Semiring (Poly v a) where
   zero = Poly G.empty
@@ -168,6 +173,10 @@ instance (Eq a, Semiring a, G.Vector v (Word, a)) => Semiring (Poly v a) where
     | otherwise = Poly $ G.singleton (0, one)
   plus (Poly xs) (Poly ys) = Poly $ plusPoly (/= zero) plus xs ys
   times (Poly xs) (Poly ys) = Poly $ convolution (/= zero) plus times xs ys
+  {-# INLINE zero #-}
+  {-# INLINE one #-}
+  {-# INLINE plus #-}
+  {-# INLINE times #-}
 
 instance (Eq a, Semiring.Ring a, G.Vector v (Word, a)) => Semiring.Ring (Poly v a) where
   negate (Poly xs) = Poly $ G.map (fmap Semiring.negate) xs
@@ -214,6 +223,7 @@ plusPoly p add xs ys = runST $ do
   where
     lenXs = G.basicLength xs
     lenYs = G.basicLength ys
+{-# INLINE plusPoly #-}
 
 minusPoly
   :: G.Vector v (Word, a)
@@ -258,6 +268,7 @@ minusPoly p neg sub xs ys = runST $ do
   where
     lenXs = G.basicLength xs
     lenYs = G.basicLength ys
+{-# INLINE minusPoly #-}
 
 convolution
   :: G.Vector v (Word, a)
@@ -281,6 +292,7 @@ convolution p add mul xs ys
   where
     lenXs = G.basicLength xs
     lenYs = G.basicLength ys
+{-# INLINE convolution #-}
 
 -- | Create a polynomial from a constant term.
 constant :: (Eq a, Num a, G.Vector v (Word, a)) => a -> Poly v a
@@ -309,6 +321,7 @@ eval (Poly cs) x = fst3 $ G.foldl' go (Strict3 0 0 1) cs
     go (Strict3 acc q xq) (p, c) =
       let xp = xq * x ^ (p - q) in
         Strict3 (acc + c * xp) p xp
+{-# INLINE eval #-}
 
 eval' :: (Semiring a, G.Vector v (Word, a)) => Poly v a -> a -> a
 eval' (Poly cs) x = fst3 $ G.foldl' go (Strict3 zero 0 one) cs
@@ -319,6 +332,7 @@ eval' (Poly cs) x = fst3 $ G.foldl' go (Strict3 zero 0 one) cs
     go (Strict3 acc q xq) (p, c) =
       let xp = xq `times` getMul (stimes' (p - q) (Mul x)) in
         Strict3 (acc `plus` c `times` xp) p xp
+{-# INLINE eval' #-}
 
 -- | Take a derivative.
 --
@@ -331,6 +345,7 @@ deriv (Poly xs)
     = toPoly
     $ G.map (\(p, c) -> (p - 1, c * fromIntegral p))
     $ if fst (G.head xs) == 0 then G.tail xs else xs
+{-# INLINE deriv #-}
 
 deriv' :: (Eq a, Semiring a, G.Vector v (Word, a)) => Poly v a -> Poly v a
 deriv' (Poly xs)
@@ -339,6 +354,7 @@ deriv' (Poly xs)
     = toPoly'
     $ G.map (\(p, c) -> (p - 1, getAdd (stimes p (Add c))))
     $ if fst (G.head xs) == 0 then G.tail xs else xs
+{-# INLINE deriv' #-}
 
 -- | Compute an indefinite integral of a polynomial,
 -- setting constant term to zero.
@@ -349,6 +365,7 @@ integral :: (Eq a, Fractional a, G.Vector v (Word, a)) => Poly v a -> Poly v a
 integral (Poly xs)
   = Poly
   $ G.map (\(p, c) -> (p + 1, c / (fromIntegral p + 1))) xs
+{-# INLINE integral #-}
 
 -- | Create an identity polynomial.
 pattern X :: (Eq a, Num a, G.Vector v (Word, a), Eq (v (Word, a))) => Poly v a
@@ -359,6 +376,7 @@ var :: forall a v. (Eq a, Num a, G.Vector v (Word, a), Eq (v (Word, a))) => Poly
 var
   | (1 :: a) == 0 = Poly G.empty
   | otherwise     = Poly $ G.singleton (1, 1)
+{-# INLINE var #-}
 
 -- | Create an identity polynomial.
 pattern X' :: (Eq a, Semiring a, G.Vector v (Word, a), Eq (v (Word, a))) => Poly v a
@@ -369,3 +387,4 @@ var' :: forall a v. (Eq a, Semiring a, G.Vector v (Word, a), Eq (v (Word, a))) =
 var'
   | (one :: a) == zero = Poly G.empty
   | otherwise          = Poly $ G.singleton (1, one)
+{-# INLINE var' #-}
