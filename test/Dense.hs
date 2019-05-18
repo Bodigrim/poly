@@ -1,4 +1,6 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -7,6 +9,7 @@ module Dense
   ) where
 
 import Prelude hiding (quotRem)
+import Data.Euclidean
 import Data.Int
 import Data.Poly
 import qualified Data.Poly.Semiring as S
@@ -17,11 +20,22 @@ import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed as U
 import Test.Tasty
 import Test.Tasty.QuickCheck
-import Test.QuickCheck.Classes (lawsProperties, semiringLaws, ringLaws)
+import Test.QuickCheck.Classes
 
 instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (Poly v a) where
   arbitrary = S.toPoly . G.fromList <$> arbitrary
   shrink = fmap (S.toPoly . G.fromList) . shrink . G.toList . unPoly
+
+instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (PolyOverFractional (Poly v a)) where
+  arbitrary = PolyOverFractional . S.toPoly . G.fromList . (\xs -> take (length xs `mod` 10) xs) <$> arbitrary
+  shrink = fmap (PolyOverFractional . S.toPoly . G.fromList) . shrink . G.toList . unPoly . unPolyOverFractional
+
+newtype ShortPoly a = ShortPoly { unShortPoly :: a }
+  deriving (Eq, Show, Semiring, GcdDomain, Euclidean)
+
+instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (ShortPoly (Poly v a)) where
+  arbitrary = ShortPoly . S.toPoly . G.fromList . (\xs -> take (length xs `mod` 10) xs) <$> arbitrary
+  shrink = fmap (ShortPoly . S.toPoly . G.fromList) . shrink . G.toList . unPoly . unShortPoly
 
 testSuite :: TestTree
 testSuite = testGroup "Dense"
@@ -29,7 +43,7 @@ testSuite = testGroup "Dense"
     , semiringTests
     , evalTests
     , derivTests
-    , quotRemTests
+    , euclideanTests
     ]
 
 semiringTests :: TestTree
@@ -43,6 +57,16 @@ semiringTests
   ,     ringLaws (Proxy :: Proxy (Poly U.Vector Int8))
   , semiringLaws (Proxy :: Proxy (Poly V.Vector Integer))
   ,     ringLaws (Proxy :: Proxy (Poly V.Vector Integer))
+  ]
+
+euclideanTests :: TestTree
+euclideanTests
+  = testGroup "Euclidean"
+  $ map (uncurry testProperty)
+  $ concatMap lawsProperties
+  [ gcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Integer)))
+  , gcdDomainLaws (Proxy :: Proxy (PolyOverFractional (Poly V.Vector Rational)))
+  , euclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
   ]
 
 arithmeticTests :: TestTree
@@ -131,10 +155,3 @@ derivTests = testGroup "deriv"
   --     deriv (eval (toPoly $ fmap constant $ unPoly p) q) ===
   --       deriv q * eval (toPoly $ fmap constant $ unPoly $ deriv p) q
   ]
-
-quotRemTests :: TestTree
-quotRemTests = testGroup "quotRem" []
-  -- [ testProperty "(q, r) = x `quotRem` y ==> q * y + r == x" $
-  --   \(x :: Poly U.Vector Int) y -> let (q, r) = x `quotRem` y in
-  --     y === 0 .||. q * y + r === x
-  -- ]

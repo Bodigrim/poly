@@ -27,6 +27,8 @@ import qualified Data.Vector.Generic as G
 
 import Data.Poly.Uni.Dense (Poly(..), VPoly, UPoly)
 import qualified Data.Poly.Uni.Dense as Dense
+import Data.Poly.Uni.Dense.Fractional ()
+import Data.Poly.Uni.Dense.GcdDomain ()
 
 -- | Make 'Poly' from a vector of coefficients
 -- (first element corresponds to a constant term).

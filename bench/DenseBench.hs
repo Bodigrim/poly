@@ -4,8 +4,11 @@ module DenseBench
   ( benchSuite
   ) where
 
+import Prelude hiding (quotRem, gcd)
 import Gauge.Main
+import Data.Euclidean
 import Data.Poly
+import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 
 benchSuite :: Benchmark
@@ -15,6 +18,9 @@ benchSuite = bgroup "dense" $ concat
   , map benchEval     [100, 1000, 10000]
   , map benchDeriv    [100, 1000, 10000]
   , map benchIntegral [100, 1000, 10000]
+  , map benchQuotRem  [10, 100]
+  , map benchGcdFrac  [10, 100]
+  , map benchGcd      [10, 100]
   ]
 
 benchAdd :: Int -> Benchmark
@@ -31,6 +37,15 @@ benchDeriv k = bench ("deriv/" ++ show k) $ nf doDeriv k
 
 benchIntegral :: Int -> Benchmark
 benchIntegral k = bench ("integral/" ++ show k) $ nf doIntegral k
+
+benchQuotRem :: Int -> Benchmark
+benchQuotRem k = bench ("quotRem/" ++ show k) $ nf doQuotRem k
+
+benchGcd :: Int -> Benchmark
+benchGcd k = bench ("gcd/" ++ show k) $ nf doGcd k
+
+benchGcdFrac :: Int -> Benchmark
+benchGcdFrac k = bench ("gcdFrac/" ++ show k) $ nf doGcdFrac k
 
 doBinOp :: (forall a. Num a => a -> a -> a) -> Int -> Int
 doBinOp op n = U.sum zs
@@ -56,3 +71,24 @@ doIntegral n = U.sum zs
   where
     xs = toPoly $ U.generate n ((* 2) . fromIntegral)
     zs = unPoly $ integral xs
+
+doQuotRem :: Int -> Double
+doQuotRem n = U.sum (unPoly qs) + U.sum (unPoly rs)
+  where
+    xs = toPoly $ U.generate (2 * n) ((+ 1.0) . (* 2.0) . fromIntegral)
+    ys = toPoly $ U.generate n       ((+ 2.0) . (* 3.0) . fromIntegral)
+    (qs, rs) = xs `quotRem` ys
+
+doGcd :: Int -> Integer
+doGcd n = V.sum gs
+  where
+    xs = toPoly $ V.generate n ((+ 1) . (* 2) . fromIntegral)
+    ys = toPoly $ V.generate n ((+ 2) . (* 3) . fromIntegral)
+    gs = unPoly $ xs `gcd` ys
+
+doGcdFrac :: Int -> Rational
+doGcdFrac n = V.sum gs
+  where
+    xs = PolyOverFractional $ toPoly $ V.generate n ((+ 1) . (* 2) . fromIntegral)
+    ys = PolyOverFractional $ toPoly $ V.generate n ((+ 2) . (* 3) . fromIntegral)
+    gs = unPoly $ unPolyOverFractional $ xs `gcd` ys

@@ -30,6 +30,8 @@ library
     Data.Poly.Sparse.Semiring
   other-modules:
     Data.Poly.Uni.Dense
+    Data.Poly.Uni.Dense.Fractional
+    Data.Poly.Uni.Dense.GcdDomain
     Data.Poly.Uni.Sparse
   build-depends:
     base >= 4.9 && < 5,
@@ -64,6 +66,7 @@ benchmark poly-gauge
     base,
     gauge,
     poly,
+    semirings,
     vector
   type: exitcode-stdio-1.0
   main-is: Bench.hs

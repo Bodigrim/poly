@@ -170,7 +170,7 @@ instance (Eq a, Semiring a, G.Vector v (Word, a)) => Semiring (Poly v a) where
     | otherwise = Poly $ G.singleton (0, one)
   plus (Poly xs) (Poly ys) = Poly $ plusPoly (/= zero) plus xs ys
   times (Poly xs) (Poly ys) = Poly $ convolution (/= zero) plus times xs ys
-  fromNatural n = if n' == zero then zero else Poly $ G.singleton (0, one)
+  fromNatural n = if n' == zero then zero else Poly $ G.singleton (0, n')
     where
       n' :: a
       n' = fromNatural n
