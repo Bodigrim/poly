@@ -21,6 +21,11 @@ module Data.Poly.Sparse
   , eval
   , deriv
   , integral
+  -- * Fractional coefficients
+  , PolyOverFractional(..)
   ) where
 
 import Data.Poly.Uni.Sparse
+import Data.Poly.Uni.Sparse.Fractional ()
+import Data.Poly.Uni.Sparse.GcdDomain ()
+import Data.Poly.Uni.PolyOverFractional

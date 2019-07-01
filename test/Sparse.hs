@@ -1,6 +1,8 @@
-{-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE ScopedTypeVariables  #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE UndecidableInstances       #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -9,6 +11,7 @@ module Sparse
   ) where
 
 import Prelude hiding (quotRem)
+import Data.Euclidean
 import Data.Function
 import Data.Int
 import Data.List
@@ -21,11 +24,22 @@ import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed as U
 import Test.Tasty
 import Test.Tasty.QuickCheck
-import Test.QuickCheck.Classes (lawsProperties, semiringLaws, ringLaws)
+import Test.QuickCheck.Classes
 
 instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a)) => Arbitrary (Poly v a) where
   arbitrary = S.toPoly . G.fromList <$> arbitrary
   shrink = fmap (S.toPoly . G.fromList) . shrink . G.toList . unPoly
+
+instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a)) => Arbitrary (PolyOverFractional (Poly v a)) where
+  arbitrary = PolyOverFractional . S.toPoly . G.fromList . (\xs -> take (length xs `mod` 5) xs) <$> arbitrary
+  shrink = fmap (PolyOverFractional . S.toPoly . G.fromList) . shrink . G.toList . unPoly . unPolyOverFractional
+
+newtype ShortPoly a = ShortPoly { unShortPoly :: a }
+  deriving (Eq, Show, Semiring, GcdDomain, Euclidean)
+
+instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a)) => Arbitrary (ShortPoly (Poly v a)) where
+  arbitrary = ShortPoly . S.toPoly . G.fromList . (\xs -> take (length xs `mod` 5) xs) <$> arbitrary
+  shrink = fmap (ShortPoly . S.toPoly . G.fromList) . shrink . G.toList . unPoly . unShortPoly
 
 testSuite :: TestTree
 testSuite = testGroup "Sparse"
@@ -33,6 +47,7 @@ testSuite = testGroup "Sparse"
     , semiringTests
     , evalTests
     , derivTests
+    , euclideanTests
     ]
 
 semiringTests :: TestTree
@@ -46,6 +61,16 @@ semiringTests
   ,     ringLaws (Proxy :: Proxy (Poly U.Vector Int8))
   , semiringLaws (Proxy :: Proxy (Poly V.Vector Integer))
   ,     ringLaws (Proxy :: Proxy (Poly V.Vector Integer))
+  ]
+
+euclideanTests :: TestTree
+euclideanTests
+  = testGroup "Euclidean"
+  $ map (uncurry testProperty)
+  $ concatMap lawsProperties
+  [ gcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Integer)))
+  , gcdDomainLaws (Proxy :: Proxy (PolyOverFractional (Poly V.Vector Rational)))
+  , euclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
   ]
 
 arithmeticTests :: TestTree

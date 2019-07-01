@@ -32,7 +32,10 @@ library
     Data.Poly.Uni.Dense
     Data.Poly.Uni.Dense.Fractional
     Data.Poly.Uni.Dense.GcdDomain
+    Data.Poly.Uni.PolyOverFractional
     Data.Poly.Uni.Sparse
+    Data.Poly.Uni.Sparse.Fractional
+    Data.Poly.Uni.Sparse.GcdDomain
   build-depends:
     base >= 4.9 && < 5,
     primitive,

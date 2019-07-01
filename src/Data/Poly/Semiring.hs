@@ -20,6 +20,8 @@ module Data.Poly.Semiring
   , pattern X
   , eval
   , deriv
+  -- * Fractional coefficients
+  , PolyOverFractional(..)
   ) where
 
 import Data.Semiring (Semiring)
@@ -29,6 +31,7 @@ import Data.Poly.Uni.Dense (Poly(..), VPoly, UPoly)
 import qualified Data.Poly.Uni.Dense as Dense
 import Data.Poly.Uni.Dense.Fractional ()
 import Data.Poly.Uni.Dense.GcdDomain ()
+import Data.Poly.Uni.PolyOverFractional
 
 -- | Make 'Poly' from a vector of coefficients
 -- (first element corresponds to a constant term).

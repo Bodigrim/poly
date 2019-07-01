@@ -15,10 +15,9 @@
 {-# LANGUAGE ViewPatterns         #-}
 
 module Data.Poly.Uni.Sparse
-  ( Poly
+  ( Poly(..)
   , VPoly
   , UPoly
-  , unPoly
   -- * Num interface
   , toPoly
   , constant
