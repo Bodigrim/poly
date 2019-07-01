@@ -43,7 +43,7 @@ testSuite = testGroup "Dense"
     , semiringTests
     , evalTests
     , derivTests
-    , euclideanTests
+    -- , euclideanTests
     ]
 
 semiringTests :: TestTree
@@ -59,15 +59,15 @@ semiringTests
   ,     ringLaws (Proxy :: Proxy (Poly V.Vector Integer))
   ]
 
-euclideanTests :: TestTree
-euclideanTests
-  = testGroup "Euclidean"
-  $ map (uncurry testProperty)
-  $ concatMap lawsProperties
-  [ gcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Integer)))
-  , gcdDomainLaws (Proxy :: Proxy (PolyOverFractional (Poly V.Vector Rational)))
-  , euclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
-  ]
+-- euclideanTests :: TestTree
+-- euclideanTests
+--   = testGroup "Euclidean"
+--   $ map (uncurry testProperty)
+--   $ concatMap lawsProperties
+--   [ gcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Integer)))
+--   , gcdDomainLaws (Proxy :: Proxy (PolyOverFractional (Poly V.Vector Rational)))
+--   , euclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
+--   ]
 
 arithmeticTests :: TestTree
 arithmeticTests = testGroup "Arithmetic"

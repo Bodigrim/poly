@@ -43,7 +43,6 @@ testSuite = testGroup "Sparse"
     , semiringTests
     , evalTests
     , derivTests
-    , euclideanTests
     ]
 
 semiringTests :: TestTree
@@ -57,15 +56,6 @@ semiringTests
   ,     ringLaws (Proxy :: Proxy (Poly U.Vector Int8))
   , semiringLaws (Proxy :: Proxy (Poly V.Vector Integer))
   ,     ringLaws (Proxy :: Proxy (Poly V.Vector Integer))
-  ]
-
-euclideanTests :: TestTree
-euclideanTests
-  = testGroup "Euclidean"
-  $ map (uncurry testProperty)
-  $ concatMap lawsProperties
-  [ gcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Integer)))
-  , euclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
   ]
 
 arithmeticTests :: TestTree
