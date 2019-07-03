@@ -21,8 +21,6 @@ module Data.Poly.Sparse.Semiring
   , pattern X
   , eval
   , deriv
-  -- * Fractional coefficients
-  , PolyOverFractional(..)
   ) where
 
 import Data.Semiring (Semiring)
@@ -32,7 +30,6 @@ import Data.Poly.Uni.Sparse (Poly(..), VPoly, UPoly)
 import qualified Data.Poly.Uni.Sparse as Sparse
 import Data.Poly.Uni.Sparse.Fractional ()
 import Data.Poly.Uni.Sparse.GcdDomain ()
-import Data.Poly.Uni.PolyOverFractional
 
 -- | Make 'Poly' from a list of (power, coefficient) pairs.
 -- (first element corresponds to a constant term).

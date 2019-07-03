@@ -30,10 +30,6 @@ instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a)) => Arbitrary (Pol
   arbitrary = S.toPoly . G.fromList <$> arbitrary
   shrink = fmap (S.toPoly . G.fromList) . shrink . G.toList . unPoly
 
-instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a)) => Arbitrary (PolyOverFractional (Poly v a)) where
-  arbitrary = PolyOverFractional . S.toPoly . G.fromList . (\xs -> take (length xs `mod` 5) xs) <$> arbitrary
-  shrink = fmap (PolyOverFractional . S.toPoly . G.fromList) . shrink . G.toList . unPoly . unPolyOverFractional
-
 newtype ShortPoly a = ShortPoly { unShortPoly :: a }
   deriving (Eq, Show, Semiring, GcdDomain, Euclidean)
 
@@ -69,7 +65,6 @@ euclideanTests
   $ map (uncurry testProperty)
   $ concatMap lawsProperties
   [ gcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Integer)))
-  , gcdDomainLaws (Proxy :: Proxy (PolyOverFractional (Poly V.Vector Rational)))
   , euclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
   ]
 
