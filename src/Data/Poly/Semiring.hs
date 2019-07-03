@@ -27,11 +27,11 @@ module Data.Poly.Semiring
 import Data.Semiring (Semiring)
 import qualified Data.Vector.Generic as G
 
-import Data.Poly.Uni.Dense (Poly(..), VPoly, UPoly)
-import qualified Data.Poly.Uni.Dense as Dense
-import Data.Poly.Uni.Dense.Fractional ()
-import Data.Poly.Uni.Dense.GcdDomain ()
-import Data.Poly.Uni.PolyOverFractional
+import Data.Poly.Internal.Dense (Poly(..), VPoly, UPoly)
+import qualified Data.Poly.Internal.Dense as Dense
+import Data.Poly.Internal.Dense.Fractional ()
+import Data.Poly.Internal.Dense.GcdDomain ()
+import Data.Poly.Internal.PolyOverFractional
 
 -- | Make 'Poly' from a vector of coefficients
 -- (first element corresponds to a constant term).

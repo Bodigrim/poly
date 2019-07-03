@@ -1,5 +1,5 @@
 -- |
--- Module:      Data.Poly.Uni.Dense.Fractional
+-- Module:      Data.Poly.Internal.Dense.Fractional
 -- Copyright:   (c) 2019 Andrew Lelechenko
 -- Licence:     BSD3
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
@@ -16,7 +16,7 @@
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Data.Poly.Uni.Dense.Fractional
+module Data.Poly.Internal.Dense.Fractional
   ( fractionalGcd
   ) where
 
@@ -30,8 +30,8 @@ import qualified Data.Semiring as Semiring
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as MG
 
-import Data.Poly.Uni.Dense
-import Data.Poly.Uni.Dense.GcdDomain ()
+import Data.Poly.Internal.Dense
+import Data.Poly.Internal.Dense.GcdDomain ()
 
 instance (Eq a, Eq (v a), Semiring.Ring a, GcdDomain a, Fractional a, G.Vector v a) => Euclidean (Poly v a) where
   degree (Poly xs) = fromIntegral (G.basicLength xs)

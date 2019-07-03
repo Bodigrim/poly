@@ -27,7 +27,7 @@ module Data.Poly
   , PolyOverFractional(..)
   ) where
 
-import Data.Poly.Uni.Dense
-import Data.Poly.Uni.Dense.Fractional ()
-import Data.Poly.Uni.Dense.GcdDomain ()
-import Data.Poly.Uni.PolyOverFractional
+import Data.Poly.Internal.Dense
+import Data.Poly.Internal.Dense.Fractional ()
+import Data.Poly.Internal.Dense.GcdDomain ()
+import Data.Poly.Internal.PolyOverFractional

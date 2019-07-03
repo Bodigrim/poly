@@ -26,10 +26,10 @@ module Data.Poly.Sparse.Semiring
 import Data.Semiring (Semiring)
 import qualified Data.Vector.Generic as G
 
-import Data.Poly.Uni.Sparse (Poly(..), VPoly, UPoly)
-import qualified Data.Poly.Uni.Sparse as Sparse
-import Data.Poly.Uni.Sparse.Fractional ()
-import Data.Poly.Uni.Sparse.GcdDomain ()
+import Data.Poly.Internal.Sparse (Poly(..), VPoly, UPoly)
+import qualified Data.Poly.Internal.Sparse as Sparse
+import Data.Poly.Internal.Sparse.Fractional ()
+import Data.Poly.Internal.Sparse.GcdDomain ()
 
 -- | Make 'Poly' from a list of (power, coefficient) pairs.
 -- (first element corresponds to a constant term).

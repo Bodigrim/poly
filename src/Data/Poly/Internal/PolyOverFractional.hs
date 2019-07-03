@@ -1,5 +1,5 @@
 -- |
--- Module:      Data.Poly.Uni.PolyOverFractional
+-- Module:      Data.Poly.Internal.PolyOverFractional
 -- Copyright:   (c) 2019 Andrew Lelechenko
 -- Licence:     BSD3
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
@@ -11,7 +11,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE UndecidableInstances       #-}
 
-module Data.Poly.Uni.PolyOverFractional
+module Data.Poly.Internal.PolyOverFractional
   ( PolyOverFractional(..)
   ) where
 
@@ -21,8 +21,8 @@ import Data.Semiring
 import qualified Data.Semiring as Semiring
 import qualified Data.Vector.Generic as G
 
-import qualified Data.Poly.Uni.Dense as Dense
-import qualified Data.Poly.Uni.Dense.Fractional as Dense (fractionalGcd)
+import qualified Data.Poly.Internal.Dense as Dense
+import qualified Data.Poly.Internal.Dense.Fractional as Dense (fractionalGcd)
 
 newtype PolyOverFractional poly = PolyOverFractional { unPolyOverFractional :: poly }
   deriving (Eq, Ord, Show, Num, Semiring, Semiring.Ring)

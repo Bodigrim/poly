@@ -1,5 +1,5 @@
 -- |
--- Module:      Data.Poly.Uni.Sparse.GcdDomain
+-- Module:      Data.Poly.Internal.Sparse.GcdDomain
 -- Copyright:   (c) 2019 Andrew Lelechenko
 -- Licence:     BSD3
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
@@ -18,7 +18,7 @@
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Data.Poly.Uni.Sparse.GcdDomain
+module Data.Poly.Internal.Sparse.GcdDomain
   () where
 
 import Prelude hiding (gcd, lcm, (^))
@@ -29,7 +29,7 @@ import Data.Semiring (Semiring(..))
 import qualified Data.Semiring as Semiring
 import qualified Data.Vector.Generic as G
 
-import Data.Poly.Uni.Sparse
+import Data.Poly.Internal.Sparse
 
 -- | Consider using 'PolyOverFractional' wrapper,
 -- which provides a much faster implementation of

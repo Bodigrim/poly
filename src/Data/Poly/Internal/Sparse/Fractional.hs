@@ -1,5 +1,5 @@
 -- |
--- Module:      Data.Poly.Uni.Sparse.Fractional
+-- Module:      Data.Poly.Internal.Sparse.Fractional
 -- Copyright:   (c) 2019 Andrew Lelechenko
 -- Licence:     BSD3
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
@@ -18,7 +18,7 @@
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Data.Poly.Uni.Sparse.Fractional
+module Data.Poly.Internal.Sparse.Fractional
   ( fractionalGcd
   ) where
 
@@ -29,8 +29,8 @@ import Data.Euclidean
 import qualified Data.Semiring as Semiring
 import qualified Data.Vector.Generic as G
 
-import Data.Poly.Uni.Sparse
-import Data.Poly.Uni.Sparse.GcdDomain ()
+import Data.Poly.Internal.Sparse
+import Data.Poly.Internal.Sparse.GcdDomain ()
 
 instance (Eq a, Eq (v (Word, a)), Semiring.Ring a, GcdDomain a, Fractional a, G.Vector v (Word, a)) => Euclidean (Poly v a) where
   degree (Poly xs)

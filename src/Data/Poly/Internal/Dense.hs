@@ -1,5 +1,5 @@
 -- |
--- Module:      Data.Poly.Uni.Dense
+-- Module:      Data.Poly.Internal.Dense
 -- Copyright:   (c) 2019 Andrew Lelechenko
 -- Licence:     BSD3
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
@@ -14,7 +14,7 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE ViewPatterns               #-}
 
-module Data.Poly.Uni.Dense
+module Data.Poly.Internal.Dense
   ( Poly(..)
   , VPoly
   , UPoly

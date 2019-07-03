@@ -23,6 +23,6 @@ module Data.Poly.Sparse
   , integral
   ) where
 
-import Data.Poly.Uni.Sparse
-import Data.Poly.Uni.Sparse.Fractional ()
-import Data.Poly.Uni.Sparse.GcdDomain ()
+import Data.Poly.Internal.Sparse
+import Data.Poly.Internal.Sparse.Fractional ()
+import Data.Poly.Internal.Sparse.GcdDomain ()

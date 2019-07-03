@@ -1,5 +1,5 @@
 -- |
--- Module:      Data.Poly.Uni.Sparse
+-- Module:      Data.Poly.Internal.Sparse
 -- Copyright:   (c) 2019 Andrew Lelechenko
 -- Licence:     BSD3
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
@@ -14,7 +14,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns         #-}
 
-module Data.Poly.Uni.Sparse
+module Data.Poly.Internal.Sparse
   ( Poly(..)
   , VPoly
   , UPoly

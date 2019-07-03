@@ -29,13 +29,13 @@ library
     Data.Poly.Sparse
     Data.Poly.Sparse.Semiring
   other-modules:
-    Data.Poly.Uni.Dense
-    Data.Poly.Uni.Dense.Fractional
-    Data.Poly.Uni.Dense.GcdDomain
-    Data.Poly.Uni.PolyOverFractional
-    Data.Poly.Uni.Sparse
-    Data.Poly.Uni.Sparse.Fractional
-    Data.Poly.Uni.Sparse.GcdDomain
+    Data.Poly.Internal.Dense
+    Data.Poly.Internal.Dense.Fractional
+    Data.Poly.Internal.Dense.GcdDomain
+    Data.Poly.Internal.PolyOverFractional
+    Data.Poly.Internal.Sparse
+    Data.Poly.Internal.Sparse.Fractional
+    Data.Poly.Internal.Sparse.GcdDomain
   build-depends:
     base >= 4.9 && < 5,
     primitive,
