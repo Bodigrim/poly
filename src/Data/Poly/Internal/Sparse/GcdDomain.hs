@@ -76,8 +76,3 @@ gcdHelper xs ys = case leading xs of
         gx = fromMaybe err $ divide g xc
         gy = fromMaybe err $ divide g yc
         err = error "gcd: violated internal invariant"
-
-leading :: G.Vector v (Word, a) => Poly v a -> Maybe (Word, a)
-leading (Poly xs)
-  | G.null xs = Nothing
-  | otherwise = Just $ G.last xs

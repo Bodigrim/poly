@@ -18,6 +18,7 @@ module Data.Poly.Internal.Sparse
   ( Poly(..)
   , VPoly
   , UPoly
+  , leading
   -- * Num interface
   , toPoly
   , constant
@@ -104,6 +105,17 @@ toPoly = Poly . normalize (/= 0) (+)
 
 toPoly' :: (Eq a, Semiring a, G.Vector v (Word, a)) => v (Word, a) -> Poly v a
 toPoly' = Poly . normalize (/= zero) plus
+
+-- | Return a leading power and coefficient of a non-zero polynomial.
+--
+-- >>> leading ((2 * X + 1) * (2 * X^2 - 1) :: UPoly Int)
+-- Just (3,4)
+-- >>> leading (0 :: UPoly Int)
+-- Nothing
+leading :: G.Vector v (Word, a) => Poly v a -> Maybe (Word, a)
+leading (Poly v)
+  | G.null v  = Nothing
+  | otherwise = Just (G.last v)
 
 normalize
   :: G.Vector v (Word, a)

@@ -14,6 +14,7 @@ module Data.Poly.Semiring
   , VPoly
   , UPoly
   , unPoly
+  , leading
   -- * Semiring interface
   , toPoly
   , constant
@@ -27,7 +28,7 @@ module Data.Poly.Semiring
 import Data.Semiring (Semiring)
 import qualified Data.Vector.Generic as G
 
-import Data.Poly.Internal.Dense (Poly(..), VPoly, UPoly)
+import Data.Poly.Internal.Dense (Poly(..), VPoly, UPoly, leading)
 import qualified Data.Poly.Internal.Dense as Dense
 import Data.Poly.Internal.Dense.Fractional ()
 import Data.Poly.Internal.Dense.GcdDomain ()

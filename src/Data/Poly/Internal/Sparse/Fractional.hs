@@ -67,8 +67,3 @@ fractionalGcd xs ys
   | G.null (unPoly ys) = xs
   | otherwise = fractionalGcd ys $ snd $ quotientRemainder xs ys
 {-# INLINE fractionalGcd #-}
-
-leading :: G.Vector v (Word, a) => Poly v a -> Maybe (Word, a)
-leading (Poly xs)
-  | G.null xs = Nothing
-  | otherwise = Just $ G.last xs

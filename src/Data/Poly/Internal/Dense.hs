@@ -18,6 +18,7 @@ module Data.Poly.Internal.Dense
   ( Poly(..)
   , VPoly
   , UPoly
+  , leading
   , dropWhileEndM
   -- * Num interface
   , toPoly
@@ -104,6 +105,17 @@ toPoly = Poly . dropWhileEnd (== 0)
 
 toPoly' :: (Eq a, Semiring a, G.Vector v a) => v a -> Poly v a
 toPoly' = Poly . dropWhileEnd (== zero)
+
+-- | Return a leading power and coefficient of a non-zero polynomial.
+--
+-- >>> leading ((2 * X + 1) * (2 * X^2 - 1) :: UPoly Int)
+-- Just (3,4)
+-- >>> leading (0 :: UPoly Int)
+-- Nothing
+leading :: G.Vector v a => Poly v a -> Maybe (Word, a)
+leading (Poly v)
+  | G.null v  = Nothing
+  | otherwise = Just (fromIntegral (G.length v - 1), G.last v)
 
 -- | Note that 'abs' = 'id' and 'signum' = 'const' 1.
 instance (Eq a, Num a, G.Vector v a) => Num (Poly v a) where

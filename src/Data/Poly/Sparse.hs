@@ -14,6 +14,7 @@ module Data.Poly.Sparse
   , VPoly
   , UPoly
   , unPoly
+  , leading
   -- * Num interface
   , toPoly
   , constant

@@ -15,6 +15,7 @@ module Data.Poly.Sparse.Semiring
   , VPoly
   , UPoly
   , unPoly
+  , leading
   -- * Semiring interface
   , toPoly
   , constant
@@ -26,7 +27,7 @@ module Data.Poly.Sparse.Semiring
 import Data.Semiring (Semiring)
 import qualified Data.Vector.Generic as G
 
-import Data.Poly.Internal.Sparse (Poly(..), VPoly, UPoly)
+import Data.Poly.Internal.Sparse (Poly(..), VPoly, UPoly, leading)
 import qualified Data.Poly.Internal.Sparse as Sparse
 import Data.Poly.Internal.Sparse.Fractional ()
 import Data.Poly.Internal.Sparse.GcdDomain ()
