@@ -146,6 +146,7 @@ normalizeM p add ws = do
     wsHead <- MG.unsafeRead ws 0
     go 0 1 wsHead
 
+-- | Note that 'abs' = 'id' and 'signum' = 'const' 1.
 instance (Eq a, Num a, G.Vector v (Word, a)) => Num (Poly v a) where
   Poly xs + Poly ys = Poly $ plusPoly (/= 0) (+) xs ys
   Poly xs - Poly ys = Poly $ minusPoly (/= 0) negate (-) xs ys

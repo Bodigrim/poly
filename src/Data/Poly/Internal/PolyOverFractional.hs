@@ -24,6 +24,9 @@ import qualified Data.Vector.Generic as G
 import qualified Data.Poly.Internal.Dense as Dense
 import qualified Data.Poly.Internal.Dense.Fractional as Dense (fractionalGcd)
 
+-- | Wrapper over polynomials,
+-- providing a faster 'GcdDomain' instance,
+-- when coefficients are 'Fractional'.
 newtype PolyOverFractional poly = PolyOverFractional { unPolyOverFractional :: poly }
   deriving (Eq, Ord, Show, Num, Semiring, Semiring.Ring)
 

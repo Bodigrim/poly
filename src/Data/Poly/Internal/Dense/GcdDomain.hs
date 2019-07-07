@@ -32,7 +32,7 @@ import qualified Data.Vector.Generic.Mutable as MG
 
 import Data.Poly.Internal.Dense
 
--- | Consider using 'PolyOverFractional' wrapper,
+-- | Consider using 'Data.Poly.Semiring.PolyOverFractional' wrapper,
 -- which provides a much faster implementation of
 -- 'Data.Euclidean.gcd' for 'Fractional'
 -- coefficients.

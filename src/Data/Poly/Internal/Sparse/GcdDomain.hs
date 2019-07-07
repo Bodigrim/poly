@@ -31,7 +31,7 @@ import qualified Data.Vector.Generic as G
 
 import Data.Poly.Internal.Sparse
 
--- | Consider using 'PolyOverFractional' wrapper,
+-- | Consider using 'Data.Poly.Sparse.Semiring.PolyOverFractional' wrapper,
 -- which provides a much faster implementation of
 -- 'Data.Euclidean.gcd' for 'Fractional'
 -- coefficients.

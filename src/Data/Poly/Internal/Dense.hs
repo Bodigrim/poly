@@ -105,6 +105,7 @@ toPoly = Poly . dropWhileEnd (== 0)
 toPoly' :: (Eq a, Semiring a, G.Vector v a) => v a -> Poly v a
 toPoly' = Poly . dropWhileEnd (== zero)
 
+-- | Note that 'abs' = 'id' and 'signum' = 'const' 1.
 instance (Eq a, Num a, G.Vector v a) => Num (Poly v a) where
   Poly xs + Poly ys = toPoly $ plusPoly (+) xs ys
   Poly xs - Poly ys = toPoly $ minusPoly negate (-) xs ys
