@@ -1,3 +1,10 @@
+# 0.3.0.0
+
+* Implement sparse polynomials.
+* Add `GcdDomain` and `Euclidean` instances.
+* Add functions `leading`, `monomial`, `scale`.
+* Remove function `constant`.
+
 # 0.2.0.0
 
 * Fix a bug in `Num.(-)`.

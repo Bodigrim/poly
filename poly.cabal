@@ -1,8 +1,8 @@
 name: poly
-version: 0.2.0.0
+version: 0.3.0.0
 synopsis: Polynomials
 description:
-  Polynomials with `Num` and `Semiring` instances, backed by `Vector`.
+  Polynomials backed by `Vector`.
 homepage: https://github.com/Bodigrim/poly#readme
 license: BSD3
 license-file: LICENSE
