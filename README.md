@@ -1,6 +1,6 @@
 # poly [![Build Status](https://travis-ci.org/Bodigrim/poly.svg)](https://travis-ci.org/Bodigrim/poly) [![Hackage](http://img.shields.io/hackage/v/poly.svg)](https://hackage.haskell.org/package/poly)
 
-Univariate polynomials with `Num` and `Semiring` instances, backed by `Vector`.
+Univariate polynomials, backed by `Vector`.
 
 ```haskell
 > (X + 1) + (X - 1) :: VPoly Integer
@@ -8,20 +8,11 @@ Univariate polynomials with `Num` and `Semiring` instances, backed by `Vector`.
 
 > (X + 1) * (X - 1) :: UPoly Int
 1 * X^2 + 0 * X + (-1)
-
-> eval (X^2 + 1 :: UPoly Int) 3
-10
-
-> eval (X^2 + 1 :: VPoly (UPoly Int)) (X + 1)
-1 * X^2 + 2 * X + 2
-
-> deriv (X^3 + 3 * X) :: UPoly Int
-3 * X^2 + 0 * X + 3
 ```
 
 ## Vectors
 
-Polynomial `Poly v a` is polymorhic over a container `v`, implementing `Vector` interface, and coefficients of type `a`. Usually `v` is either a boxed vector from `Data.Vector` or an unboxed vector from `Data.Vector.Unboxed`. Use unboxed vectors whenever possible, e. g., when coefficients are `Int` or `Double`.
+`Poly v a` is polymorphic over a container `v`, implementing `Vector` interface, and coefficients of type `a`. Usually `v` is either a boxed vector from `Data.Vector` or an unboxed vector from `Data.Vector.Unboxed`. Use unboxed vectors whenever possible, e. g., when coefficients are `Int` or `Double`.
 
 There are handy type synonyms:
 
@@ -39,41 +30,95 @@ The simplest way to construct a polynomial is using the pattern `X`:
 1 * X^2 + (-3) * X + 2
 ```
 
-(Unfortunately, a type is often ambiguous and must be explicit.)
+(Unfortunately, a type is often ambiguous and must be given explicitly.)
 
-While being convenient to read and use in REPL, `X` is relatively slow. The fastest approach is to use `toPoly`, providing it with a vector of coefficients (head is the constant term):
+While being convenient to read and write in REPL, `X` is relatively slow. The fastest approach is to use `toPoly`, providing it with a vector of coefficients (head is the constant term):
 
 ```haskell
 > toPoly (Data.Vector.Unboxed.fromList [2, -3, 1 :: Int])
 1 * X^2 + (-3) * X + 2
 ```
 
-TODO note on `monomial`
+There is a shortcut to construct a monomial:
+
+```haskell
+> monomial 2 3 :: UPoly Int
+3 * X^2 + 0 * X + 0
+```
 
 ## Operations
 
-Most operations on `Poly` are provided by means of instances, like `Eq` and `Num`. For example,
+Most operations are provided by means of instances, like `Eq` and `Num`. For example,
 
 ```haskell
 > (X^2 + 1) * (X^2 - 1) :: UPoly Int
 1 * X^4 + 0 * X^3 + 0 * X^2 + 0 * X + (-1)
 ```
 
-TODO eval, deriv, integral
+One can also find convenient to `scale` by monomial (cf. `monomial` above):
 
-TODO Euclidean and GcdDomain
+```haskell
+> scale 2 3 (X^2 + 1) :: UPoly Int
+3 * X^4 + 0 * X^3 + 3 * X^2 + 0 * X + 0
+```
+
+While `Poly` cannot be made an instance of `Integral` (because there is no meaningful `toInteger`),
+it is an instance of `GcdDomain` and `Euclidean` from `semirings` package. These type classes
+cover main functionality of `Integral`, providing division with remainder and `gcd` / `lcm`:
+
+```haskell
+> Data.Euclidean.gcd (X^2 + 7 * X + 6) (X^2 - 5 * X - 6) :: Data.Poly.UPoly Int
+1 * X + 1
+
+> Data.Euclidean.quotRem (X^3 + 2) (X^2 - 1 :: Data.Poly.UPoly Double)
+(1.0 * X + 0.0,1.0 * X + 2.0)
+```
+
+Miscellaneous utilities include `eval` for evaluation at a given value of indeterminate,
+and reciprocals `deriv` / `integral`:
+
+```haskell
+> eval (X^2 + 1 :: UPoly Int) 3
+10
+
+> eval (X^2 + 1 :: VPoly (UPoly Int)) (X + 1)
+1 * X^2 + 2 * X + 2
+
+> deriv (X^3 + 3 * X) :: UPoly Double
+3.0 * X^2 + 0.0 * X + 3.0
+
+> integral (3 * X^2 + 3) :: UPoly Double
+1.0 * X^3 + 0.0 * X^2 + 3.0 * X + 0.0
+```
 
 ## Deconstruction
 
-Use `unPoly` to deconstruct a polynomial to a vector of coefficients:
+Use `unPoly` to deconstruct a polynomial to a vector of coefficients (head is the constant term):
 
 ```haskell
-> unPoly (X^2 - 3*X + 2 :: UPoly Int)
+> unPoly (X^2 - 3 * X + 2 :: UPoly Int)
 [2,-3,1]
 ```
 
-TODO note on `leading`
+Further, `leading` is a shortcut to to obtain the leading term of a non-zero polynomial,
+expressed as a power and a coefficient:
 
-## Flavors
+```haskell
+> leading (X^2 - 3 * X + 2 :: UPoly Int)
+Just (2,1)
+```
 
-TODO Num/Semiring, Dense/Sparse
+## Flavours
+
+The same API is exposed in four flavours:
+
+* `Data.Poly` provides dense polynomials with `Num`-based interface.
+  This is a default choice for most users.
+
+* `Data.Poly.Semiring` provides dense polynomials with `Semiring`-based interface.
+
+* `Data.Poly.Sparse` provides sparse polynomials with `Num`-based interface.
+  Besides that, you may find it easier to use in REPL
+  because of a more readable `Show` instance, skipping zero coefficients.
+
+* `Data.Poly.Sparse.Semiring` provides sparse polynomials with `Semiring`-based interface.
