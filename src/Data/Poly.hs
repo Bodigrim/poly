@@ -20,6 +20,7 @@ module Data.Poly
   -- * Num interface
   , toPoly
   , monomial
+  , scale
   , pattern X
   , eval
   , deriv

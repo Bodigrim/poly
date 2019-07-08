@@ -19,6 +19,7 @@ module Data.Poly.Sparse.Semiring
   -- * Semiring interface
   , toPoly
   , monomial
+  , scale
   , pattern X
   , eval
   , deriv
@@ -46,6 +47,13 @@ toPoly = Sparse.toPoly'
 -- | Create a monomial from a power and a coefficient.
 monomial :: (Eq a, Semiring a, G.Vector v (Word, a)) => Word -> a -> Poly v a
 monomial = Sparse.monomial'
+
+-- | Multiply a polynomial by a monomial, expressed as a power and a coefficient.
+--
+-- >>> scale 2 3 (X^2 + 1) :: UPoly Int
+-- 3 * X^4 + 3 * X^2
+scale :: (Eq a, Semiring a, G.Vector v (Word, a)) => Word -> a -> Poly v a -> Poly v a
+scale = Sparse.scale'
 
 -- | Create an identity polynomial.
 pattern X :: (Eq a, Semiring a, G.Vector v (Word, a), Eq (v (Word, a))) => Poly v a

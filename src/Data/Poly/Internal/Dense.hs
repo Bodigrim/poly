@@ -23,6 +23,7 @@ module Data.Poly.Internal.Dense
   -- * Num interface
   , toPoly
   , monomial
+  , scale
   , pattern X
   , eval
   , deriv
@@ -30,6 +31,7 @@ module Data.Poly.Internal.Dense
   -- * Semiring interface
   , toPoly'
   , monomial'
+  , scale'
   , pattern X'
   , eval'
   , deriv'
@@ -254,6 +256,33 @@ monomial' :: (Eq a, Semiring a, G.Vector v a) => Word -> a -> Poly v a
 monomial' p c
   | c == zero = Poly G.empty
   | otherwise = Poly $ G.generate (fromIntegral p + 1) (\i -> if i == fromIntegral p then c else zero)
+
+scaleInternal
+  :: (Eq a, G.Vector v a)
+  => a
+  -> (a -> a -> a)
+  -> Word
+  -> a
+  -> Poly v a
+  -> v a
+scaleInternal zer mul yp yc (Poly xs) = runST $ do
+  let lenXs = G.basicLength xs
+  zs <- MG.basicUnsafeNew (fromIntegral yp + lenXs)
+  forM_ [0 .. fromIntegral yp - 1] $ \k ->
+    MG.unsafeWrite zs k zer
+  forM_ [0 .. lenXs - 1] $ \k ->
+    MG.unsafeWrite zs (fromIntegral yp + k) (mul yc $ G.unsafeIndex xs k)
+  G.unsafeFreeze zs
+
+-- | Multiply a polynomial by a monomial, expressed as a power and a coefficient.
+--
+-- >>> scale 2 3 (X^2 + 1) :: UPoly Int
+-- 3 * X^4 + 0 * X^3 + 3 * X^2 + 0 * X + 0
+scale :: (Eq a, Num a, G.Vector v a) => Word -> a -> Poly v a -> Poly v a
+scale yp yc xs = toPoly $ scaleInternal 0 (*) yp yc xs
+
+scale' :: (Eq a, Semiring a, G.Vector v a) => Word -> a -> Poly v a -> Poly v a
+scale' yp yc xs = toPoly' $ scaleInternal zero times yp yc xs
 
 data StrictPair a b = !a :*: !b
 

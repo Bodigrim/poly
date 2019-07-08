@@ -22,6 +22,7 @@ module Data.Poly.Internal.Sparse
   -- * Num interface
   , toPoly
   , monomial
+  , scale
   , pattern X
   , eval
   , deriv
@@ -29,6 +30,7 @@ module Data.Poly.Internal.Sparse
   -- * Semiring interface
   , toPoly'
   , monomial'
+  , scale'
   , pattern X'
   , eval'
   , deriv'
@@ -319,6 +321,30 @@ scaleM p mul xs (yp, yc) zs = go 0 0
         else
           go (ix + 1) iz
 {-# INLINE scaleM #-}
+
+scaleInternal
+  :: G.Vector v (Word, a)
+  => (a -> Bool)
+  -> (a -> a -> a)
+  -> Word
+  -> a
+  -> Poly v a
+  -> Poly v a
+scaleInternal p mul yp yc (Poly xs) = runST $ do
+  zs <- MG.basicUnsafeNew (G.basicLength xs)
+  len <- scaleM p (flip mul) xs (yp, yc) zs
+  fmap Poly $ G.unsafeFreeze $ MG.basicUnsafeSlice 0 len zs
+{-# INLINE scaleInternal #-}
+
+-- | Multiply a polynomial by a monomial, expressed as a power and a coefficient.
+--
+-- >>> scale 2 3 (X^2 + 1) :: UPoly Int
+-- 3 * X^4 + 3 * X^2
+scale :: (Eq a, Num a, G.Vector v (Word, a)) => Word -> a -> Poly v a -> Poly v a
+scale = scaleInternal (/= 0) (*)
+
+scale' :: (Eq a, Semiring a, G.Vector v (Word, a)) => Word -> a -> Poly v a -> Poly v a
+scale' = scaleInternal (/= zero) times
 
 convolution
   :: forall v a.
