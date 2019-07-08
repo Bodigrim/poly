@@ -23,7 +23,7 @@ import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed as U
 import Test.Tasty
-import Test.Tasty.QuickCheck
+import Test.Tasty.QuickCheck hiding (scale)
 import Test.QuickCheck.Classes
 
 instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a)) => Arbitrary (Poly v a) where
@@ -40,6 +40,7 @@ instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a)) => Arbitrary (Sho
 testSuite :: TestTree
 testSuite = testGroup "Sparse"
     [ arithmeticTests
+    , otherTests
     , semiringTests
     , evalTests
     , derivTests
@@ -95,6 +96,21 @@ mulRef xs ys
   $ groupBy ((==) `on` fst)
   $ sortOn fst
   $ [ (xp + yp, xc * yc) | (xp, xc) <- xs, (yp, yc) <- ys ]
+
+otherTests :: TestTree
+otherTests = testGroup "Other"
+  [ testProperty "leading p 0 == Nothing" $
+    \p -> leading (monomial p 0 :: UPoly Int) === Nothing
+  , testProperty "leading . monomial = id" $
+    \p c -> c /= 0 ==> leading (monomial p c :: UPoly Int) === Just (p, c)
+  , testProperty "monomial matches reference" $
+    \p (c :: Int) -> monomial p c === toPoly (V.fromList (monomialRef p c))
+  , testProperty "scale matches multiplication by monomial" $
+    \p c (xs :: UPoly Int) -> scale p c xs === monomial p c * xs
+  ]
+
+monomialRef :: Num a => Word -> a -> [(Word, a)]
+monomialRef p c = [(p, c)]
 
 evalTests :: TestTree
 evalTests = testGroup "eval" $ concat

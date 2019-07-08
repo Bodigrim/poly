@@ -19,7 +19,7 @@ import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed as U
 import Test.Tasty
-import Test.Tasty.QuickCheck
+import Test.Tasty.QuickCheck hiding (scale)
 import Test.QuickCheck.Classes
 
 instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (Poly v a) where
@@ -40,6 +40,7 @@ instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (ShortPoly (
 testSuite :: TestTree
 testSuite = testGroup "Dense"
     [ arithmeticTests
+    , otherTests
     , semiringTests
     , evalTests
     , derivTests
@@ -97,6 +98,21 @@ mulRef xs ys
   = foldl addRef []
   $ zipWith (\x zs -> map (* x) zs) xs
   $ iterate (0 :) ys
+
+otherTests :: TestTree
+otherTests = testGroup "Other"
+  [ testProperty "leading p 0 == Nothing" $
+    \p -> leading (monomial p 0 :: UPoly Int) === Nothing
+  , testProperty "leading . monomial = id" $
+    \p c -> c /= 0 ==> leading (monomial p c :: UPoly Int) === Just (p, c)
+  , testProperty "monomial matches reference" $
+    \p (c :: Int) -> monomial p c === toPoly (V.fromList (monomialRef p c))
+  , testProperty "scale matches multiplication by monomial" $
+    \p c (xs :: UPoly Int) -> scale p c xs === monomial p c * xs
+  ]
+
+monomialRef :: Num a => Word -> a -> [a]
+monomialRef p c = replicate (fromIntegral p) 0 ++ [c]
 
 evalTests :: TestTree
 evalTests = testGroup "eval" $ concat
