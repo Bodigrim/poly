@@ -19,7 +19,7 @@ module Data.Poly
   , leading
   -- * Num interface
   , toPoly
-  , constant
+  , monomial
   , pattern X
   , eval
   , deriv

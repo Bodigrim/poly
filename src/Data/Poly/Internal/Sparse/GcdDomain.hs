@@ -51,12 +51,12 @@ instance (Eq a, Semiring.Ring a, GcdDomain a, Eq (v (Word, a)), G.Vector v (Word
   gcd xs ys
     | G.null (unPoly xs) = ys
     | G.null (unPoly ys) = xs
-    | otherwise = maybe err (times xy) (divide zs (constant' (cont zs)))
+    | otherwise = maybe err (times xy) (divide zs (monomial' 0 (cont zs)))
       where
         err = error "gcd: violated internal invariant"
         zs = gcdHelper xs ys
         cont ts = G.foldl' (\acc (_, t) -> gcd acc t) zero (unPoly ts)
-        xy = constant' (gcd (cont xs) (cont ys))
+        xy = monomial' 0 (gcd (cont xs) (cont ys))
 
 gcdHelper
   :: (Eq a, Semiring.Ring a, GcdDomain a, G.Vector v (Word, a))
@@ -68,9 +68,9 @@ gcdHelper xs ys = case leading xs of
   Just (xp, xc) -> case leading ys of
     Nothing -> xs
     Just (yp, yc) -> case xp `compare` yp of
-      LT -> gcdHelper xs (ys `times` constant' gy `plus` Semiring.negate (xs `times` (Poly (G.singleton (yp - xp, gx)))))
-      EQ -> gcdHelper xs (ys `times` constant' gy `plus` Semiring.negate (xs `times` constant' gx))
-      GT -> gcdHelper (xs `times` constant' gx `plus` Semiring.negate (ys `times` (Poly (G.singleton (xp - yp, gy))))) ys
+      LT -> gcdHelper xs (ys `times` monomial' 0 gy `plus` Semiring.negate (xs `times` monomial' (yp - xp) gx))
+      EQ -> gcdHelper xs (ys `times` monomial' 0 gy `plus` Semiring.negate (xs `times` monomial' 0 gx))
+      GT -> gcdHelper (xs `times` monomial' 0 gx `plus` Semiring.negate (ys `times` monomial' (xp - yp) gy)) ys
       where
         g = lcm xc yc
         gx = fromMaybe err $ divide g xc

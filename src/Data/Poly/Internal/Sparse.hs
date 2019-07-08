@@ -21,14 +21,14 @@ module Data.Poly.Internal.Sparse
   , leading
   -- * Num interface
   , toPoly
-  , constant
+  , monomial
   , pattern X
   , eval
   , deriv
   , integral
   -- * Semiring interface
   , toPoly'
-  , constant'
+  , monomial'
   , pattern X'
   , eval'
   , deriv'
@@ -392,15 +392,15 @@ convolution p add mult xs ys
         gogo slicesNew' bufferNew' buffer'
 {-# INLINE convolution #-}
 
--- | Create a polynomial from a constant term.
-constant :: (Eq a, Num a, G.Vector v (Word, a)) => a -> Poly v a
-constant 0 = Poly G.empty
-constant c = Poly $ G.singleton (0, c)
+-- | Create a monomial from a power and a coefficient.
+monomial :: (Eq a, Num a, G.Vector v (Word, a)) => Word -> a -> Poly v a
+monomial _ 0 = Poly G.empty
+monomial p c = Poly $ G.singleton (p, c)
 
-constant' :: (Eq a, Semiring a, G.Vector v (Word, a)) => a -> Poly v a
-constant' c
+monomial' :: (Eq a, Semiring a, G.Vector v (Word, a)) => Word -> a -> Poly v a
+monomial' p c
   | c == zero = Poly G.empty
-  | otherwise = Poly $ G.singleton (0, c)
+  | otherwise = Poly $ G.singleton (p, c)
 
 data Strict3 a b c = Strict3 !a !b !c
 
@@ -475,7 +475,7 @@ derivPoly p mul xs
 -- | Compute an indefinite integral of a polynomial,
 -- setting constant term to zero.
 --
--- >>> integral (constant 3.0 * X^2 + constant 3.0) :: UPoly Double
+-- >>> integral (3 * X^2 + 3) :: UPoly Double
 -- 1.0 * X^3 + 3.0 * X
 integral :: (Eq a, Fractional a, G.Vector v (Word, a)) => Poly v a -> Poly v a
 integral (Poly xs)

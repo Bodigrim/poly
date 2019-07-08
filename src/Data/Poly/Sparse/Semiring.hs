@@ -18,7 +18,7 @@ module Data.Poly.Sparse.Semiring
   , leading
   -- * Semiring interface
   , toPoly
-  , constant
+  , monomial
   , pattern X
   , eval
   , deriv
@@ -43,9 +43,9 @@ import Data.Poly.Internal.Sparse.GcdDomain ()
 toPoly :: (Eq a, Semiring a, G.Vector v (Word, a)) => v (Word, a) -> Poly v a
 toPoly = Sparse.toPoly'
 
--- | Create a polynomial from a constant term.
-constant :: (Eq a, Semiring a, G.Vector v (Word, a)) => a -> Poly v a
-constant = Sparse.constant'
+-- | Create a monomial from a power and a coefficient.
+monomial :: (Eq a, Semiring a, G.Vector v (Word, a)) => Word -> a -> Poly v a
+monomial = Sparse.monomial'
 
 -- | Create an identity polynomial.
 pattern X :: (Eq a, Semiring a, G.Vector v (Word, a), Eq (v (Word, a))) => Poly v a

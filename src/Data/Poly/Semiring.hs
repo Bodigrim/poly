@@ -17,7 +17,7 @@ module Data.Poly.Semiring
   , leading
   -- * Semiring interface
   , toPoly
-  , constant
+  , monomial
   , pattern X
   , eval
   , deriv
@@ -45,9 +45,9 @@ import Data.Poly.Internal.PolyOverFractional
 toPoly :: (Eq a, Semiring a, G.Vector v a) => v a -> Poly v a
 toPoly = Dense.toPoly'
 
--- | Create a polynomial from a constant term.
-constant :: (Eq a, Semiring a, G.Vector v a) => a -> Poly v a
-constant = Dense.constant'
+-- | Create a monomial from a power and a coefficient.
+monomial :: (Eq a, Semiring a, G.Vector v a) => Word -> a -> Poly v a
+monomial = Dense.monomial'
 
 -- | Create an identity polynomial.
 pattern X :: (Eq a, Semiring a, G.Vector v a, Eq (v a)) => Poly v a

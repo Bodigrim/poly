@@ -116,8 +116,8 @@ evalTestGroup _ =
     \p q r -> e (p * q) r === e p r * e q r
   , testProperty "eval x p = p" $
     \p -> e X p === p
-  , testProperty "eval (constant c) p = c" $
-    \c p -> e (constant c) p === c
+  , testProperty "eval (monomial 0 c) p = c" $
+    \c p -> e (monomial 0 c) p === c
 
   , testProperty "eval' (p + q) r = eval' p r + eval' q r" $
     \p q r -> e' (p + q) r === e' p r + e' q r
@@ -125,8 +125,8 @@ evalTestGroup _ =
     \p q r -> e' (p * q) r === e' p r * e' q r
   , testProperty "eval' x p = p" $
     \p -> e' S.X p === p
-  , testProperty "eval' (S.constant c) p = c" $
-    \c p -> e' (S.constant c) p === c
+  , testProperty "eval' (S.monomial 0 c) p = c" $
+    \c p -> e' (S.monomial 0 c) p === c
   ]
 
   where
@@ -142,9 +142,9 @@ derivTests = testGroup "deriv"
   , testProperty "deriv . integral = id" $
     \(p :: Poly V.Vector Rational) -> deriv (integral p) === p
   , testProperty "deriv c = 0" $
-    \c -> deriv (constant c :: Poly V.Vector Int) === 0
+    \c -> deriv (monomial 0 c :: Poly V.Vector Int) === 0
   , testProperty "deriv cX = c" $
-    \c -> deriv (constant c * X :: Poly V.Vector Int) === constant c
+    \c -> deriv (monomial 0 c * X :: Poly V.Vector Int) === monomial 0 c
   , testProperty "deriv (p + q) = deriv p + deriv q" $
     \p q -> deriv (p + q) === (deriv p + deriv q :: Poly V.Vector Int)
   , testProperty "deriv (p * q) = p * deriv q + q * deriv p" $
@@ -152,6 +152,6 @@ derivTests = testGroup "deriv"
   -- The following property takes too long for a regular test-suite
   -- , testProperty "deriv (eval p q) = deriv q * eval (deriv p) q" $
   --   \(p :: Poly V.Vector Int) (q :: Poly U.Vector Int) ->
-  --     deriv (eval (toPoly $ fmap constant $ unPoly p) q) ===
-  --       deriv q * eval (toPoly $ fmap constant $ unPoly $ deriv p) q
+  --     deriv (eval (toPoly $ fmap (monomial 0) $ unPoly p) q) ===
+  --       deriv q * eval (toPoly $ fmap (monomial 0) $ unPoly $ deriv p) q
   ]

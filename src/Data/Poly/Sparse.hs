@@ -17,7 +17,7 @@ module Data.Poly.Sparse
   , leading
   -- * Num interface
   , toPoly
-  , constant
+  , monomial
   , pattern X
   , eval
   , deriv

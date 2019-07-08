@@ -22,14 +22,14 @@ module Data.Poly.Internal.Dense
   , dropWhileEndM
   -- * Num interface
   , toPoly
-  , constant
+  , monomial
   , pattern X
   , eval
   , deriv
   , integral
   -- * Semiring interface
   , toPoly'
-  , constant'
+  , monomial'
   , pattern X'
   , eval'
   , deriv'
@@ -245,15 +245,15 @@ convolution zer add mul xs ys
     G.unsafeFreeze zs
 {-# INLINE convolution #-}
 
--- | Create a polynomial from a constant term.
-constant :: (Eq a, Num a, G.Vector v a) => a -> Poly v a
-constant 0 = Poly G.empty
-constant c = Poly $ G.singleton c
+-- | Create a monomial from a power and a coefficient.
+monomial :: (Eq a, Num a, G.Vector v a) => Word -> a -> Poly v a
+monomial _ 0 = Poly G.empty
+monomial p c = Poly $ G.generate (fromIntegral p + 1) (\i -> if i == fromIntegral p then c else 0)
 
-constant' :: (Eq a, Semiring a, G.Vector v a) => a -> Poly v a
-constant' c
+monomial' :: (Eq a, Semiring a, G.Vector v a) => Word -> a -> Poly v a
+monomial' p c
   | c == zero = Poly G.empty
-  | otherwise = Poly $ G.singleton c
+  | otherwise = Poly $ G.generate (fromIntegral p + 1) (\i -> if i == fromIntegral p then c else zero)
 
 data StrictPair a b = !a :*: !b
 
@@ -297,7 +297,7 @@ deriv' (Poly xs)
 -- | Compute an indefinite integral of a polynomial,
 -- setting constant term to zero.
 --
--- >>> integral (constant 3.0 * X^2 + constant 3.0) :: UPoly Double
+-- >>> integral (3 * X^2 + 3) :: UPoly Double
 -- 1.0 * X^3 + 0.0 * X^2 + 3.0 * X + 0.0
 integral :: (Eq a, Fractional a, G.Vector v a) => Poly v a -> Poly v a
 integral (Poly xs)
