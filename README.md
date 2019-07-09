@@ -1,6 +1,8 @@
-# poly [![Build Status](https://travis-ci.org/Bodigrim/poly.svg)](https://travis-ci.org/Bodigrim/poly) [![Hackage](http://img.shields.io/hackage/v/poly.svg)](https://hackage.haskell.org/package/poly)
+# poly [![Build Status](https://travis-ci.org/Bodigrim/poly.svg)](https://travis-ci.org/Bodigrim/poly) [![Hackage](http://img.shields.io/hackage/v/poly.svg)](https://hackage.haskell.org/package/poly) [![Hackage CI](https://matrix.hackage.haskell.org/api/v2/packages/poly/badge)](https://matrix.hackage.haskell.org/package/poly) [![Stackage LTS](http://stackage.org/package/poly/badge/lts)](http://stackage.org/lts/package/poly) [![Stackage Nightly](http://stackage.org/package/poly/badge/nightly)](http://stackage.org/nightly/package/poly)
 
-Univariate polynomials, backed by `Vector`.
+
+
+Haskell library for univariate polynomials, backed by `Vector`.
 
 ```haskell
 > (X + 1) + (X - 1) :: VPoly Integer
@@ -122,3 +124,5 @@ The same API is exposed in four flavours:
   because of a more readable `Show` instance, skipping zero coefficients.
 
 * `Data.Poly.Sparse.Semiring` provides sparse polynomials with `Semiring`-based interface.
+
+All flavours are available backed by boxed or unboxed vectors.
