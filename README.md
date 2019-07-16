@@ -28,7 +28,7 @@ type UPoly a = Poly Data.Vector.Unboxed.Vector a
 The simplest way to construct a polynomial is using the pattern `X`:
 
 ```haskell
-> X^2 - 3*X + 2 :: UPoly Int
+> X^2 - 3 * X + 2 :: UPoly Int
 1 * X^2 + (-3) * X + 2
 ```
 
@@ -44,8 +44,8 @@ While being convenient to read and write in REPL, `X` is relatively slow. The fa
 There is a shortcut to construct a monomial:
 
 ```haskell
-> monomial 2 3 :: UPoly Int
-3 * X^2 + 0 * X + 0
+> monomial 2 3.5 :: UPoly Double
+3.5 * X^2 + 0.0 * X + 0.0
 ```
 
 ## Operations
@@ -60,8 +60,8 @@ Most operations are provided by means of instances, like `Eq` and `Num`. For exa
 One can also find convenient to `scale` by monomial (cf. `monomial` above):
 
 ```haskell
-> scale 2 3 (X^2 + 1) :: UPoly Int
-3 * X^4 + 0 * X^3 + 3 * X^2 + 0 * X + 0
+> scale 2 3.5 (X^2 + 1) :: UPoly Double
+3.5 * X^4 + 0.0 * X^3 + 3.5 * X^2 + 0.0 * X + 0.0
 ```
 
 While `Poly` cannot be made an instance of `Integral` (because there is no meaningful `toInteger`),
@@ -83,9 +83,6 @@ and reciprocals `deriv` / `integral`:
 > eval (X^2 + 1 :: UPoly Int) 3
 10
 
-> eval (X^2 + 1 :: VPoly (UPoly Int)) (X + 1)
-1 * X^2 + 2 * X + 2
-
 > deriv (X^3 + 3 * X) :: UPoly Double
 3.0 * X^2 + 0.0 * X + 3.0
 
@@ -102,12 +99,12 @@ Use `unPoly` to deconstruct a polynomial to a vector of coefficients (head is th
 [2,-3,1]
 ```
 
-Further, `leading` is a shortcut to to obtain the leading term of a non-zero polynomial,
+Further, `leading` is a shortcut to obtain the leading term of a non-zero polynomial,
 expressed as a power and a coefficient:
 
 ```haskell
-> leading (X^2 - 3 * X + 2 :: UPoly Int)
-Just (2,1)
+> leading (X^2 - 3 * X + 2 :: UPoly Double)
+Just (2,1.0)
 ```
 
 ## Flavours
