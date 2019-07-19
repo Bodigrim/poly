@@ -7,6 +7,7 @@
 -- Sparse polynomials of one variable.
 --
 
+{-# LANGUAGE CPP                  #-}
 {-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE PatternSynonyms      #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
@@ -48,6 +49,10 @@ import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as MG
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Algorithms.Tim as Tim
+#if !MIN_VERSION_semirings(0,4,0)
+import Data.Semigroup
+import Numeric.Natural
+#endif
 
 -- | Polynomials of one variable with coefficients from @a@,
 -- backed by a 'G.Vector' @v@ (boxed, unboxed, storable, etc.).
@@ -184,15 +189,18 @@ instance (Eq a, Semiring a, G.Vector v (Word, a)) => Semiring (Poly v a) where
     | otherwise = Poly $ G.singleton (0, one)
   plus (Poly xs) (Poly ys) = Poly $ plusPoly (/= zero) plus xs ys
   times (Poly xs) (Poly ys) = Poly $ convolution (/= zero) plus times xs ys
-  fromNatural n = if n' == zero then zero else Poly $ G.singleton (0, n')
-    where
-      n' :: a
-      n' = fromNatural n
   {-# INLINE zero #-}
   {-# INLINE one #-}
   {-# INLINE plus #-}
   {-# INLINE times #-}
+
+#if MIN_VERSION_semirings(0,4,0)
+  fromNatural n = if n' == zero then zero else Poly $ G.singleton (0, n')
+    where
+      n' :: a
+      n' = fromNatural n
   {-# INLINE fromNatural #-}
+#endif
 
 instance (Eq a, Semiring.Ring a, G.Vector v (Word, a)) => Semiring.Ring (Poly v a) where
   negate (Poly xs) = Poly $ G.map (fmap Semiring.negate) xs
@@ -472,6 +480,17 @@ deriv' (Poly xs) = Poly $ derivPoly
   (\p c -> fromNatural (fromIntegral p) `times` c)
   xs
 {-# INLINE deriv' #-}
+
+#if !MIN_VERSION_semirings(0,4,0)
+fromNatural :: Semiring a => Natural -> a
+fromNatural 0 = zero
+fromNatural n = getAdd' (stimes n (Add' one))
+
+newtype Add' a = Add' { getAdd' :: a }
+
+instance Semiring a => Semigroup (Add' a) where
+  Add' a <> Add' b = Add' (a `plus` b)
+#endif
 
 derivPoly
   :: G.Vector v (Word, a)

@@ -7,6 +7,7 @@
 -- GcdDomain for Fractional underlying
 --
 
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE PatternSynonyms            #-}
@@ -15,6 +16,8 @@
 {-# LANGUAGE ViewPatterns               #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+
+#if MIN_VERSION_semirings(0,4,2)
 
 module Data.Poly.Internal.Dense.Fractional
   ( fractionalGcd
@@ -127,3 +130,9 @@ gcdM xs ys = do
     remainderM xs ys'
     gcdM ys' xs
 {-# INLINE gcdM #-}
+
+#else
+
+module Data.Poly.Internal.Dense.Fractional () where
+
+#endif

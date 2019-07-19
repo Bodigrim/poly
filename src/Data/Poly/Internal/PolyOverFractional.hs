@@ -7,9 +7,12 @@
 -- Wrapper with a more efficient 'Euclidean' instance.
 --
 
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE UndecidableInstances       #-}
+
+#if MIN_VERSION_semirings(0,4,2)
 
 module Data.Poly.Internal.PolyOverFractional
   ( PolyOverFractional(..)
@@ -44,3 +47,9 @@ instance (Eq a, Eq (v a), Semiring.Ring a, GcdDomain a, Fractional a, G.Vector v
   rem (PolyOverFractional x) (PolyOverFractional y) =
     PolyOverFractional (rem x y)
   {-# INLINE rem #-}
+
+#else
+
+module Data.Poly.Internal.PolyOverFractional () where
+
+#endif

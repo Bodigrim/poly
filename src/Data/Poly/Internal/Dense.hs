@@ -7,6 +7,7 @@
 -- Dense polynomials of one variable.
 --
 
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE PatternSynonyms            #-}
@@ -48,6 +49,10 @@ import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as MG
 import qualified Data.Vector.Unboxed as U
+#if !MIN_VERSION_semirings(0,4,0)
+import Data.Semigroup
+import Numeric.Natural
+#endif
 
 -- | Polynomials of one variable with coefficients from @a@,
 -- backed by a 'G.Vector' @v@ (boxed, unboxed, storable, etc.).
@@ -147,6 +152,14 @@ instance (Eq a, Semiring a, G.Vector v a) => Semiring (Poly v a) where
   {-# INLINE one #-}
   {-# INLINE plus #-}
   {-# INLINE times #-}
+
+#if MIN_VERSION_semirings(0,4,0)
+  fromNatural n = if n' == zero then zero else Poly $ G.singleton n'
+    where
+      n' :: a
+      n' = fromNatural n
+  {-# INLINE fromNatural #-}
+#endif
 
 instance (Eq a, Semiring.Ring a, G.Vector v a) => Semiring.Ring (Poly v a) where
   negate (Poly xs) = Poly $ G.map Semiring.negate xs
@@ -322,6 +335,17 @@ deriv' (Poly xs)
   | G.null xs = Poly G.empty
   | otherwise = toPoly' $ G.imap (\i x -> fromNatural (fromIntegral (i + 1)) `times` x) $ G.tail xs
 {-# INLINE deriv' #-}
+
+#if !MIN_VERSION_semirings(0,4,0)
+fromNatural :: Semiring a => Natural -> a
+fromNatural 0 = zero
+fromNatural n = getAdd' (stimes n (Add' one))
+
+newtype Add' a = Add' { getAdd' :: a }
+
+instance Semiring a => Semigroup (Add' a) where
+  Add' a <> Add' b = Add' (a `plus` b)
+#endif
 
 -- | Compute an indefinite integral of a polynomial,
 -- setting constant term to zero.

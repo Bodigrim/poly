@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP        #-}
 {-# LANGUAGE RankNTypes #-}
 
 module DenseBench
@@ -6,10 +7,12 @@ module DenseBench
 
 import Prelude hiding (quotRem, gcd)
 import Gauge.Main
-import Data.Euclidean
 import Data.Poly
-import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
+#if MIN_VERSION_semirings(0,4,2)
+import Data.Euclidean
+import qualified Data.Vector as V
+#endif
 
 benchSuite :: Benchmark
 benchSuite = bgroup "dense" $ concat
@@ -18,9 +21,11 @@ benchSuite = bgroup "dense" $ concat
   , map benchEval     [100, 1000, 10000]
   , map benchDeriv    [100, 1000, 10000]
   , map benchIntegral [100, 1000, 10000]
+#if MIN_VERSION_semirings(0,4,2)
   , map benchQuotRem  [10, 100]
   , map benchGcdFrac  [10, 100]
   , map benchGcd      [10, 100]
+#endif
   ]
 
 benchAdd :: Int -> Benchmark
@@ -38,6 +43,8 @@ benchDeriv k = bench ("deriv/" ++ show k) $ nf doDeriv k
 benchIntegral :: Int -> Benchmark
 benchIntegral k = bench ("integral/" ++ show k) $ nf doIntegral k
 
+#if MIN_VERSION_semirings(0,4,2)
+
 benchQuotRem :: Int -> Benchmark
 benchQuotRem k = bench ("quotRem/" ++ show k) $ nf doQuotRem k
 
@@ -46,6 +53,8 @@ benchGcd k = bench ("gcd/" ++ show k) $ nf doGcd k
 
 benchGcdFrac :: Int -> Benchmark
 benchGcdFrac k = bench ("gcdFrac/" ++ show k) $ nf doGcdFrac k
+
+#endif
 
 doBinOp :: (forall a. Num a => a -> a -> a) -> Int -> Int
 doBinOp op n = U.sum zs
@@ -72,6 +81,8 @@ doIntegral n = U.sum zs
     xs = toPoly $ U.generate n ((* 2) . fromIntegral)
     zs = unPoly $ integral xs
 
+#if MIN_VERSION_semirings(0,4,2)
+
 doQuotRem :: Int -> Double
 doQuotRem n = U.sum (unPoly qs) + U.sum (unPoly rs)
   where
@@ -92,3 +103,5 @@ doGcdFrac n = V.sum gs
     xs = PolyOverFractional $ toPoly $ V.generate n ((+ 1) . (* 2) . fromIntegral)
     ys = PolyOverFractional $ toPoly $ V.generate n ((+ 2) . (* 3) . fromIntegral)
     gs = unPoly $ unPolyOverFractional $ xs `gcd` ys
+
+#endif

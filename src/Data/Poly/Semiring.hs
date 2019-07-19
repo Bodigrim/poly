@@ -7,6 +7,7 @@
 -- Dense polynomials and a 'Semiring'-based interface.
 --
 
+{-# LANGUAGE CPP                 #-}
 {-# LANGUAGE PatternSynonyms     #-}
 
 module Data.Poly.Semiring
@@ -22,8 +23,10 @@ module Data.Poly.Semiring
   , pattern X
   , eval
   , deriv
+#if MIN_VERSION_semirings(0,4,2)
   -- * Fractional coefficients
   , PolyOverFractional(..)
+#endif
   ) where
 
 import Data.Semiring (Semiring)
@@ -31,9 +34,11 @@ import qualified Data.Vector.Generic as G
 
 import Data.Poly.Internal.Dense (Poly(..), VPoly, UPoly, leading)
 import qualified Data.Poly.Internal.Dense as Dense
+#if MIN_VERSION_semirings(0,4,2)
 import Data.Poly.Internal.Dense.Fractional ()
 import Data.Poly.Internal.Dense.GcdDomain ()
 import Data.Poly.Internal.PolyOverFractional
+#endif
 
 -- | Make 'Poly' from a vector of coefficients
 -- (first element corresponds to a constant term).

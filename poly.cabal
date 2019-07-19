@@ -39,7 +39,7 @@ library
   build-depends:
     base >= 4.9 && < 5,
     primitive,
-    semirings >= 0.4,
+    semirings >= 0.2,
     vector,
     vector-algorithms
   default-language: Haskell2010
@@ -55,7 +55,7 @@ test-suite poly-tests
     base >=4.9 && <5,
     poly,
     QuickCheck >=2.10,
-    quickcheck-classes >=0.6.1,
+    quickcheck-classes >=0.5,
     semirings,
     tasty,
     tasty-quickcheck,

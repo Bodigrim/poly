@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
@@ -9,7 +10,9 @@ module Dense
   ) where
 
 import Prelude hiding (quotRem)
+#if MIN_VERSION_semirings(0,4,2)
 import Data.Euclidean
+#endif
 import Data.Int
 import Data.Poly
 import qualified Data.Poly.Semiring as S
@@ -26,12 +29,22 @@ instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (Poly v a) w
   arbitrary = S.toPoly . G.fromList <$> arbitrary
   shrink = fmap (S.toPoly . G.fromList) . shrink . G.toList . unPoly
 
+#if MIN_VERSION_semirings(0,4,2)
 instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (PolyOverFractional (Poly v a)) where
   arbitrary = PolyOverFractional . S.toPoly . G.fromList . (\xs -> take (length xs `mod` 10) xs) <$> arbitrary
   shrink = fmap (PolyOverFractional . S.toPoly . G.fromList) . shrink . G.toList . unPoly . unPolyOverFractional
+#endif
 
 newtype ShortPoly a = ShortPoly { unShortPoly :: a }
-  deriving (Eq, Show, Semiring, GcdDomain, Euclidean)
+  deriving
+    ( Eq
+    , Show
+    , Semiring
+#if MIN_VERSION_semirings(0,4,2)
+    , GcdDomain
+    , Euclidean
+#endif
+    )
 
 instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (ShortPoly (Poly v a)) where
   arbitrary = ShortPoly . S.toPoly . G.fromList . (\xs -> take (length xs `mod` 10) xs) <$> arbitrary
@@ -44,7 +57,9 @@ testSuite = testGroup "Dense"
     , semiringTests
     , evalTests
     , derivTests
+#if MIN_VERSION_semirings(0,4,2)
     -- , euclideanTests
+#endif
     ]
 
 semiringTests :: TestTree
@@ -53,13 +68,16 @@ semiringTests
   $ map (uncurry testProperty)
   $ concatMap lawsProperties
   [ semiringLaws (Proxy :: Proxy (Poly U.Vector ()))
-  ,     ringLaws (Proxy :: Proxy (Poly U.Vector ()))
   , semiringLaws (Proxy :: Proxy (Poly U.Vector Int8))
-  ,     ringLaws (Proxy :: Proxy (Poly U.Vector Int8))
   , semiringLaws (Proxy :: Proxy (Poly V.Vector Integer))
-  ,     ringLaws (Proxy :: Proxy (Poly V.Vector Integer))
+#if MIN_VERSION_quickcheck_classes(0,6,1)
+  , ringLaws (Proxy :: Proxy (Poly U.Vector ()))
+  , ringLaws (Proxy :: Proxy (Poly U.Vector Int8))
+  , ringLaws (Proxy :: Proxy (Poly V.Vector Integer))
+#endif
   ]
 
+#if MIN_VERSION_semirings(0,4,2)
 -- euclideanTests :: TestTree
 -- euclideanTests
 --   = testGroup "Euclidean"
@@ -69,6 +87,7 @@ semiringTests
 --   , gcdDomainLaws (Proxy :: Proxy (PolyOverFractional (Poly V.Vector Rational)))
 --   , euclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
 --   ]
+#endif
 
 arithmeticTests :: TestTree
 arithmeticTests = testGroup "Arithmetic"

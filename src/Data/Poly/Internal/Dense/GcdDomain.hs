@@ -7,6 +7,7 @@
 -- GcdDomain for GcdDomain underlying
 --
 
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE PatternSynonyms            #-}
@@ -18,6 +19,8 @@
 
 module Data.Poly.Internal.Dense.GcdDomain
   () where
+
+#if MIN_VERSION_semirings(0,4,2)
 
 import Prelude hiding (gcd, lcm, (^))
 import Control.Exception
@@ -171,3 +174,5 @@ quotient xs ys
 
     go (lenQs - 1)
 {-# INLINE quotient #-}
+
+#endif

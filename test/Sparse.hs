@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -11,7 +12,9 @@ module Sparse
   ) where
 
 import Prelude hiding (quotRem)
+#if MIN_VERSION_semirings(0,4,2)
 import Data.Euclidean
+#endif
 import Data.Function
 import Data.Int
 import Data.List
@@ -31,7 +34,15 @@ instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a)) => Arbitrary (Pol
   shrink = fmap (S.toPoly . G.fromList) . shrink . G.toList . unPoly
 
 newtype ShortPoly a = ShortPoly { unShortPoly :: a }
-  deriving (Eq, Show, Semiring, GcdDomain, Euclidean)
+  deriving
+    ( Eq
+    , Show
+    , Semiring
+#if MIN_VERSION_semirings(0,4,2)
+    , GcdDomain
+    , Euclidean
+#endif
+    )
 
 instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a)) => Arbitrary (ShortPoly (Poly v a)) where
   arbitrary = ShortPoly . S.toPoly . G.fromList . (\xs -> take (length xs `mod` 5) xs) <$> arbitrary
@@ -52,11 +63,13 @@ semiringTests
   $ map (uncurry testProperty)
   $ concatMap lawsProperties
   [ semiringLaws (Proxy :: Proxy (Poly U.Vector ()))
-  ,     ringLaws (Proxy :: Proxy (Poly U.Vector ()))
   , semiringLaws (Proxy :: Proxy (Poly U.Vector Int8))
-  ,     ringLaws (Proxy :: Proxy (Poly U.Vector Int8))
   , semiringLaws (Proxy :: Proxy (Poly V.Vector Integer))
-  ,     ringLaws (Proxy :: Proxy (Poly V.Vector Integer))
+#if MIN_VERSION_quickcheck_classes(0,6,1)
+  , ringLaws (Proxy :: Proxy (Poly U.Vector ()))
+  , ringLaws (Proxy :: Proxy (Poly U.Vector Int8))
+  , ringLaws (Proxy :: Proxy (Poly V.Vector Integer))
+#endif
   ]
 
 arithmeticTests :: TestTree

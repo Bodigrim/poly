@@ -7,6 +7,7 @@
 -- GcdDomain for Fractional underlying
 --
 
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -17,6 +18,8 @@
 {-# LANGUAGE ViewPatterns               #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+
+#if MIN_VERSION_semirings(0,4,2)
 
 module Data.Poly.Internal.Sparse.Fractional
   ( fractionalGcd
@@ -67,3 +70,9 @@ fractionalGcd xs ys
   | G.null (unPoly ys) = xs
   | otherwise = fractionalGcd ys $ snd $ quotientRemainder xs ys
 {-# INLINE fractionalGcd #-}
+
+#else
+
+module Data.Poly.Internal.Sparse.Fractional () where
+
+#endif
