@@ -1,3 +1,8 @@
+# 0.3.1.0
+
+* Implement Karatsuba multiplication.
+* Add `IsList` instance.
+
 # 0.3.0.0
 
 * Implement sparse polynomials.
