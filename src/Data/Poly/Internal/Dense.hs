@@ -321,11 +321,13 @@ convolution zer add mul xs ys
 monomial :: (Eq a, Num a, G.Vector v a) => Word -> a -> Poly v a
 monomial _ 0 = Poly G.empty
 monomial p c = Poly $ G.generate (fromIntegral p + 1) (\i -> if i == fromIntegral p then c else 0)
+{-# INLINE monomial #-}
 
 monomial' :: (Eq a, Semiring a, G.Vector v a) => Word -> a -> Poly v a
 monomial' p c
   | c == zero = Poly G.empty
   | otherwise = Poly $ G.generate (fromIntegral p + 1) (\i -> if i == fromIntegral p then c else zero)
+{-# INLINE monomial' #-}
 
 scaleInternal
   :: (Eq a, G.Vector v a)
@@ -343,6 +345,7 @@ scaleInternal zer mul yp yc xs = runST $ do
   forM_ [0 .. lenXs - 1] $ \k ->
     MG.unsafeWrite zs (fromIntegral yp + k) (mul yc $ G.unsafeIndex xs k)
   G.unsafeFreeze zs
+{-# INLINE scaleInternal #-}
 
 -- | Multiply a polynomial by a monomial, expressed as a power and a coefficient.
 --
