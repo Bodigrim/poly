@@ -38,7 +38,7 @@ module Data.Poly.Internal.Dense
   , deriv'
   ) where
 
-import Prelude hiding (quotRem, quot, rem, gcd, lcm, (^))
+import Prelude hiding (quotRem, rem, gcd, lcm, (^))
 import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
@@ -141,7 +141,7 @@ instance (Eq a, Num a, G.Vector v a) => Num (Poly v a) where
   fromInteger n = case fromInteger n of
     0 -> Poly $ G.empty
     m -> Poly $ G.singleton m
-  Poly xs * Poly ys = toPoly $ convolution 0 (+) (*) xs ys
+  Poly xs * Poly ys = toPoly $ karatsuba xs ys
   {-# INLINE (+) #-}
   {-# INLINE (-) #-}
   {-# INLINE negate #-}
@@ -244,6 +244,56 @@ minusPoly neg sub xs ys = runST $ do
   G.unsafeFreeze zs
 {-# INLINE minusPoly #-}
 
+karatsubaThreshold :: Int
+karatsubaThreshold = 32
+
+karatsuba
+  :: (Eq a, Num a, G.Vector v a)
+  => v a
+  -> v a
+  -> v a
+karatsuba xs ys
+  | lenXs <= karatsubaThreshold || lenYs <= karatsubaThreshold
+  = convolution 0 (+) (*) xs ys
+  | otherwise = runST $ do
+    zs <- MG.basicUnsafeNew lenZs
+    forM_ [0 .. lenZs - 1] $ \k -> do
+      let z0 = if k < G.basicLength zs0
+               then G.unsafeIndex zs0 k
+               else 0
+          z11 = if k - m >= 0 && k - m < G.basicLength zs11
+               then G.unsafeIndex zs11 (k - m)
+               else 0
+          z10 = if k - m >= 0 && k - m < G.basicLength zs0
+               then G.unsafeIndex zs0 (k - m)
+               else 0
+          z12 = if k - m >= 0 && k - m < G.basicLength zs2
+               then G.unsafeIndex zs2 (k - m)
+               else 0
+          z2 = if k - 2 * m >= 0 && k - 2 * m < G.basicLength zs2
+               then G.unsafeIndex zs2 (k - 2 * m)
+               else 0
+      MG.unsafeWrite zs k (z0 + (z11 - z10 - z12) + z2)
+    G.unsafeFreeze zs
+  where
+    lenXs = G.basicLength xs
+    lenYs = G.basicLength ys
+    lenZs = lenXs + lenYs - 1
+
+    m    = ((lenXs `min` lenYs) + 1) `quot` 2
+
+    xs0  = G.slice 0 m xs
+    xs1  = G.slice m (lenXs - m) xs
+    ys0  = G.slice 0 m ys
+    ys1  = G.slice m (lenYs - m) ys
+
+    xs01 = plusPoly (+) xs0 xs1
+    ys01 = plusPoly (+) ys0 ys1
+    zs0  = karatsuba xs0 ys0
+    zs2  = karatsuba xs1 ys1
+    zs11 = karatsuba xs01 ys01
+{-# INLINE karatsuba #-}
+
 convolution
   :: G.Vector v a
   => a
@@ -283,9 +333,9 @@ scaleInternal
   -> (a -> a -> a)
   -> Word
   -> a
-  -> Poly v a
   -> v a
-scaleInternal zer mul yp yc (Poly xs) = runST $ do
+  -> v a
+scaleInternal zer mul yp yc xs = runST $ do
   let lenXs = G.basicLength xs
   zs <- MG.basicUnsafeNew (fromIntegral yp + lenXs)
   forM_ [0 .. fromIntegral yp - 1] $ \k ->
@@ -299,10 +349,10 @@ scaleInternal zer mul yp yc (Poly xs) = runST $ do
 -- >>> scale 2 3 (X^2 + 1) :: UPoly Int
 -- 3 * X^4 + 0 * X^3 + 3 * X^2 + 0 * X + 0
 scale :: (Eq a, Num a, G.Vector v a) => Word -> a -> Poly v a -> Poly v a
-scale yp yc xs = toPoly $ scaleInternal 0 (*) yp yc xs
+scale yp yc (Poly xs) = toPoly $ scaleInternal 0 (*) yp yc xs
 
 scale' :: (Eq a, Semiring a, G.Vector v a) => Word -> a -> Poly v a -> Poly v a
-scale' yp yc xs = toPoly' $ scaleInternal zero times yp yc xs
+scale' yp yc (Poly xs) = toPoly' $ scaleInternal zero times yp yc xs
 
 data StrictPair a b = !a :*: !b
 
