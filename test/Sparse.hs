@@ -29,6 +29,8 @@ import Test.Tasty
 import Test.Tasty.QuickCheck hiding (scale)
 import Test.QuickCheck.Classes
 
+import Quaternion
+
 instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a)) => Arbitrary (Poly v a) where
   arbitrary = S.toPoly . G.fromList <$> arbitrary
   shrink = fmap (S.toPoly . G.fromList) . shrink . G.toList . unPoly
@@ -65,10 +67,12 @@ semiringTests
   [ semiringLaws (Proxy :: Proxy (Poly U.Vector ()))
   , semiringLaws (Proxy :: Proxy (Poly U.Vector Int8))
   , semiringLaws (Proxy :: Proxy (Poly V.Vector Integer))
+  , semiringLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
 #if MIN_VERSION_quickcheck_classes(0,6,1)
   , ringLaws (Proxy :: Proxy (Poly U.Vector ()))
   , ringLaws (Proxy :: Proxy (Poly U.Vector Int8))
   , ringLaws (Proxy :: Proxy (Poly V.Vector Integer))
+  , ringLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
 #endif
   ]
 
@@ -111,15 +115,25 @@ mulRef xs ys
   $ [ (xp + yp, xc * yc) | (xp, xc) <- xs, (yp, yc) <- ys ]
 
 otherTests :: TestTree
-otherTests = testGroup "Other"
+otherTests = testGroup "other" $ concat
+  [ otherTestGroup (Proxy :: Proxy Int8)
+  , otherTestGroup (Proxy :: Proxy (Quaternion Int))
+  ]
+
+otherTestGroup
+  :: forall a.
+     (Eq a, Show a, Semiring a, Num a, Arbitrary a, U.Unbox a, G.Vector U.Vector a)
+  => Proxy a
+  -> [TestTree]
+otherTestGroup _ =
   [ testProperty "leading p 0 == Nothing" $
-    \p -> leading (monomial p 0 :: UPoly Int) === Nothing
+    \p -> leading (monomial p 0 :: UPoly a) === Nothing
   , testProperty "leading . monomial = id" $
-    \p c -> c /= 0 ==> leading (monomial p c :: UPoly Int) === Just (p, c)
+    \p c -> c /= 0 ==> leading (monomial p c :: UPoly a) === Just (p, c)
   , testProperty "monomial matches reference" $
-    \p (c :: Int) -> monomial p c === toPoly (V.fromList (monomialRef p c))
+    \p (c :: a) -> monomial p c === toPoly (V.fromList (monomialRef p c))
   , testProperty "scale matches multiplication by monomial" $
-    \p c (xs :: UPoly Int) -> scale p c xs === monomial p c * xs
+    \p c (xs :: UPoly a) -> scale p c xs === monomial p c * xs
   ]
 
 monomialRef :: Num a => Word -> a -> [(Word, a)]

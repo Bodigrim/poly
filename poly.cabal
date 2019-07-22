@@ -50,6 +50,7 @@ test-suite poly-tests
   main-is: Main.hs
   other-modules:
     Dense
+    Quaternion
     Sparse
   build-depends:
     base >=4.9 && <5,
