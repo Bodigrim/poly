@@ -130,3 +130,16 @@ The same API is exposed in four flavours:
 * `Data.Poly.Sparse.Semiring` provides sparse polynomials with `Semiring`-based interface.
 
 All flavours are available backed by boxed or unboxed vectors.
+
+## Benchmarks
+
+As a rough guide, `poly` is 20x-40x faster than [`polynomial`](http://hackage.haskell.org/package/polynomial) library.
+Here is a couple of benchmarks for `UPoly Int`.
+
+| Benchmark                     | polynomial, μs  | poly, μs | speedup
+| :---------------------------- | --------------: | -------: | ------:
+| addition, 100 coeffs.         |              45 |       2  |  22x
+| addition, 1000 coeffs.        |             441 |      17  |  25x
+| addition, 10000 coeffs.       |            6545 |     167  |  39x
+| multiplication, 100 coeffs.   |            1733 |      40  |  43x
+| multiplication, 1000 coeffs.  |          442000 |    3302  | 133x

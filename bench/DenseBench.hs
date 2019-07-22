@@ -17,7 +17,7 @@ import qualified Data.Vector as V
 benchSuite :: Benchmark
 benchSuite = bgroup "dense" $ concat
   [ map benchAdd      [100, 1000, 10000]
-  , map benchMul      [10, 100]
+  , map benchMul      [100, 1000, 10000]
   , map benchEval     [100, 1000, 10000]
   , map benchDeriv    [100, 1000, 10000]
   , map benchIntegral [100, 1000, 10000]
