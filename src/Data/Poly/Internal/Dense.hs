@@ -49,6 +49,7 @@ import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as MG
 import qualified Data.Vector.Unboxed as U
+import GHC.Exts
 #if !MIN_VERSION_semirings(0,4,0)
 import Data.Semigroup
 import Numeric.Natural
@@ -76,6 +77,12 @@ newtype Poly v a = Poly
   -- (first element corresponds to a constant term).
   }
   deriving (Eq, Ord)
+
+instance (Eq a, Semiring a, G.Vector v a) => IsList (Poly v a) where
+  type Item (Poly v a) = a
+  fromList = toPoly' . G.fromList
+  fromListN = (toPoly' .) . G.fromListN
+  toList = G.toList . unPoly
 
 instance (Show a, G.Vector v a) => Show (Poly v a) where
   showsPrec d (Poly xs)

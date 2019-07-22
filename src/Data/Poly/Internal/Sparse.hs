@@ -12,6 +12,7 @@
 {-# LANGUAGE PatternSynonyms      #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE StandaloneDeriving   #-}
+{-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns         #-}
 
@@ -49,6 +50,7 @@ import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as MG
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Algorithms.Tim as Tim
+import GHC.Exts
 #if !MIN_VERSION_semirings(0,4,0)
 import Data.Semigroup
 import Numeric.Natural
@@ -78,6 +80,12 @@ newtype Poly v a = Poly
 
 deriving instance Eq   (v (Word, a)) => Eq   (Poly v a)
 deriving instance Ord  (v (Word, a)) => Ord  (Poly v a)
+
+instance (Eq a, Semiring a, G.Vector v (Word, a)) => IsList (Poly v a) where
+  type Item (Poly v a) = (Word, a)
+  fromList = toPoly' . G.fromList
+  fromListN = (toPoly' .) . G.fromListN
+  toList = G.toList . unPoly
 
 instance (Show a, G.Vector v (Word, a)) => Show (Poly v a) where
   showsPrec d (Poly xs)

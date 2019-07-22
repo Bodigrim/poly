@@ -41,6 +41,13 @@ While being convenient to read and write in REPL, `X` is relatively slow. The fa
 1 * X^2 + (-3) * X + 2
 ```
 
+Alternatively one can enable `{-# LANGUAGE OverloadedLists #-}` and simply write
+
+```haskell
+> [2, -3, 1] :: UPoly Int
+1 * X^2 + (-3) * X + 2
+```
+
 There is a shortcut to construct a monomial:
 
 ```haskell
