@@ -39,6 +39,7 @@ module Data.Poly.Internal.Dense
   ) where
 
 import Prelude hiding (quotRem, rem, gcd, lcm, (^))
+import Control.DeepSeq (NFData)
 import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
@@ -76,7 +77,7 @@ newtype Poly v a = Poly
   -- ^ Convert 'Poly' to a vector of coefficients
   -- (first element corresponds to a constant term).
   }
-  deriving (Eq, Ord)
+  deriving (Eq, NFData, Ord)
 
 instance (Eq a, Semiring a, G.Vector v a) => IsList (Poly v a) where
   type Item (Poly v a) = a
