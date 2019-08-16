@@ -8,6 +8,7 @@
 --
 
 {-# LANGUAGE CPP                        #-}
+{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE PatternSynonyms            #-}
@@ -18,7 +19,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Data.Poly.Internal.Dense.GcdDomain
-  () where
+  ( extEuclid
+  ) where
 
 #if MIN_VERSION_semirings(0,4,2)
 
@@ -28,7 +30,7 @@ import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.Euclidean
-import Data.Semiring (Semiring(..), isZero)
+import Data.Semiring (Semiring(..), isZero, minus)
 import qualified Data.Semiring as Semiring
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as MG
@@ -174,5 +176,21 @@ quotient xs ys
 
     go (lenQs - 1)
 {-# INLINE quotient #-}
+
+-- | Extended Euclidean algorithm.
+extEuclid
+  :: (Eq (v a), Euclidean (Poly v a), GcdDomain (Poly v a), Semiring.Ring (Poly v a))
+  => Poly v a
+  -> Poly v a
+  -> (Poly v a, (Poly v a, Poly v a))
+extEuclid xs ys = go ys xs zero one one zero
+  where
+    go r r' s s' t t'
+      | r == zero = (r', (s', t'))
+      | otherwise = case Data.Euclidean.quot r' r of
+        q -> go (r' `minus` q `times` r) r
+                (s' `minus` q `times` s) s
+                (t' `minus` q `times` t) t
+{-# INLINE extEuclid #-}
 
 #endif
