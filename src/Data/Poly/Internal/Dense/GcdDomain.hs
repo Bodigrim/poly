@@ -179,7 +179,7 @@ quotient xs ys
 
 -- | Extended Euclidean algorithm.
 extEuclid
-  :: (Eq (v a), Euclidean (Poly v a), GcdDomain (Poly v a), Semiring.Ring (Poly v a))
+  :: (Eq (v a), Euclidean (Poly v a), Semiring.Ring (Poly v a))
   => Poly v a
   -> Poly v a
   -> (Poly v a, (Poly v a, Poly v a))
