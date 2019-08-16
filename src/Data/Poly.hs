@@ -36,6 +36,6 @@ module Data.Poly
 import Data.Poly.Internal.Dense
 #if MIN_VERSION_semirings(0,4,2)
 import Data.Poly.Internal.Dense.Fractional ()
-import Data.Poly.Internal.Dense.GcdDomain (extEuclid)
+import Data.Poly.Internal.Dense.GcdDomain ()
 import Data.Poly.Internal.PolyOverFractional
 #endif

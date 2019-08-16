@@ -30,14 +30,15 @@ module Data.Poly.Semiring
 #endif
   ) where
 
-import Data.Semiring (Semiring)
+import Data.Semiring (Ring, Semiring)
+import Data.Euclidean (Euclidean)
 import qualified Data.Vector.Generic as G
 
 import Data.Poly.Internal.Dense (Poly(..), VPoly, UPoly, leading)
 import qualified Data.Poly.Internal.Dense as Dense
 #if MIN_VERSION_semirings(0,4,2)
 import Data.Poly.Internal.Dense.Fractional ()
-import Data.Poly.Internal.Dense.GcdDomain (extEuclid)
+import Data.Poly.Internal.Dense.GcdDomain ()
 import Data.Poly.Internal.PolyOverFractional
 #endif
 
@@ -82,3 +83,8 @@ eval = Dense.eval'
 -- 3 * X^2 + 0 * X + 3
 deriv :: (Eq a, Semiring a, G.Vector v a) => Poly v a -> Poly v a
 deriv = Dense.deriv'
+
+-- | Extended Euclidean algorithm.
+extEuclid :: (Eq a, Euclidean a, Fractional a, Ring a, G.Vector v a, Eq (v a))
+  => Poly v a -> Poly v a -> (Poly v a, (Poly v a, Poly v a))
+extEuclid = Dense.extEuclid'

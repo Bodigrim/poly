@@ -8,6 +8,7 @@
 --
 
 {-# LANGUAGE CPP                        #-}
+{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE PatternSynonyms            #-}
@@ -29,6 +30,7 @@ module Data.Poly.Internal.Dense
   , eval
   , deriv
   , integral
+  , extEuclid
   -- * Semiring interface
   , toPoly'
   , monomial'
@@ -36,14 +38,16 @@ module Data.Poly.Internal.Dense
   , pattern X'
   , eval'
   , deriv'
+  , extEuclid'
   ) where
 
-import Prelude hiding (quotRem, rem, gcd, lcm, (^))
+import Prelude hiding (quotRem, quot, rem, gcd, lcm, (^))
 import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.List (foldl', intersperse)
-import Data.Semiring (Semiring(..))
+import Data.Semiring (Semiring(..), minus)
+import Data.Euclidean (Euclidean(..))
 import qualified Data.Semiring as Semiring
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
@@ -446,3 +450,27 @@ var'
   | (one :: a) == zero = Poly G.empty
   | otherwise          = Poly $ G.fromList [zero, one]
 {-# INLINE var' #-}
+
+-- | Extended Euclidean algorithm.
+extEuclid :: (Eq (v a), Euclidean (Poly v a), Num (Poly v a))
+  => Poly v a -> Poly v a -> (Poly v a, (Poly v a, Poly v a))
+extEuclid xs ys = go ys xs 0 1 1 0
+  where
+    go r r' s s' t t'
+      | r == 0 = (r', (s', t'))
+      | otherwise = case quot r' r of
+        q -> go (r' - q * r) r (s' - q * s) s (t' - q * t) t
+{-# INLINE extEuclid #-}
+
+-- | Extended Euclidean algorithm.
+extEuclid' :: (Eq (v a), Euclidean (Poly v a), Semiring.Ring (Poly v a))
+  => Poly v a -> Poly v a -> (Poly v a, (Poly v a, Poly v a))
+extEuclid' xs ys = go ys xs zero one one zero
+  where
+    go r r' s s' t t'
+      | r == zero = (r', (s', t'))
+      | otherwise = case quot r' r of
+        q -> go (r' `minus` q `times` r) r
+                (s' `minus` q `times` s) s
+                (t' `minus` q `times` t) t
+{-# INLINE extEuclid' #-}
