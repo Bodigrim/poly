@@ -26,7 +26,7 @@ import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed as U
 import Test.Tasty
-import Test.Tasty.QuickCheck hiding (scale)
+import Test.Tasty.QuickCheck hiding (scale, numTests)
 import Test.QuickCheck.Classes
 
 import Quaternion
@@ -54,10 +54,20 @@ testSuite :: TestTree
 testSuite = testGroup "Sparse"
     [ arithmeticTests
     , otherTests
-    , semiringTests
+    , lawsTests
     , evalTests
     , derivTests
     ]
+
+lawsTests :: TestTree
+lawsTests = testGroup "Laws"
+  [ semiringTests
+  , ringTests
+  , numTests
+  , euclideanTests
+  , isListTests
+  , showTests
+  ]
 
 semiringTests :: TestTree
 semiringTests
@@ -68,11 +78,69 @@ semiringTests
   , semiringLaws (Proxy :: Proxy (Poly U.Vector Int8))
   , semiringLaws (Proxy :: Proxy (Poly V.Vector Integer))
   , semiringLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
+  ]
+
+ringTests :: TestTree
+ringTests
+  = testGroup "Ring"
+  $ map (uncurry testProperty)
+  $ concatMap lawsProperties
+  [
 #if MIN_VERSION_quickcheck_classes(0,6,1)
-  , ringLaws (Proxy :: Proxy (Poly U.Vector ()))
+    ringLaws (Proxy :: Proxy (Poly U.Vector ()))
   , ringLaws (Proxy :: Proxy (Poly U.Vector Int8))
   , ringLaws (Proxy :: Proxy (Poly V.Vector Integer))
   , ringLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
+#endif
+  ]
+
+numTests :: TestTree
+numTests
+  = testGroup "Num"
+  $ map (uncurry testProperty)
+  $ concatMap lawsProperties
+  [
+#if MIN_VERSION_quickcheck_classes(0,6,3)
+    numLaws (Proxy :: Proxy (Poly U.Vector Int8))
+  , numLaws (Proxy :: Proxy (Poly V.Vector Integer))
+  , numLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
+#endif
+  ]
+
+euclideanTests :: TestTree
+euclideanTests
+  = testGroup "Euclidean"
+  $ map (uncurry testProperty)
+  $ concatMap lawsProperties
+  [
+#if MIN_VERSION_semirings(0,4,2) && MIN_VERSION_quickcheck_classes(0,6,3)
+    gcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Integer)))
+  , euclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
+#endif
+  ]
+
+isListTests :: TestTree
+isListTests
+  = testGroup "IsList"
+  $ map (uncurry testProperty)
+  $ concatMap lawsProperties
+  [ isListLaws (Proxy :: Proxy (Poly U.Vector ()))
+  , isListLaws (Proxy :: Proxy (Poly U.Vector Int8))
+  , isListLaws (Proxy :: Proxy (Poly V.Vector Integer))
+  , isListLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
+  ]
+
+showTests :: TestTree
+showTests
+  = testGroup "Show"
+  $ map (uncurry testProperty)
+  $ concatMap lawsProperties
+  [
+#if MIN_VERSION_quickcheck_classes(0,6,0)
+    showLaws (Proxy :: Proxy (Poly U.Vector ()))
+  , showLaws (Proxy :: Proxy (Poly U.Vector Int8))
+  , showLaws (Proxy :: Proxy (Poly V.Vector Integer))
+  , showLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
 #endif
   ]
 
