@@ -19,6 +19,7 @@ module Data.Poly
   , unPoly
   , leading
   -- * Num interface
+  , extEuclid
   , toPoly
   , monomial
   , scale

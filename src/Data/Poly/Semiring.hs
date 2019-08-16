@@ -17,6 +17,7 @@ module Data.Poly.Semiring
   , unPoly
   , leading
   -- * Semiring interface
+  , extEuclid
   , toPoly
   , monomial
   , scale
@@ -29,7 +30,8 @@ module Data.Poly.Semiring
 #endif
   ) where
 
-import Data.Semiring (Semiring)
+import Data.Semiring (Ring, Semiring)
+import Data.Euclidean (Euclidean)
 import qualified Data.Vector.Generic as G
 
 import Data.Poly.Internal.Dense (Poly(..), VPoly, UPoly, leading)
@@ -81,3 +83,8 @@ eval = Dense.eval'
 -- 3 * X^2 + 0 * X + 3
 deriv :: (Eq a, Semiring a, G.Vector v a) => Poly v a -> Poly v a
 deriv = Dense.deriv'
+
+-- | Extended Euclidean algorithm.
+extEuclid :: (Eq a, Euclidean a, Fractional a, Ring a, G.Vector v a, Eq (v a))
+  => Poly v a -> Poly v a -> (Poly v a, (Poly v a, Poly v a))
+extEuclid = Dense.extEuclid'
