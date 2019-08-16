@@ -38,6 +38,7 @@ library
     Data.Poly.Internal.Sparse.GcdDomain
   build-depends:
     base >= 4.9 && < 5,
+    deepseq >= 1.1 && < 1.5,
     primitive >= 0.6,
     semirings >= 0.2,
     vector >= 0.12.0.2,
