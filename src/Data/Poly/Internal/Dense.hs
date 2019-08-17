@@ -460,11 +460,11 @@ var'
 #if MIN_VERSION_semirings(0,4,2)
 -- | Execute the extended Euclidean algorithm.
 -- For polynomials 'a' and 'b', compute their greatest common divisor 'g'
--- and the coefficient 's' satisfying 'a''s' + 'b''t' = 'g'.
+-- and the coefficient polynomial 's' satisfying 'a''s' + 'b''t' = 'g'.
 --
--- >>> gcdExt (X^2 + 1 :: VPoly Double) (X^3 + 3 * X :: VPoly Double)
+-- >>> gcdExt (X^2 + 1 :: UPoly Double) (X^3 + 3 * X :: UPoly Double)
 -- (1.0, 0.5 * X^2 + (-0.0) * X + 1.0)
--- >>> gcdExt (X^3 + 3 * X :: VPoly Double) (3 * X^4 + 3 * X^2 :: VPoly Double)
+-- >>> gcdExt (X^3 + 3 * X :: UPoly Double) (3 * X^4 + 3 * X^2 :: UPoly Double)
 -- (3.0 * X + 0.0, (-0.5) * X^2 + (-0.0) * X + 1.0)
 gcdExt :: (Eq (Poly v a), Euclidean (Poly v a), Num (Poly v a))
   => Poly v a -> Poly v a -> (Poly v a, Poly v a)
@@ -478,11 +478,11 @@ gcdExt xs ys = go ys xs 0 1
 
 -- | Execute the extended Euclidean algorithm.
 -- For polynomials 'a' and 'b', compute their greatest common divisor 'g'
--- and the coefficient 's' satisfying 'a''s' + 'b''t' = 'g'.
+-- and the coefficient polynomial 's' satisfying 'a''s' + 'b''t' = 'g'.
 --
--- >>> gcdExt (X^2 + 1 :: VPoly Double) (X^3 + 3 * X :: VPoly Double)
+-- >>> gcdExt (X^2 + 1 :: UPoly Double) (X^3 + 3 * X :: UPoly Double)
 -- (1.0, 0.5 * X^2 + (-0.0) * X + 1.0)
--- >>> gcdExt (X^3 + 3 * X :: VPoly Double) (3 * X^4 + 3 * X^2 :: VPoly Double)
+-- >>> gcdExt (X^3 + 3 * X :: UPoly Double) (3 * X^4 + 3 * X^2 :: UPoly Double)
 -- (3.0 * X + 0.0, (-0.5) * X^2 + (-0.0) * X + 1.0)
 gcdExt' :: (Eq (Poly v a), Euclidean (Poly v a), Semiring.Ring (Poly v a))
   => Poly v a -> Poly v a -> (Poly v a, Poly v a)
