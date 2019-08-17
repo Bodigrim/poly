@@ -459,40 +459,38 @@ var'
 
 #if MIN_VERSION_semirings(0,4,2)
 -- | Execute the extended Euclidean algorithm.
--- For polynomials 'a' and 'b', compute their greatest common divisor 'g',
--- and the coefficients 's' and 't' satisfying 'a''s' + 'b''t' = 'g'.
+-- For polynomials 'a' and 'b', compute their greatest common divisor 'g'
+-- and the coefficient 's' satisfying 'a''s' + 'b''t' = 'g'.
 --
 -- >>> gcdExt (X^2 + 1 :: VPoly Double) (X^3 + 3 * X :: VPoly Double)
--- (1.0, (0.5 * X^2 + (-0.0) * X + 1.0, (-0.5) * X + (-0.0)))
+-- (1.0, 0.5 * X^2 + (-0.0) * X + 1.0)
 -- >>> gcdExt (X^3 + 3 * X :: VPoly Double) (3 * X^4 + 3 * X^2 :: VPoly Double)
--- (3.0 * X + 0.0,((-0.5) * X^2 + (-0.0) * X + 1.0,0.16666666666666666 * X + (-0.0)))
+-- (3.0 * X + 0.0, (-0.5) * X^2 + (-0.0) * X + 1.0)
 gcdExt :: (Eq (v a), Euclidean (Poly v a), Num (Poly v a))
-  => Poly v a -> Poly v a -> (Poly v a, (Poly v a, Poly v a))
-gcdExt xs ys = go ys xs 0 1 1 0
+  => Poly v a -> Poly v a -> (Poly v a, Poly v a)
+gcdExt xs ys = go ys xs 0 1
   where
-    go r r' s s' t t'
-      | r == 0 = (r', (s', t'))
-      | otherwise = case quot r' r of
-        q -> go (r' - q * r) r (s' - q * s) s (t' - q * t) t
+    go r r' s s'
+      | r == 0 = (r', s')
+      | otherwise = case r' `quot` r of
+        q -> go (r' - q * r) r (s' - q * s) s
 {-# INLINE gcdExt #-}
 
 -- | Execute the extended Euclidean algorithm.
--- For polynomials 'a' and 'b', compute their greatest common divisor 'g',
--- and the coefficients 's' and 't' satisfying 'a''s' + 'b''t' = 'g'.
+-- For polynomials 'a' and 'b', compute their greatest common divisor 'g'
+-- and the coefficient 's' satisfying 'a''s' + 'b''t' = 'g'.
 --
 -- >>> gcdExt (X^2 + 1 :: VPoly Double) (X^3 + 3 * X :: VPoly Double)
--- (1.0, (0.5 * X^2 + (-0.0) * X + 1.0, (-0.5) * X + (-0.0)))
+-- (1.0, 0.5 * X^2 + (-0.0) * X + 1.0)
 -- >>> gcdExt (X^3 + 3 * X :: VPoly Double) (3 * X^4 + 3 * X^2 :: VPoly Double)
--- (3.0 * X + 0.0,((-0.5) * X^2 + (-0.0) * X + 1.0,0.16666666666666666 * X + (-0.0)))
+-- (3.0 * X + 0.0, (-0.5) * X^2 + (-0.0) * X + 1.0)
 gcdExt' :: (Eq (v a), Euclidean (Poly v a), Semiring.Ring (Poly v a))
-  => Poly v a -> Poly v a -> (Poly v a, (Poly v a, Poly v a))
-gcdExt' xs ys = go ys xs zero one one zero
+  => Poly v a -> Poly v a -> (Poly v a, Poly v a)
+gcdExt' xs ys = go ys xs zero one
   where
-    go r r' s s' t t'
-      | r == zero = (r', (s', t'))
-      | otherwise = case quot r' r of
-        q -> go (r' `minus` q `times` r) r
-                (s' `minus` q `times` s) s
-                (t' `minus` q `times` t) t
+    go r r' s s'
+      | r == zero = (r', s')
+      | otherwise = case r' `quot` r of
+        q -> go (r' `minus` q `times` r) r (s' `minus` q `times` s) s
 {-# INLINE gcdExt' #-}
 #endif
