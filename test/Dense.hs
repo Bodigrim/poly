@@ -10,7 +10,7 @@ module Dense
   ( testSuite
   ) where
 
-import Prelude hiding (quotRem)
+import Prelude hiding (gcd, quotRem, rem)
 #if MIN_VERSION_semirings(0,4,2)
 import Data.Euclidean
 #endif
@@ -60,6 +60,7 @@ testSuite = testGroup "Dense"
     , lawsTests
     , evalTests
     , derivTests
+    , gcdExtTests
     ]
 
 lawsTests :: TestTree
@@ -258,4 +259,19 @@ derivTests = testGroup "deriv"
   --   \(p :: Poly V.Vector Int) (q :: Poly U.Vector Int) ->
   --     deriv (eval (toPoly $ fmap (monomial 0) $ unPoly p) q) ===
   --       deriv q * eval (toPoly $ fmap (monomial 0) $ unPoly $ deriv p) q
+  ]
+
+gcdExtTests :: TestTree
+gcdExtTests = localOption (QuickCheckMaxSize 10) $ testGroup "gcdExt"
+  [
+#if MIN_VERSION_semirings(0,4,2)
+    testProperty "gcdExt == S.gcdExt" $
+    \(a :: Poly V.Vector Rational) b -> gcdExt a b === S.gcdExt a b
+  -- The following property currently only holds up to units
+  -- , testProperty "gcd == fst . gcdExt" $
+  --   \(a :: Poly V.Vector Rational) b -> gcd a b === fst (gcdExt a b)
+  , testProperty "g == as (mod b)" $
+    \(a :: Poly V.Vector Rational) b -> b /= 0 ==>
+      uncurry ((. flip rem b) . (===) . flip rem b) ((* a) <$> gcdExt a b)
+#endif
   ]
