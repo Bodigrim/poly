@@ -17,13 +17,13 @@ module Data.Poly.Semiring
   , unPoly
   , leading
   -- * Semiring interface
-  , extEuclid
   , toPoly
   , monomial
   , scale
   , pattern X
   , eval
   , deriv
+  , gcdExt
 #if MIN_VERSION_semirings(0,4,2)
   -- * Fractional coefficients
   , PolyOverFractional(..)
@@ -85,6 +85,6 @@ deriv :: (Eq a, Semiring a, G.Vector v a) => Poly v a -> Poly v a
 deriv = Dense.deriv'
 
 -- | Extended Euclidean algorithm.
-extEuclid :: (Eq a, Euclidean a, Fractional a, Ring a, G.Vector v a, Eq (v a))
+gcdExt :: (Eq a, Euclidean a, Fractional a, Ring a, G.Vector v a, Eq (v a))
   => Poly v a -> Poly v a -> (Poly v a, (Poly v a, Poly v a))
-extEuclid = Dense.extEuclid'
+gcdExt = Dense.gcdExt'

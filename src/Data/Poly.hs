@@ -19,7 +19,6 @@ module Data.Poly
   , unPoly
   , leading
   -- * Num interface
-  , extEuclid
   , toPoly
   , monomial
   , scale
@@ -27,6 +26,7 @@ module Data.Poly
   , eval
   , deriv
   , integral
+  , gcdExt
 #if MIN_VERSION_semirings(0,4,2)
   -- * Fractional coefficients
   , PolyOverFractional(..)
