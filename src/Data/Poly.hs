@@ -26,8 +26,8 @@ module Data.Poly
   , eval
   , deriv
   , integral
-  , gcdExt
 #if MIN_VERSION_semirings(0,4,2)
+  , gcdExt
   -- * Fractional coefficients
   , PolyOverFractional(..)
 #endif

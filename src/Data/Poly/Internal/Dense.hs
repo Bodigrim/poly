@@ -30,7 +30,9 @@ module Data.Poly.Internal.Dense
   , eval
   , deriv
   , integral
+#if MIN_VERSION_semirings(0,4,2)
   , gcdExt
+#endif
   -- * Semiring interface
   , toPoly'
   , monomial'
@@ -38,7 +40,9 @@ module Data.Poly.Internal.Dense
   , pattern X'
   , eval'
   , deriv'
+#if MIN_VERSION_semirings(0,4,2)
   , gcdExt'
+#endif
   ) where
 
 import Prelude hiding (quotRem, quot, rem, gcd, lcm, (^))
@@ -47,7 +51,6 @@ import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.List (foldl', intersperse)
 import Data.Semiring (Semiring(..), minus)
-import Data.Euclidean (Euclidean(..))
 import qualified Data.Semiring as Semiring
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
@@ -57,6 +60,9 @@ import GHC.Exts
 #if !MIN_VERSION_semirings(0,4,0)
 import Data.Semigroup
 import Numeric.Natural
+#endif
+#if MIN_VERSION_semirings(0,4,2)
+import Data.Euclidean (Euclidean(..))
 #endif
 
 -- | Polynomials of one variable with coefficients from @a@,
@@ -451,6 +457,7 @@ var'
   | otherwise          = Poly $ G.fromList [zero, one]
 {-# INLINE var' #-}
 
+#if MIN_VERSION_semirings(0,4,2)
 -- | Extended Euclidean algorithm.
 gcdExt :: (Eq (v a), Euclidean (Poly v a), Num (Poly v a))
   => Poly v a -> Poly v a -> (Poly v a, (Poly v a, Poly v a))
@@ -474,3 +481,4 @@ gcdExt' xs ys = go ys xs zero one one zero
                 (s' `minus` q `times` s) s
                 (t' `minus` q `times` t) t
 {-# INLINE gcdExt' #-}
+#endif

@@ -23,16 +23,18 @@ module Data.Poly.Semiring
   , pattern X
   , eval
   , deriv
-  , gcdExt
 #if MIN_VERSION_semirings(0,4,2)
+  , gcdExt
   -- * Fractional coefficients
   , PolyOverFractional(..)
 #endif
   ) where
 
 import Data.Semiring (Ring, Semiring)
-import Data.Euclidean (Euclidean)
 import qualified Data.Vector.Generic as G
+#if MIN_VERSION_semirings(0,4,2)
+import Data.Euclidean (Euclidean)
+#endif
 
 import Data.Poly.Internal.Dense (Poly(..), VPoly, UPoly, leading)
 import qualified Data.Poly.Internal.Dense as Dense
@@ -84,7 +86,9 @@ eval = Dense.eval'
 deriv :: (Eq a, Semiring a, G.Vector v a) => Poly v a -> Poly v a
 deriv = Dense.deriv'
 
+#if MIN_VERSION_semirings(0,4,2)
 -- | Extended Euclidean algorithm.
 gcdExt :: (Eq a, Euclidean a, Fractional a, Ring a, G.Vector v a, Eq (v a))
   => Poly v a -> Poly v a -> (Poly v a, (Poly v a, Poly v a))
 gcdExt = Dense.gcdExt'
+#endif
