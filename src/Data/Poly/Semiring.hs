@@ -7,8 +7,9 @@
 -- Dense polynomials and a 'Semiring'-based interface.
 --
 
-{-# LANGUAGE CPP                 #-}
-{-# LANGUAGE PatternSynonyms     #-}
+{-# LANGUAGE CPP              #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE PatternSynonyms  #-}
 
 module Data.Poly.Semiring
   ( Poly
@@ -95,7 +96,7 @@ deriv = Dense.deriv'
 -- (1.0, 0.5 * X^2 + (-0.0) * X + 1.0)
 -- >>> gcdExt (X^3 + 3 * X :: VPoly Double) (3 * X^4 + 3 * X^2 :: VPoly Double)
 -- (3.0 * X + 0.0, (-0.5) * X^2 + (-0.0) * X + 1.0)
-gcdExt :: (Eq a, Euclidean a, Fractional a, Ring a, G.Vector v a, Eq (v a))
+gcdExt :: (Eq (Poly v a), Euclidean (Poly v a), Ring (Poly v a))
   => Poly v a -> Poly v a -> (Poly v a, Poly v a)
 gcdExt = Dense.gcdExt'
 #endif

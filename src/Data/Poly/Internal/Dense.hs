@@ -466,7 +466,7 @@ var'
 -- (1.0, 0.5 * X^2 + (-0.0) * X + 1.0)
 -- >>> gcdExt (X^3 + 3 * X :: VPoly Double) (3 * X^4 + 3 * X^2 :: VPoly Double)
 -- (3.0 * X + 0.0, (-0.5) * X^2 + (-0.0) * X + 1.0)
-gcdExt :: (Eq (v a), Euclidean (Poly v a), Num (Poly v a))
+gcdExt :: (Eq (Poly v a), Euclidean (Poly v a), Num (Poly v a))
   => Poly v a -> Poly v a -> (Poly v a, Poly v a)
 gcdExt xs ys = go ys xs 0 1
   where
@@ -484,7 +484,7 @@ gcdExt xs ys = go ys xs 0 1
 -- (1.0, 0.5 * X^2 + (-0.0) * X + 1.0)
 -- >>> gcdExt (X^3 + 3 * X :: VPoly Double) (3 * X^4 + 3 * X^2 :: VPoly Double)
 -- (3.0 * X + 0.0, (-0.5) * X^2 + (-0.0) * X + 1.0)
-gcdExt' :: (Eq (v a), Euclidean (Poly v a), Semiring.Ring (Poly v a))
+gcdExt' :: (Eq (Poly v a), Euclidean (Poly v a), Semiring.Ring (Poly v a))
   => Poly v a -> Poly v a -> (Poly v a, Poly v a)
 gcdExt' xs ys = go ys xs zero one
   where
