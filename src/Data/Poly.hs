@@ -19,7 +19,6 @@ module Data.Poly
   , unPoly
   , leading
   -- * Num interface
-  , extEuclid
   , toPoly
   , monomial
   , scale
@@ -28,14 +27,17 @@ module Data.Poly
   , deriv
   , integral
 #if MIN_VERSION_semirings(0,4,2)
+  , gcdExt
   -- * Fractional coefficients
   , PolyOverFractional(..)
+  , fractionalGcdExt
+  , scaleMonic
 #endif
   ) where
 
 import Data.Poly.Internal.Dense
 #if MIN_VERSION_semirings(0,4,2)
-import Data.Poly.Internal.Dense.Fractional ()
+import Data.Poly.Internal.Dense.Fractional (fractionalGcdExt, scaleMonic)
 import Data.Poly.Internal.Dense.GcdDomain ()
 import Data.Poly.Internal.PolyOverFractional
 #endif

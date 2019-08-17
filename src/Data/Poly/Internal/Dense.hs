@@ -30,7 +30,9 @@ module Data.Poly.Internal.Dense
   , eval
   , deriv
   , integral
-  , extEuclid
+#if MIN_VERSION_semirings(0,4,2)
+  , gcdExt
+#endif
   -- * Semiring interface
   , toPoly'
   , monomial'
@@ -38,7 +40,9 @@ module Data.Poly.Internal.Dense
   , pattern X'
   , eval'
   , deriv'
-  , extEuclid'
+#if MIN_VERSION_semirings(0,4,2)
+  , gcdExt'
+#endif
   ) where
 
 import Prelude hiding (quotRem, quot, rem, gcd, lcm, (^))
@@ -48,7 +52,6 @@ import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.List (foldl', intersperse)
 import Data.Semiring (Semiring(..), minus)
-import Data.Euclidean (Euclidean(..))
 import qualified Data.Semiring as Semiring
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
@@ -58,6 +61,9 @@ import GHC.Exts
 #if !MIN_VERSION_semirings(0,4,0)
 import Data.Semigroup
 import Numeric.Natural
+#endif
+#if MIN_VERSION_semirings(0,4,2)
+import Data.Euclidean (Euclidean(..))
 #endif
 
 -- | Polynomials of one variable with coefficients from @a@,
@@ -452,26 +458,40 @@ var'
   | otherwise          = Poly $ G.fromList [zero, one]
 {-# INLINE var' #-}
 
--- | Extended Euclidean algorithm.
-extEuclid :: (Eq (v a), Euclidean (Poly v a), Num (Poly v a))
-  => Poly v a -> Poly v a -> (Poly v a, (Poly v a, Poly v a))
-extEuclid xs ys = go ys xs 0 1 1 0
+#if MIN_VERSION_semirings(0,4,2)
+-- | Execute the extended Euclidean algorithm.
+-- For polynomials 'a' and 'b', compute their greatest common divisor 'g'
+-- and the coefficient polynomial 's' satisfying 'a''s' + 'b''t' = 'g'.
+--
+-- >>> gcdExt (X^2 + 1 :: UPoly Double) (X^3 + 3 * X :: UPoly Double)
+-- (1.0, 0.5 * X^2 + (-0.0) * X + 1.0)
+-- >>> gcdExt (X^3 + 3 * X :: UPoly Double) (3 * X^4 + 3 * X^2 :: UPoly Double)
+-- (3.0 * X + 0.0, (-0.5) * X^2 + (-0.0) * X + 1.0)
+gcdExt :: (Eq (Poly v a), Euclidean (Poly v a), Num (Poly v a))
+  => Poly v a -> Poly v a -> (Poly v a, Poly v a)
+gcdExt xs ys = go ys xs 0 1
   where
-    go r r' s s' t t'
-      | r == 0 = (r', (s', t'))
-      | otherwise = case quot r' r of
-        q -> go (r' - q * r) r (s' - q * s) s (t' - q * t) t
-{-# INLINE extEuclid #-}
+    go r r' s s'
+      | r == 0 = (r', s')
+      | otherwise = case r' `quot` r of
+        q -> go (r' - q * r) r (s' - q * s) s
+{-# INLINE gcdExt #-}
 
--- | Extended Euclidean algorithm.
-extEuclid' :: (Eq (v a), Euclidean (Poly v a), Semiring.Ring (Poly v a))
-  => Poly v a -> Poly v a -> (Poly v a, (Poly v a, Poly v a))
-extEuclid' xs ys = go ys xs zero one one zero
+-- | Execute the extended Euclidean algorithm.
+-- For polynomials 'a' and 'b', compute their greatest common divisor 'g'
+-- and the coefficient polynomial 's' satisfying 'a''s' + 'b''t' = 'g'.
+--
+-- >>> gcdExt (X^2 + 1 :: UPoly Double) (X^3 + 3 * X :: UPoly Double)
+-- (1.0, 0.5 * X^2 + (-0.0) * X + 1.0)
+-- >>> gcdExt (X^3 + 3 * X :: UPoly Double) (3 * X^4 + 3 * X^2 :: UPoly Double)
+-- (3.0 * X + 0.0, (-0.5) * X^2 + (-0.0) * X + 1.0)
+gcdExt' :: (Eq (Poly v a), Euclidean (Poly v a), Semiring.Ring (Poly v a))
+  => Poly v a -> Poly v a -> (Poly v a, Poly v a)
+gcdExt' xs ys = go ys xs zero one
   where
-    go r r' s s' t t'
-      | r == zero = (r', (s', t'))
-      | otherwise = case quot r' r of
-        q -> go (r' `minus` q `times` r) r
-                (s' `minus` q `times` s) s
-                (t' `minus` q `times` t) t
-{-# INLINE extEuclid' #-}
+    go r r' s s'
+      | r == zero = (r', s')
+      | otherwise = case r' `quot` r of
+        q -> go (r' `minus` q `times` r) r (s' `minus` q `times` s) s
+{-# INLINE gcdExt' #-}
+#endif
