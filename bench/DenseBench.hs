@@ -122,8 +122,8 @@ doGcdExt n = V.sum gs
 doGcdFracExt :: Int -> Rational
 doGcdFracExt n = V.sum gs
   where
-    xs = toPoly $ V.generate n ((+ 1) . (* 2) . fromIntegral)
-    ys = toPoly $ V.generate n ((+ 2) . (* 3) . fromIntegral)
-    gs = unPoly $ fst $ xs `fractionalGcdExt` ys
+    xs = PolyOverFractional $ toPoly $ V.generate n ((+ 1) . (* 2) . fromIntegral)
+    ys = PolyOverFractional $ toPoly $ V.generate n ((+ 2) . (* 3) . fromIntegral)
+    gs = unPoly $ unPolyOverFractional $ fst $ xs `fractionalGcdExt` ys
 
 #endif

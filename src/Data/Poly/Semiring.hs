@@ -42,7 +42,7 @@ import Data.Euclidean (Euclidean)
 import Data.Poly.Internal.Dense (Poly(..), VPoly, UPoly, leading)
 import qualified Data.Poly.Internal.Dense as Dense
 #if MIN_VERSION_semirings(0,4,2)
-import Data.Poly.Internal.Dense.Fractional (fractionalGcdExt, scaleMonic)
+import Data.Poly.Internal.Dense.Fractional ()
 import Data.Poly.Internal.Dense.GcdDomain ()
 import Data.Poly.Internal.PolyOverFractional
 #endif

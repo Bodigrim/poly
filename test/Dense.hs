@@ -277,29 +277,29 @@ gcdExtTests = localOption (QuickCheckMaxSize 9) $ testGroup "gcdExt"
     \(a :: Poly V.Vector Rational) -> a /= 0 ==>
       gcdExt a a === (a, 0)
   , testProperty "fractionalGcdExt == S.fractionalGcdExt" $
-    \(a :: Poly V.Vector Rational) b ->
+    \(a :: PolyOverFractional (Poly V.Vector Rational)) b ->
       fractionalGcdExt a b === S.fractionalGcdExt a b
   , testProperty "g == as (mod b) for fractionalGcdExt" $
-    \(a :: Poly V.Vector Rational) b -> b /= 0 ==>
+    \(a :: PolyOverFractional (Poly V.Vector Rational)) b -> b /= 0 ==>
       uncurry ((. flip rem b) . (===) . flip rem b) ((* a) <$> fractionalGcdExt a b)
   , testProperty "fractionalGcdExt a 0 == (a, 1) (mod units)" $
-    \(a :: Poly V.Vector Rational) ->
+    \(a :: PolyOverFractional (Poly V.Vector Rational)) ->
       fractionalGcdExt a 0 === scaleMonic' a
   , testProperty "fractionalGcdExt a 1 == (1, 0) (mod units)" $
-    \(a :: Poly V.Vector Rational) ->
+    \(a :: PolyOverFractional (Poly V.Vector Rational)) ->
       fractionalGcdExt a 1 === (1, 0)
   , testProperty "fractionalGcdExt a a == (a, 0) (mod units)" $
-    \(a :: Poly V.Vector Rational) ->
+    \(a :: PolyOverFractional (Poly V.Vector Rational)) ->
       fractionalGcdExt a a === scaleMonic'' a
   , testProperty "fst . fractionalGcdExt == gcd (mod units)" $
-    \(a :: Poly V.Vector Rational) b ->
+    \(a :: PolyOverFractional (Poly V.Vector Rational)) b ->
       fst (fractionalGcdExt a b) === fst (scaleMonic'' (gcd a b))
   ]
   where
     scaleMonic' a = case scaleMonic a of
-      Just (c', a') -> (a', monomial 0 c')
+      Just (c', a') -> (a', PolyOverFractional (monomial 0 c'))
       Nothing -> (0, 1)
     scaleMonic'' a = case scaleMonic a of
-      Just (_, a') -> (a', 0 :: Poly V.Vector Rational)
+      Just (_, a') -> (a', PolyOverFractional (0 :: Poly V.Vector Rational))
       Nothing -> (0, 1)
 #endif
