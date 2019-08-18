@@ -7,14 +7,15 @@
 -- Sparse polynomials of one variable.
 --
 
-{-# LANGUAGE CPP                  #-}
-{-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE PatternSynonyms      #-}
-{-# LANGUAGE ScopedTypeVariables  #-}
-{-# LANGUAGE StandaloneDeriving   #-}
-{-# LANGUAGE TypeFamilies         #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE ViewPatterns         #-}
+{-# LANGUAGE CPP                        #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE PatternSynonyms            #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 module Data.Poly.Internal.Sparse
   ( Poly(..)
@@ -38,6 +39,7 @@ module Data.Poly.Internal.Sparse
   , deriv'
   ) where
 
+import Control.DeepSeq (NFData)
 import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
@@ -78,8 +80,9 @@ newtype Poly v a = Poly
   -- (first element corresponds to a constant term).
   }
 
-deriving instance Eq   (v (Word, a)) => Eq   (Poly v a)
-deriving instance Ord  (v (Word, a)) => Ord  (Poly v a)
+deriving instance Eq     (v (Word, a)) => Eq     (Poly v a)
+deriving instance Ord    (v (Word, a)) => Ord    (Poly v a)
+deriving instance NFData (v (Word, a)) => NFData (Poly v a)
 
 instance (Eq a, Semiring a, G.Vector v (Word, a)) => IsList (Poly v a) where
   type Item (Poly v a) = (Word, a)

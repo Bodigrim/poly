@@ -45,7 +45,8 @@ module Data.Poly.Internal.Dense
 #endif
   ) where
 
-import Prelude hiding (quotRem, quot, rem, gcd, lcm, (^))
+import Prelude hiding (quotRem, rem, gcd, lcm, (^))
+import Control.DeepSeq (NFData)
 import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
@@ -62,7 +63,7 @@ import Data.Semigroup
 import Numeric.Natural
 #endif
 #if MIN_VERSION_semirings(0,4,2)
-import Data.Euclidean (Euclidean(..))
+import qualified Data.Euclidean as E (Euclidean(..))
 #endif
 
 -- | Polynomials of one variable with coefficients from @a@,
@@ -86,7 +87,7 @@ newtype Poly v a = Poly
   -- ^ Convert 'Poly' to a vector of coefficients
   -- (first element corresponds to a constant term).
   }
-  deriving (Eq, Ord)
+  deriving (Eq, NFData, Ord)
 
 instance (Eq a, Semiring a, G.Vector v a) => IsList (Poly v a) where
   type Item (Poly v a) = a
@@ -466,13 +467,13 @@ var'
 -- (1.0, 0.5 * X^2 + (-0.0) * X + 1.0)
 -- >>> gcdExt (X^3 + 3 * X :: UPoly Double) (3 * X^4 + 3 * X^2 :: UPoly Double)
 -- (3.0 * X + 0.0, (-0.5) * X^2 + (-0.0) * X + 1.0)
-gcdExt :: (Eq (Poly v a), Euclidean (Poly v a), Num (Poly v a))
+gcdExt :: (Eq (Poly v a), E.Euclidean (Poly v a), Num (Poly v a))
   => Poly v a -> Poly v a -> (Poly v a, Poly v a)
 gcdExt xs ys = go ys xs 0 1
   where
     go r r' s s'
       | r == 0 = (r', s')
-      | otherwise = case r' `quot` r of
+      | otherwise = case r' `E.quot` r of
         q -> go (r' - q * r) r (s' - q * s) s
 {-# INLINE gcdExt #-}
 
@@ -484,13 +485,13 @@ gcdExt xs ys = go ys xs 0 1
 -- (1.0, 0.5 * X^2 + (-0.0) * X + 1.0)
 -- >>> gcdExt (X^3 + 3 * X :: UPoly Double) (3 * X^4 + 3 * X^2 :: UPoly Double)
 -- (3.0 * X + 0.0, (-0.5) * X^2 + (-0.0) * X + 1.0)
-gcdExt' :: (Eq (Poly v a), Euclidean (Poly v a), Semiring.Ring (Poly v a))
+gcdExt' :: (Eq (Poly v a), E.Euclidean (Poly v a), Semiring.Ring (Poly v a))
   => Poly v a -> Poly v a -> (Poly v a, Poly v a)
 gcdExt' xs ys = go ys xs zero one
   where
     go r r' s s'
       | r == zero = (r', s')
-      | otherwise = case r' `quot` r of
+      | otherwise = case r' `E.quot` r of
         q -> go (r' `minus` q `times` r) r (s' `minus` q `times` s) s
 {-# INLINE gcdExt' #-}
 #endif
