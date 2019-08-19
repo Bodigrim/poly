@@ -76,10 +76,10 @@ it is an instance of `GcdDomain` and `Euclidean` from `semirings` package. These
 cover main functionality of `Integral`, providing division with remainder and `gcd` / `lcm`:
 
 ```haskell
-> Data.Euclidean.gcd (X^2 + 7 * X + 6) (X^2 - 5 * X - 6) :: Data.Poly.UPoly Int
+> Data.Euclidean.gcd (X^2 + 7 * X + 6) (X^2 - 5 * X - 6) :: UPoly Int
 1 * X + 1
 
-> Data.Euclidean.quotRem (X^3 + 2) (X^2 - 1 :: Data.Poly.UPoly Double)
+> Data.Euclidean.quotRem (X^3 + 2) (X^2 - 1 :: UPoly Double)
 (1.0 * X + 0.0,1.0 * X + 2.0)
 ```
 
