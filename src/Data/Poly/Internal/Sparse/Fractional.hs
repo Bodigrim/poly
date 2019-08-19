@@ -29,13 +29,13 @@ import Prelude hiding (quotRem, rem, gcd)
 import Control.Arrow
 import Control.Exception
 import Data.Euclidean
-import qualified Data.Semiring as Semiring
+import Data.Semiring (Ring())
 import qualified Data.Vector.Generic as G
 
 import Data.Poly.Internal.Sparse
 import Data.Poly.Internal.Sparse.GcdDomain ()
 
-instance (Eq a, Eq (v (Word, a)), Semiring.Ring a, GcdDomain a, Fractional a, G.Vector v (Word, a)) => Euclidean (Poly v a) where
+instance (Eq a, Eq (v (Word, a)), Ring a, GcdDomain a, Fractional a, G.Vector v (Word, a)) => Euclidean (Poly v a) where
   degree (Poly xs)
     | G.null xs = 0
     | otherwise = 1 + fromIntegral (fst (G.last xs))
