@@ -44,7 +44,7 @@ import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.List (foldl', intersperse)
-import Data.Semiring (Semiring(..))
+import Data.Semiring (Semiring(..), Ring())
 import qualified Data.Semiring as Semiring
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
@@ -169,7 +169,7 @@ instance (Eq a, Semiring a, G.Vector v a) => Semiring (Poly v a) where
   {-# INLINE fromNatural #-}
 #endif
 
-instance (Eq a, Semiring.Ring a, G.Vector v a) => Semiring.Ring (Poly v a) where
+instance (Eq a, Ring a, G.Vector v a) => Ring (Poly v a) where
   negate (Poly xs) = Poly $ G.map Semiring.negate xs
 
 dropWhileEnd

@@ -31,14 +31,14 @@ import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.Euclidean
-import qualified Data.Semiring as Semiring
+import Data.Semiring (Ring())
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as MG
 
 import Data.Poly.Internal.Dense
 import Data.Poly.Internal.Dense.GcdDomain ()
 
-instance (Eq a, Eq (v a), Semiring.Ring a, GcdDomain a, Fractional a, G.Vector v a) => Euclidean (Poly v a) where
+instance (Eq a, Eq (v a), Ring a, GcdDomain a, Fractional a, G.Vector v a) => Euclidean (Poly v a) where
   degree (Poly xs) = fromIntegral (G.basicLength xs)
 
   quotRem (Poly xs) (Poly ys) = (toPoly qs, toPoly rs)

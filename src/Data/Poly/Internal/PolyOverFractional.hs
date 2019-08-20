@@ -22,7 +22,6 @@ import Prelude hiding (quotRem, quot, rem, gcd, lcm, (^))
 import Control.DeepSeq (NFData)
 import Data.Euclidean
 import Data.Semiring
-import qualified Data.Semiring as Semiring
 import qualified Data.Vector.Generic as G
 
 import qualified Data.Poly.Internal.Dense as Dense
@@ -34,11 +33,11 @@ import qualified Data.Poly.Internal.Dense.Fractional as Dense (fractionalGcd)
 newtype PolyOverFractional poly = PolyOverFractional { unPolyOverFractional :: poly }
   deriving (Eq, NFData, Num, Ord, Semiring.Ring, Semiring, Show)
 
-instance (Eq a, Eq (v a), Semiring.Ring a, GcdDomain a, Fractional a, G.Vector v a) => GcdDomain (PolyOverFractional (Dense.Poly v a)) where
+instance (Eq a, Eq (v a), Ring a, GcdDomain a, Fractional a, G.Vector v a) => GcdDomain (PolyOverFractional (Dense.Poly v a)) where
   gcd (PolyOverFractional x) (PolyOverFractional y) = PolyOverFractional (Dense.fractionalGcd x y)
   {-# INLINE gcd #-}
 
-instance (Eq a, Eq (v a), Semiring.Ring a, GcdDomain a, Fractional a, G.Vector v a) => Euclidean (PolyOverFractional (Dense.Poly v a)) where
+instance (Eq a, Eq (v a), Ring a, GcdDomain a, Fractional a, G.Vector v a) => Euclidean (PolyOverFractional (Dense.Poly v a)) where
   degree (PolyOverFractional x) =
     degree x
   quotRem (PolyOverFractional x) (PolyOverFractional y) =
