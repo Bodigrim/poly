@@ -16,17 +16,16 @@ import qualified Data.Vector as V
 
 benchSuite :: Benchmark
 benchSuite = bgroup "dense" $ concat
-  [ map benchAdd        [100, 1000, 10000]
-  , map benchMul        [100, 1000, 10000]
-  , map benchEval       [100, 1000, 10000]
-  , map benchDeriv      [100, 1000, 10000]
-  , map benchIntegral   [100, 1000, 10000]
+  [ map benchAdd      [100, 1000, 10000]
+  , map benchMul      [100, 1000, 10000]
+  , map benchEval     [100, 1000, 10000]
+  , map benchDeriv    [100, 1000, 10000]
+  , map benchIntegral [100, 1000, 10000]
 #if MIN_VERSION_semirings(0,4,2)
-  , map benchQuotRem    [10, 100]
-  , map benchGcd        [10, 100]
-  , map benchGcdFrac    [10, 100]
-  , map benchGcdExt     [10, 100]
-  , map benchGcdFracExt [10, 100]
+  , map benchQuotRem  [10, 100]
+  , map benchGcd      [10, 100]
+  , map benchGcdExt   [10, 100]
+  , map benchGcdFrac  [10, 100]
 #endif
   ]
 
@@ -53,14 +52,11 @@ benchQuotRem k = bench ("quotRem/" ++ show k) $ nf doQuotRem k
 benchGcd :: Int -> Benchmark
 benchGcd k = bench ("gcd/" ++ show k) $ nf doGcd k
 
-benchGcdFrac :: Int -> Benchmark
-benchGcdFrac k = bench ("gcdFrac/" ++ show k) $ nf doGcdFrac k
-
 benchGcdExt :: Int -> Benchmark
 benchGcdExt k = bench ("gcdExt/" ++ show k) $ nf doGcdExt k
 
-benchGcdFracExt :: Int -> Benchmark
-benchGcdFracExt k = bench ("gcdFracExt/" ++ show k) $ nf doGcdFracExt k
+benchGcdFrac :: Int -> Benchmark
+benchGcdFrac k = bench ("gcdFrac/" ++ show k) $ nf doGcdFrac k
 
 #endif
 
@@ -105,13 +101,6 @@ doGcd n = V.sum gs
     ys = toPoly $ V.generate n ((+ 2) . (* 3) . fromIntegral)
     gs = unPoly $ xs `gcd` ys
 
-doGcdFrac :: Int -> Rational
-doGcdFrac n = V.sum gs
-  where
-    xs = PolyOverFractional $ toPoly $ V.generate n ((+ 1) . (* 2) . fromIntegral)
-    ys = PolyOverFractional $ toPoly $ V.generate n ((+ 2) . (* 3) . fromIntegral)
-    gs = unPoly $ unPolyOverFractional $ xs `gcd` ys
-
 doGcdExt :: Int -> Rational
 doGcdExt n = V.sum gs
   where
@@ -119,11 +108,11 @@ doGcdExt n = V.sum gs
     ys = toPoly $ V.generate n ((+ 2) . (* 3) . fromIntegral)
     gs = unPoly $ fst $ xs `gcdExt` ys
 
-doGcdFracExt :: Int -> Rational
-doGcdFracExt n = V.sum gs
+doGcdFrac :: Int -> Rational
+doGcdFrac n = V.sum gs
   where
-    xs = toPoly $ V.generate n ((+ 1) . (* 2) . fromIntegral)
-    ys = toPoly $ V.generate n ((+ 2) . (* 3) . fromIntegral)
-    gs = unPoly $ fst $ xs `fractionalGcdExt` ys
+    xs = PolyOverFractional $ toPoly $ V.generate n ((+ 1) . (* 2) . fromIntegral)
+    ys = PolyOverFractional $ toPoly $ V.generate n ((+ 2) . (* 3) . fromIntegral)
+    gs = unPoly $ unPolyOverFractional $ xs `gcd` ys
 
 #endif
