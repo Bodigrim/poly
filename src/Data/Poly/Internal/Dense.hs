@@ -304,18 +304,15 @@ convolution
   -> v a
   -> v a
 convolution zer add mul xs ys
-  | G.null xs || G.null ys = G.empty
-  | otherwise = runST $ do
-    let lenXs = G.basicLength xs
-        lenYs = G.basicLength ys
-        lenZs = lenXs + lenYs - 1
-    zs <- MG.basicUnsafeNew lenZs
-    forM_ [0 .. lenZs - 1] $ \k -> do
-      let is = [max (k - lenYs + 1) 0 .. min k (lenXs - 1)]
-          acc = foldl' add zer $ flip map is $ \i ->
-            mul (G.unsafeIndex xs i) (G.unsafeIndex ys (k - i))
-      MG.unsafeWrite zs k acc
-    G.unsafeFreeze zs
+  | lenXs == 0 || lenYs == 0 = G.empty
+  | otherwise = G.generate lenZs $ \k -> foldl'
+    (\acc i -> acc `add` mul (G.unsafeIndex xs i) (G.unsafeIndex ys (k - i)))
+    zer
+    [max (k - lenYs + 1) 0 .. min k (lenXs - 1)]
+  where
+    lenXs = G.basicLength xs
+    lenYs = G.basicLength ys
+    lenZs = lenXs + lenYs - 1
 {-# INLINE convolution #-}
 
 -- | Create a monomial from a power and a coefficient.
