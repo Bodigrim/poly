@@ -15,6 +15,7 @@ import Prelude hiding (gcd, quotRem, rem)
 import Data.Euclidean
 #endif
 import Data.Int
+import Data.Maybe
 import Data.Poly
 import qualified Data.Poly.Semiring as S
 import Data.Proxy
@@ -272,24 +273,13 @@ gcdExtTests = localOption (QuickCheckMaxSize 12) $ testGroup "gcdExt"
   , testProperty "g == as (mod b) for gcdExt" $
     \(a :: Poly V.Vector Rational) b -> b /= 0 ==>
       uncurry ((. flip rem b) . (===) . flip rem b) ((* a) <$> gcdExt a b)
-  , testProperty "gcdExt a 0 == (a, 1) (mod units)" $
-    \(a :: Poly V.Vector Rational) ->
-      gcdExt a 0 === scaleMonic' a
-  , testProperty "gcdExt a 1 == (1, 0) (mod units)" $
-    \(a :: Poly V.Vector Rational) ->
-      gcdExt a 1 === (1, 0)
-  , testProperty "gcdExt a a == (a, 0) (mod units)" $
-    \(a :: Poly V.Vector Rational) ->
-      gcdExt a a === scaleMonic'' a
   , testProperty "fst . gcdExt == gcd (mod units)" $
     \(a :: Poly V.Vector Rational) b ->
-      fst (gcdExt a b) === fst (scaleMonic'' (gcd a b))
+      fst (gcdExt a b) `sameUpToUnits` gcd a b
   ]
-  where
-    scaleMonic' a = case scaleMonic a of
-      Just (c', a') -> (a', monomial 0 c')
-      Nothing -> (0, 1)
-    scaleMonic'' a = case scaleMonic a of
-      Just (_, a') -> (a', 0 :: Poly V.Vector Rational)
-      Nothing -> (0, 1)
+
+sameUpToUnits :: (Eq a, GcdDomain a) => a -> a -> Bool
+sameUpToUnits x y = x == y ||
+  isJust (x `divide` y) && isJust (y `divide` x)
+
 #endif

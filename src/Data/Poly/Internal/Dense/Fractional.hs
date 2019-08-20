@@ -22,7 +22,6 @@
 module Data.Poly.Internal.Dense.Fractional
   ( fractionalGcd
   , gcdExt
-  , scaleMonic
   ) where
 
 import Prelude hiding (quot, rem, gcd)
