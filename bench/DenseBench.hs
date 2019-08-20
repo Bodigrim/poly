@@ -23,8 +23,9 @@ benchSuite = bgroup "dense" $ concat
   , map benchIntegral [100, 1000, 10000]
 #if MIN_VERSION_semirings(0,4,2)
   , map benchQuotRem  [10, 100]
-  , map benchGcdFrac  [10, 100]
   , map benchGcd      [10, 100]
+  , map benchGcdExt   [10, 100]
+  , map benchGcdFrac  [10, 100]
 #endif
   ]
 
@@ -50,6 +51,9 @@ benchQuotRem k = bench ("quotRem/" ++ show k) $ nf doQuotRem k
 
 benchGcd :: Int -> Benchmark
 benchGcd k = bench ("gcd/" ++ show k) $ nf doGcd k
+
+benchGcdExt :: Int -> Benchmark
+benchGcdExt k = bench ("gcdExt/" ++ show k) $ nf doGcdExt k
 
 benchGcdFrac :: Int -> Benchmark
 benchGcdFrac k = bench ("gcdFrac/" ++ show k) $ nf doGcdFrac k
@@ -96,6 +100,13 @@ doGcd n = V.sum gs
     xs = toPoly $ V.generate n ((+ 1) . (* 2) . fromIntegral)
     ys = toPoly $ V.generate n ((+ 2) . (* 3) . fromIntegral)
     gs = unPoly $ xs `gcd` ys
+
+doGcdExt :: Int -> Rational
+doGcdExt n = V.sum gs
+  where
+    xs = toPoly $ V.generate n ((+ 1) . (* 2) . fromIntegral)
+    ys = toPoly $ V.generate n ((+ 2) . (* 3) . fromIntegral)
+    gs = unPoly $ fst $ xs `gcdExt` ys
 
 doGcdFrac :: Int -> Rational
 doGcdFrac n = V.sum gs

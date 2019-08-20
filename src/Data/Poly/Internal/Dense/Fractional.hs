@@ -21,15 +21,17 @@
 
 module Data.Poly.Internal.Dense.Fractional
   ( fractionalGcd
+  , gcdExt
+  , scaleMonic
   ) where
 
-import Prelude hiding (rem, gcd)
+import Prelude hiding (quot, rem, gcd)
 import Control.Exception
 import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.Euclidean
-import Data.Semiring (Ring())
+import Data.Semiring (Ring)
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as MG
 
@@ -130,6 +132,50 @@ gcdM xs ys = do
     remainderM xs ys'
     gcdM ys' xs
 {-# INLINE gcdM #-}
+
+-- | Execute the extended Euclidean algorithm.
+-- For polynomials 'a' and 'b', compute their unique greatest common divisor 'g'
+-- and the unique coefficient polynomial 's' satisfying 'a''s' + 'b''t' = 'g',
+-- such that either 'g' is monic, or 'g = 0' and 's' is monic, or 'g = s = 0'.
+--
+-- >>> gcdExt (X^2 + 1 :: UPoly Double) (X^3 + 3 * X :: UPoly Double)
+-- (1.0, 0.5 * X^2 + (-0.0) * X + 1.0)
+-- >>> gcdExt (X^3 + 3 * X :: UPoly Double) (3 * X^4 + 3 * X^2 :: UPoly Double)
+-- (1.0 * X + 0.0,(-0.16666666666666666) * X^2 + (-0.0) * X + 0.3333333333333333)
+gcdExt
+  :: (Eq a, Fractional a, GcdDomain a, Ring a, G.Vector v a, Eq (v a))
+  => Poly v a
+  -> Poly v a
+  -> (Poly v a, Poly v a)
+gcdExt xs ys = case scaleMonic gs of
+  Just (c', gs') -> (gs', scale 0 c' ss)
+  Nothing -> case scaleMonic ss of
+    Just (_, ss') -> (0, ss')
+    Nothing -> (0, 0)
+  where
+    (gs, ss) = go ys xs 0 1
+      where
+        go r r' s s'
+          | r == 0 = (r', s')
+          | otherwise = case r' `quot` r of
+            q -> go (r' - q * r) r (s' - q * s) s
+{-# INLINE gcdExt #-}
+
+-- | Scale a non-zero polynomial such that its leading coefficient is one,
+-- returning the reciprocal of the leading coefficient in the scaling.
+--
+-- >>> scaleMonic (X^3 + 3 * X :: UPoly Double)
+-- Just (1.0, 1.0 * X^3 + 0.0 * X^2 + 3.0 * X + 0.0)
+-- >>> scaleMonic (3 * X^4 + 3 * X^2 :: UPoly Double)
+-- Just (0.3333333333333333, 1.0 * X^4 + 0.0 * X^3 + 1.0 * X^2 + 0.0 * X + 0.0)
+scaleMonic
+  :: (Eq a, Fractional a, GcdDomain a, Ring a, G.Vector v a, Eq (v a))
+  => Poly v a
+  -> Maybe (a, Poly v a)
+scaleMonic xs = case leading xs of
+  Nothing -> Nothing
+  Just (_, c) -> let c' = recip c in Just (c', scale 0 c' xs)
+{-# INLINE scaleMonic #-}
 
 #else
 
