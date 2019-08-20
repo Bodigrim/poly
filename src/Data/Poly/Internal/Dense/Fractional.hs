@@ -36,7 +36,7 @@ import Data.Poly.Internal.Dense
 import Data.Poly.Internal.Dense.GcdDomain ()
 
 instance (Eq a, Eq (v a), Ring a, GcdDomain a, Fractional a, G.Vector v a) => Euclidean (Poly v a) where
-  degree (Poly xs) = fromIntegral (G.basicLength xs)
+  degree (Poly xs) = fromIntegral (G.length xs)
 
   quotRem (Poly xs) (Poly ys) = (toPoly qs, toPoly rs)
     where
@@ -53,13 +53,13 @@ quotientAndRemainder
   -> (v a, v a)
 quotientAndRemainder xs ys
   | G.null ys = throw DivideByZero
-  | G.basicLength xs < G.basicLength ys = (G.empty, xs)
+  | G.length xs < G.length ys = (G.empty, xs)
   | otherwise = runST $ do
-    let lenXs = G.basicLength xs
-        lenYs = G.basicLength ys
+    let lenXs = G.length xs
+        lenYs = G.length ys
         lenQs = lenXs - lenYs + 1
-    qs <- MG.basicUnsafeNew lenQs
-    rs <- MG.basicUnsafeNew lenXs
+    qs <- MG.unsafeNew lenQs
+    rs <- MG.unsafeNew lenXs
     G.unsafeCopy rs xs
     forM_ [lenQs - 1, lenQs - 2 .. 0] $ \i -> do
       r <- MG.unsafeRead rs (lenYs - 1 + i)
@@ -67,7 +67,7 @@ quotientAndRemainder xs ys
       MG.unsafeWrite qs i q
       forM_ [0 .. lenYs - 1] $ \k -> do
         MG.unsafeModify rs (\c -> c - q * G.unsafeIndex ys k) (i + k)
-    let rs' = MG.basicUnsafeSlice 0 lenYs rs
+    let rs' = MG.unsafeSlice 0 lenYs rs
     (,) <$> G.unsafeFreeze qs <*> G.unsafeFreeze rs'
 {-# INLINE quotientAndRemainder #-}
 
@@ -82,7 +82,7 @@ remainder xs ys
     rs <- G.thaw xs
     ys' <- G.unsafeThaw ys
     remainderM rs ys'
-    G.unsafeFreeze $ MG.basicUnsafeSlice 0 (G.basicLength xs `min` G.basicLength ys) rs
+    G.unsafeFreeze $ MG.unsafeSlice 0 (G.length xs `min` G.length ys) rs
 {-# INLINE remainder #-}
 
 remainderM
@@ -92,10 +92,10 @@ remainderM
   -> m ()
 remainderM xs ys
   | MG.null ys = throw DivideByZero
-  | MG.basicLength xs < MG.basicLength ys = pure ()
+  | MG.length xs < MG.length ys = pure ()
   | otherwise = do
-    let lenXs = MG.basicLength xs
-        lenYs = MG.basicLength ys
+    let lenXs = MG.length xs
+        lenYs = MG.length ys
         lenQs = lenXs - lenYs + 1
     yLast <- MG.unsafeRead ys (lenYs - 1)
     forM_ [lenQs - 1, lenQs - 2 .. 0] $ \i -> do
