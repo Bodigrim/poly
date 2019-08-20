@@ -157,7 +157,7 @@ normalizeM
 normalizeM p add ws = do
     let l = MG.basicLength ws
     let go i j acc@(accP, accC)
-          | j >= l = do
+          | j >= l =
             if p accC
               then do
                 MG.write ws i acc
@@ -184,7 +184,7 @@ instance (Eq a, Num a, G.Vector v (Word, a)) => Num (Poly v a) where
   abs = id
   signum = const 1
   fromInteger n = case fromInteger n of
-    0 -> Poly $ G.empty
+    0 -> Poly G.empty
     m -> Poly $ G.singleton (0, m)
   Poly xs * Poly ys = Poly $ convolution (/= 0) (+) (*) xs ys
   {-# INLINE (+) #-}

@@ -140,7 +140,7 @@ instance (Eq a, Num a, G.Vector v a) => Num (Poly v a) where
   abs = id
   signum = const 1
   fromInteger n = case fromInteger n of
-    0 -> Poly $ G.empty
+    0 -> Poly G.empty
     m -> Poly $ G.singleton m
   Poly xs * Poly ys = toPoly $ karatsuba xs ys
   {-# INLINE (+) #-}
@@ -373,12 +373,12 @@ fst' (a :*: _) = a
 -- 1 * X^2 + 2 * X + 2
 eval :: (Num a, G.Vector v a) => Poly v a -> a -> a
 eval (Poly cs) x = fst' $
-  G.foldl' (\(acc :*: xn) cn -> (acc + cn * xn :*: x * xn)) (0 :*: 1) cs
+  G.foldl' (\(acc :*: xn) cn -> acc + cn * xn :*: x * xn) (0 :*: 1) cs
 {-# INLINE eval #-}
 
 eval' :: (Semiring a, G.Vector v a) => Poly v a -> a -> a
 eval' (Poly cs) x = fst' $
-  G.foldl' (\(acc :*: xn) cn -> (acc `plus` cn `times` xn :*: x `times` xn)) (zero :*: one) cs
+  G.foldl' (\(acc :*: xn) cn -> acc `plus` cn `times` xn :*: x `times` xn) (zero :*: one) cs
 {-# INLINE eval' #-}
 
 -- | Take a derivative.

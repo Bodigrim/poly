@@ -1,0 +1,3 @@
+- ignore: {name: Reduce duplication, within: Data.Poly.Internal.Dense.plusPoly}
+- ignore: {name: Reduce duplication, within: Data.Poly.Internal.Dense.karatsuba}
+- ignore: {name: Unused LANGUAGE pragma, within: Data.Poly.Internal.PolyOverFractional}
