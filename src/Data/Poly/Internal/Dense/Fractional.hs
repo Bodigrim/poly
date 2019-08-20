@@ -31,7 +31,7 @@ import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.Euclidean
-import Data.Semiring (Ring())
+import Data.Semiring (Ring)
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as MG
 
@@ -143,7 +143,7 @@ gcdM xs ys = do
 -- >>> gcdExt (X^3 + 3 * X :: UPoly Double) (3 * X^4 + 3 * X^2 :: UPoly Double)
 -- (1.0 * X + 0.0,(-0.16666666666666666) * X^2 + (-0.0) * X + 0.3333333333333333)
 gcdExt
-  :: (Eq a, Fractional a, GcdDomain a, Semiring.Ring a, G.Vector v a, Eq (v a))
+  :: (Eq a, Fractional a, GcdDomain a, Ring a, G.Vector v a, Eq (v a))
   => Poly v a
   -> Poly v a
   -> (Poly v a, Poly v a)
@@ -169,7 +169,7 @@ gcdExt xs ys = case scaleMonic gs of
 -- >>> scaleMonic (3 * X^4 + 3 * X^2 :: UPoly Double)
 -- Just (0.3333333333333333, 1.0 * X^4 + 0.0 * X^3 + 1.0 * X^2 + 0.0 * X + 0.0)
 scaleMonic
-  :: (Eq a, Fractional a, GcdDomain a, Semiring.Ring a, G.Vector v a, Eq (v a))
+  :: (Eq a, Fractional a, GcdDomain a, Ring a, G.Vector v a, Eq (v a))
   => Poly v a
   -> Maybe (a, Poly v a)
 scaleMonic xs = case leading xs of
