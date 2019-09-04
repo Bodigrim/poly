@@ -27,7 +27,6 @@ module Data.Poly.Semiring
   -- * Fractional coefficients
   , PolyOverFractional(..)
   , gcdExt
-  , scaleMonic
 #endif
   ) where
 
@@ -37,7 +36,7 @@ import qualified Data.Vector.Generic as G
 import Data.Poly.Internal.Dense (Poly(..), VPoly, UPoly, leading)
 import qualified Data.Poly.Internal.Dense as Dense
 #if MIN_VERSION_semirings(0,4,2)
-import Data.Poly.Internal.Dense.Fractional (gcdExt, scaleMonic)
+import Data.Poly.Internal.Dense.Fractional (gcdExt)
 import Data.Poly.Internal.Dense.GcdDomain ()
 import Data.Poly.Internal.PolyOverFractional
 #endif

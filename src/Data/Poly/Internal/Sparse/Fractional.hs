@@ -10,20 +10,17 @@
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE PatternSynonyms            #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
-{-# LANGUAGE ViewPatterns               #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 #if MIN_VERSION_semirings(0,4,2)
 
 module Data.Poly.Internal.Sparse.Fractional
-  ( fractionalGcd
-  ) where
+  () where
 
 import Prelude hiding (quotRem, rem, gcd)
 import Control.Arrow
@@ -60,16 +57,6 @@ quotientRemainder ts ys = case leading ys of
           where
             zs = Poly $ G.singleton (xp - yp, xc / yc)
             xs' = xs - zs * ys
-
-fractionalGcd
-  :: (Eq a, Fractional a, G.Vector v (Word, a))
-  => Poly v a
-  -> Poly v a
-  -> Poly v a
-fractionalGcd xs ys
-  | G.null (unPoly ys) = xs
-  | otherwise = fractionalGcd ys $ snd $ quotientRemainder xs ys
-{-# INLINE fractionalGcd #-}
 
 #else
 

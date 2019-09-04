@@ -28,13 +28,12 @@ module Data.Poly
   -- * Fractional coefficients
   , PolyOverFractional(..)
   , gcdExt
-  , scaleMonic
 #endif
   ) where
 
 import Data.Poly.Internal.Dense
 #if MIN_VERSION_semirings(0,4,2)
-import Data.Poly.Internal.Dense.Fractional (gcdExt, scaleMonic)
+import Data.Poly.Internal.Dense.Fractional (gcdExt)
 import Data.Poly.Internal.Dense.GcdDomain ()
 import Data.Poly.Internal.PolyOverFractional
 #endif

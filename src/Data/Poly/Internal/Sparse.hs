@@ -146,7 +146,7 @@ normalize p add vs
   | otherwise = runST $ do
     ws <- G.thaw vs
     l' <- normalizeM p add ws
-    G.unsafeFreeze $ MG.basicUnsafeSlice 0 l' ws
+    G.unsafeFreeze $ MG.unsafeSlice 0 l' ws
 
 normalizeM
   :: (PrimMonad m, G.Vector v (Word, a))
@@ -155,9 +155,9 @@ normalizeM
   -> G.Mutable v (PrimState m) (Word, a)
   -> m Int
 normalizeM p add ws = do
-    let l = MG.basicLength ws
+    let l = MG.length ws
     let go i j acc@(accP, accC)
-          | j >= l = do
+          | j >= l =
             if p accC
               then do
                 MG.write ws i acc
@@ -184,7 +184,7 @@ instance (Eq a, Num a, G.Vector v (Word, a)) => Num (Poly v a) where
   abs = id
   signum = const 1
   fromInteger n = case fromInteger n of
-    0 -> Poly $ G.empty
+    0 -> Poly G.empty
     m -> Poly $ G.singleton (0, m)
   Poly xs * Poly ys = Poly $ convolution (/= 0) (+) (*) xs ys
   {-# INLINE (+) #-}
@@ -224,9 +224,9 @@ plusPoly
   -> v (Word, a)
   -> v (Word, a)
 plusPoly p add xs ys = runST $ do
-  zs <- MG.basicUnsafeNew (G.basicLength xs + G.basicLength ys)
+  zs <- MG.unsafeNew (G.length xs + G.length ys)
   lenZs <- plusPolyM p add xs ys zs
-  G.unsafeFreeze $ MG.basicUnsafeSlice 0 lenZs zs
+  G.unsafeFreeze $ MG.unsafeSlice 0 lenZs zs
 {-# INLINE plusPoly #-}
 
 plusPolyM
@@ -239,20 +239,20 @@ plusPolyM
   -> m Int
 plusPolyM p add xs ys zs = go 0 0 0
   where
-    lenXs = G.basicLength xs
-    lenYs = G.basicLength ys
+    lenXs = G.length xs
+    lenYs = G.length ys
 
     go ix iy iz
       | ix == lenXs, iy == lenYs = pure iz
       | ix == lenXs = do
         G.unsafeCopy
-          (MG.basicUnsafeSlice iz (lenYs - iy) zs)
-          (G.basicUnsafeSlice iy (lenYs - iy) ys)
+          (MG.unsafeSlice iz (lenYs - iy) zs)
+          (G.unsafeSlice iy (lenYs - iy) ys)
         pure $ iz + lenYs - iy
       | iy == lenYs = do
         G.unsafeCopy
-          (MG.basicUnsafeSlice iz (lenXs - ix) zs)
-          (G.basicUnsafeSlice ix (lenXs - ix) xs)
+          (MG.unsafeSlice iz (lenXs - ix) zs)
+          (G.unsafeSlice ix (lenXs - ix) xs)
         pure $ iz + lenXs - ix
       | (xp, xc) <- G.unsafeIndex xs ix
       , (yp, yc) <- G.unsafeIndex ys iy
@@ -281,7 +281,7 @@ minusPoly
   -> v (Word, a)
   -> v (Word, a)
 minusPoly p neg sub xs ys = runST $ do
-  zs <- MG.basicUnsafeNew (lenXs + lenYs)
+  zs <- MG.unsafeNew (lenXs + lenYs)
   let go ix iy iz
         | ix == lenXs, iy == lenYs = pure iz
         | ix == lenXs = do
@@ -291,8 +291,8 @@ minusPoly p neg sub xs ys = runST $ do
           pure $ iz + lenYs - iy
         | iy == lenYs = do
           G.unsafeCopy
-            (MG.basicUnsafeSlice iz (lenXs - ix) zs)
-            (G.basicUnsafeSlice ix (lenXs - ix) xs)
+            (MG.unsafeSlice iz (lenXs - ix) zs)
+            (G.unsafeSlice ix (lenXs - ix) xs)
           pure $ iz + lenXs - ix
         | (xp, xc) <- G.unsafeIndex xs ix
         , (yp, yc) <- G.unsafeIndex ys iy
@@ -311,10 +311,10 @@ minusPoly p neg sub xs ys = runST $ do
             MG.unsafeWrite zs iz (yp, neg yc)
             go ix (iy + 1) (iz + 1)
   lenZs <- go 0 0 0
-  G.unsafeFreeze $ MG.basicUnsafeSlice 0 lenZs zs
+  G.unsafeFreeze $ MG.unsafeSlice 0 lenZs zs
   where
-    lenXs = G.basicLength xs
-    lenYs = G.basicLength ys
+    lenXs = G.length xs
+    lenYs = G.length ys
 {-# INLINE minusPoly #-}
 
 scaleM
@@ -327,7 +327,7 @@ scaleM
   -> m Int
 scaleM p mul xs (yp, yc) zs = go 0 0
   where
-    lenXs = G.basicLength xs
+    lenXs = G.length xs
 
     go ix iz
       | ix == lenXs = pure iz
@@ -350,9 +350,9 @@ scaleInternal
   -> Poly v a
   -> Poly v a
 scaleInternal p mul yp yc (Poly xs) = runST $ do
-  zs <- MG.basicUnsafeNew (G.basicLength xs)
+  zs <- MG.unsafeNew (G.length xs)
   len <- scaleM p (flip mul) xs (yp, yc) zs
-  fmap Poly $ G.unsafeFreeze $ MG.basicUnsafeSlice 0 len zs
+  fmap Poly $ G.unsafeFreeze $ MG.unsafeSlice 0 len zs
 {-# INLINE scaleInternal #-}
 
 -- | Multiply a polynomial by a monomial, expressed as a power and a coefficient.
@@ -375,29 +375,29 @@ convolution
   -> v (Word, a)
   -> v (Word, a)
 convolution p add mult xs ys
-  | G.basicLength xs >= G.basicLength ys
+  | G.length xs >= G.length ys
   = go mult xs ys
   | otherwise
   = go (flip mult) ys xs
   where
     go :: (a -> a -> a) -> v (Word, a) -> v (Word, a) -> v (Word, a)
     go mul long short = runST $ do
-      let lenLong   = G.basicLength long
-          lenShort  = G.basicLength short
+      let lenLong   = G.length long
+          lenShort  = G.length short
           lenBuffer = lenLong * lenShort
-      slices <- MG.basicUnsafeNew lenShort
-      buffer <- MG.basicUnsafeNew lenBuffer
+      slices <- MG.unsafeNew lenShort
+      buffer <- MG.unsafeNew lenBuffer
 
       forM_ [0 .. lenShort - 1] $ \iShort -> do
         let (pShort, cShort) = G.unsafeIndex short iShort
             from = iShort * lenLong
-            bufferSlice = MG.basicUnsafeSlice from lenLong buffer
+            bufferSlice = MG.unsafeSlice from lenLong buffer
         len <- scaleM p mul long (pShort, cShort) bufferSlice
         MG.unsafeWrite slices iShort (from, len)
 
       slices' <- G.unsafeFreeze slices
       buffer' <- G.unsafeFreeze buffer
-      bufferNew <- MG.basicUnsafeNew lenBuffer
+      bufferNew <- MG.unsafeNew lenBuffer
       gogo slices' buffer' bufferNew
 
     gogo
@@ -407,27 +407,27 @@ convolution p add mult xs ys
       -> G.Mutable v (PrimState m) (Word, a)
       -> m (v (Word, a))
     gogo slices buffer bufferNew
-      | G.basicLength slices == 0
+      | G.length slices == 0
       = pure G.empty
-      | G.basicLength slices == 1
+      | G.length slices == 1
       , (from, len) <- G.unsafeIndex slices 0
-      = pure $ G.basicUnsafeSlice from len buffer
+      = pure $ G.unsafeSlice from len buffer
       | otherwise = do
-        let nSlices = G.basicLength slices
-        slicesNew <- MG.basicUnsafeNew ((nSlices + 1) `quot` 2)
+        let nSlices = G.length slices
+        slicesNew <- MG.unsafeNew ((nSlices + 1) `quot` 2)
         forM_ [0 .. (nSlices - 2) `quot` 2] $ \i -> do
           let (from1, len1) = G.unsafeIndex slices (2 * i)
               (from2, len2) = G.unsafeIndex slices (2 * i + 1)
-              slice1 = G.basicUnsafeSlice from1 len1 buffer
-              slice2 = G.basicUnsafeSlice from2 len2 buffer
-              slice3 = MG.basicUnsafeSlice from1 (len1 + len2) bufferNew
+              slice1 = G.unsafeSlice from1 len1 buffer
+              slice2 = G.unsafeSlice from2 len2 buffer
+              slice3 = MG.unsafeSlice from1 (len1 + len2) bufferNew
           len3 <- plusPolyM p add slice1 slice2 slice3
           MG.unsafeWrite slicesNew i (from1, len3)
 
         when (odd nSlices) $ do
           let (from, len) = G.unsafeIndex slices (nSlices - 1)
-              slice1 = G.basicUnsafeSlice from len buffer
-              slice3 = MG.basicUnsafeSlice from len bufferNew
+              slice1 = G.unsafeSlice from len buffer
+              slice3 = MG.unsafeSlice from len bufferNew
           G.unsafeCopy slice3 slice1
           MG.unsafeWrite slicesNew (nSlices `quot` 2) (from, len)
 
@@ -512,8 +512,8 @@ derivPoly
 derivPoly p mul xs
   | G.null xs = G.empty
   | otherwise = runST $ do
-    let lenXs = G.basicLength xs
-    zs <- MG.basicUnsafeNew lenXs
+    let lenXs = G.length xs
+    zs <- MG.unsafeNew lenXs
     let go ix iz
           | ix == lenXs = pure iz
           | (xp, xc) <- G.unsafeIndex xs ix
@@ -525,7 +525,7 @@ derivPoly p mul xs
             else
               go (ix + 1) iz
     lenZs <- go 0 0
-    G.unsafeFreeze $ MG.basicUnsafeSlice 0 lenZs zs
+    G.unsafeFreeze $ MG.unsafeSlice 0 lenZs zs
 {-# INLINE derivPoly #-}
 
 -- | Compute an indefinite integral of a polynomial,

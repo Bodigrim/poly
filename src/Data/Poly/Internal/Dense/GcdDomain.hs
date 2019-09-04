@@ -9,11 +9,9 @@
 
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE PatternSynonyms            #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE ViewPatterns               #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -61,7 +59,7 @@ gcdNonEmpty xs ys = runST $ do
     ys' <- G.thaw ys
     zs' <- gcdM xs' ys'
 
-    let lenZs = MG.basicLength zs'
+    let lenZs = MG.length zs'
         go acc 0 = pure acc
         go acc n = do
           t <- MG.unsafeRead zs' (n - 1)
@@ -87,8 +85,8 @@ gcdM xs ys
   | MG.null xs = pure ys
   | MG.null ys = pure xs
   | otherwise = do
-  let lenXs = MG.basicLength xs
-      lenYs = MG.basicLength ys
+  let lenXs = MG.length xs
+      lenYs = MG.length ys
   xLast <- MG.unsafeRead xs (lenXs - 1)
   yLast <- MG.unsafeRead ys (lenYs - 1)
   let z = xLast `lcm` yLast
@@ -127,7 +125,7 @@ isZeroM
   :: (Eq a, Semiring a, PrimMonad m, G.Vector v a)
   => G.Mutable v (PrimState m) a
   -> m Bool
-isZeroM xs = go (MG.basicLength xs)
+isZeroM xs = go (MG.length xs)
   where
     go 0 = pure True
     go n = do
@@ -143,13 +141,13 @@ quotient
 quotient xs ys
   | G.null ys = throw DivideByZero
   | G.null xs = Just xs
-  | G.basicLength xs < G.basicLength ys = Nothing
+  | G.length xs < G.length ys = Nothing
   | otherwise = runST $ do
-    let lenXs = G.basicLength xs
-        lenYs = G.basicLength ys
+    let lenXs = G.length xs
+        lenYs = G.length ys
         lenQs = lenXs - lenYs + 1
-    qs <- MG.basicUnsafeNew lenQs
-    rs <- MG.basicUnsafeNew lenXs
+    qs <- MG.unsafeNew lenQs
+    rs <- MG.unsafeNew lenXs
     G.unsafeCopy rs xs
 
     let go i
