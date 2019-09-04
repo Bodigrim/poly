@@ -7,8 +7,9 @@
 -- Sparse polynomials with 'Semiring' instance.
 --
 
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE PatternSynonyms     #-}
+{-# LANGUAGE CPP              #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE PatternSynonyms  #-}
 
 module Data.Poly.Sparse.Semiring
   ( Poly
@@ -23,6 +24,10 @@ module Data.Poly.Sparse.Semiring
   , pattern X
   , eval
   , deriv
+#if MIN_VERSION_semirings(0,4,2)
+  -- * Fractional coefficients
+  , gcdExt
+#endif
   ) where
 
 import Data.Semiring (Semiring)
@@ -30,7 +35,7 @@ import qualified Data.Vector.Generic as G
 
 import Data.Poly.Internal.Sparse (Poly(..), VPoly, UPoly, leading)
 import qualified Data.Poly.Internal.Sparse as Sparse
-import Data.Poly.Internal.Sparse.Fractional ()
+import Data.Poly.Internal.Sparse.Fractional (gcdExt)
 import Data.Poly.Internal.Sparse.GcdDomain ()
 
 -- | Make 'Poly' from a list of (power, coefficient) pairs.
