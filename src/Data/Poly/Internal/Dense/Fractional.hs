@@ -131,9 +131,9 @@ gcdM xs ys = do
 {-# INLINE gcdM #-}
 
 -- | Execute the extended Euclidean algorithm.
--- For polynomials 'a' and 'b', compute their unique greatest common divisor 'g'
--- and the unique coefficient polynomial 's' satisfying 'a''s' + 'b''t' = 'g',
--- such that either 'g' is monic, or 'g = 0' and 's' is monic, or 'g = s = 0'.
+-- For polynomials @a@ and @b@, compute their unique greatest common divisor @g@
+-- and the unique coefficient polynomial @s@ satisfying @as + bt = g@,
+-- such that either @g@ is monic, or @g = 0@ and @s@ is monic, or @g = s = 0@.
 --
 -- >>> gcdExt (X^2 + 1 :: UPoly Double) (X^3 + 3 * X :: UPoly Double)
 -- (1.0, 0.5 * X^2 + (-0.0) * X + 1.0)
