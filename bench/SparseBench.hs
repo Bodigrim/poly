@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP        #-}
 {-# LANGUAGE RankNTypes #-}
 
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
@@ -18,9 +17,6 @@ benchSuite = bgroup "sparse" $ concat
   , map benchEval     $ zip tabs vecs2
   , map benchDeriv    $ zip tabs vecs2
   , map benchIntegral $ zip tabs vecs2'
-#if MIN_VERSION_semirings(0,4,2)
-  , map benchGcdExt   $ take 2 $ zip3 tabs vecs2' vecs3'
-#endif
   ]
 
 tabs :: [Int]
@@ -38,10 +34,6 @@ vecs3 :: [UPoly Int]
 vecs3 = flip map tabs $
   \n -> toPoly $ U.generate n (\i -> (fromIntegral i ^ 3, i * 3))
 
-vecs3' :: [UPoly Double]
-vecs3' = flip map (repeat 2) $
-  \n -> toPoly $ U.generate n (\i -> (fromIntegral i ^ 3, fromIntegral i * 3))
-
 benchAdd :: (Int, UPoly Int, UPoly Int) -> Benchmark
 benchAdd (k, xs, ys) = bench ("add/" ++ show k) $ nf (doBinOp (+) xs) ys
 
@@ -56,13 +48,6 @@ benchDeriv (k, xs) = bench ("deriv/" ++ show k) $ nf doDeriv xs
 
 benchIntegral :: (Int, UPoly Double) -> Benchmark
 benchIntegral (k, xs) = bench ("integral/" ++ show k) $ nf doIntegral xs
-
-#if MIN_VERSION_semirings(0,4,2)
-
-benchGcdExt :: (Int, UPoly Double, UPoly Double) -> Benchmark
-benchGcdExt (k, xs, ys) = bench ("gcdExt/" ++ show k) $ nf (doGcdExt xs) ys
-
-#endif
 
 doBinOp :: (forall a. Num a => a -> a -> a) -> UPoly Int -> UPoly Int -> Int
 doBinOp op xs ys = U.foldl' (\acc (_, x) -> acc + x) 0 zs
@@ -82,13 +67,3 @@ doIntegral :: UPoly Double -> Double
 doIntegral xs = U.foldl' (\acc (_, x) -> acc + x) 0 zs
   where
     zs = unPoly $ integral xs
-
-#if MIN_VERSION_semirings(0,4,2)
-
-doGcdExt :: UPoly Double -> UPoly Double -> Double
-doGcdExt xs ys = U.foldl' (\acc (_, x) -> acc + x) 0 zs
-  where
-    zs = unPoly $ fst $ gcdExt xs ys
-{-# INLINE doGcdExt #-}
-
-#endif
