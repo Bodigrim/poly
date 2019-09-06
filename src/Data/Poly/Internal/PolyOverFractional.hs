@@ -8,6 +8,7 @@
 --
 
 {-# LANGUAGE CPP                        #-}
+{-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
@@ -32,11 +33,15 @@ import qualified Data.Poly.Internal.Dense.Fractional as Dense (fractionalGcd)
 newtype PolyOverFractional poly = PolyOverFractional { unPolyOverFractional :: poly }
   deriving (Eq, NFData, Num, Ord, Ring, Semiring, Show)
 
-instance (Eq a, Eq (v a), Ring a, GcdDomain a, Fractional a, G.Vector v a) => GcdDomain (PolyOverFractional (Dense.Poly v a)) where
+#if !MIN_VERSION_semirings(0,5,0)
+type Field a = (Fractional a, GcdDomain a, Ring a)
+#endif
+
+instance (Eq a, Eq (v a), Field a, G.Vector v a) => GcdDomain (PolyOverFractional (Dense.Poly v a)) where
   gcd (PolyOverFractional x) (PolyOverFractional y) = PolyOverFractional (Dense.fractionalGcd x y)
   {-# INLINE gcd #-}
 
-instance (Eq a, Eq (v a), Ring a, GcdDomain a, Fractional a, G.Vector v a) => Euclidean (PolyOverFractional (Dense.Poly v a)) where
+instance (Eq a, Eq (v a), Field a, G.Vector v a) => Euclidean (PolyOverFractional (Dense.Poly v a)) where
   degree (PolyOverFractional x) =
     degree x
   quotRem (PolyOverFractional x) (PolyOverFractional y) =
