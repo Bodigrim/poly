@@ -35,8 +35,10 @@ import qualified Data.Vector.Generic as G
 
 import Data.Poly.Internal.Sparse (Poly(..), VPoly, UPoly, leading)
 import qualified Data.Poly.Internal.Sparse as Sparse
+#if MIN_VERSION_semirings(0,4,2)
 import Data.Poly.Internal.Sparse.Fractional (gcdExt)
 import Data.Poly.Internal.Sparse.GcdDomain ()
+#endif
 
 -- | Make 'Poly' from a list of (power, coefficient) pairs.
 -- (first element corresponds to a constant term).

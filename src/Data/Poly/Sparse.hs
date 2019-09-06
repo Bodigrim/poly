@@ -31,5 +31,7 @@ module Data.Poly.Sparse
   ) where
 
 import Data.Poly.Internal.Sparse
+#if MIN_VERSION_semirings(0,4,2)
 import Data.Poly.Internal.Sparse.Fractional (gcdExt)
 import Data.Poly.Internal.Sparse.GcdDomain ()
+#endif
