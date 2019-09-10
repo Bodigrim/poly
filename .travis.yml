@@ -76,10 +76,10 @@ install:
   - cat cabal.project.local || true
   - if [ -f "./configure.ac" ]; then (cd "." && autoreconf -i); fi
   - rm -f cabal.project.freeze
-  - ${CABAL} new-freeze -w ${HC} ${TEST} ${BENCH} --project-file="cabal.project" --dry
+  - ${CABAL} new-freeze --constraint "quickcheck-classes -aeson -semigroupoids -semirings comonad -distributive" -w ${HC} ${TEST} ${BENCH} --project-file="cabal.project" --dry
   - "cat \"cabal.project.freeze\" | sed -E 's/^(constraints: *| *)//' | sed 's/any.//'"
   - rm  "cabal.project.freeze"
-  - ${CABAL} new-build -w ${HC} ${TEST} ${BENCH} --project-file="cabal.project" --dep -j2 all
+  - ${CABAL} new-build --constraint "quickcheck-classes -aeson -semigroupoids -semirings comonad -distributive" -w ${HC} ${TEST} ${BENCH} --project-file="cabal.project" --dep -j2 all
   - ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks --project-file="cabal.project" --dep -j2 all
   - rm -rf .ghc.environment.* "."/dist
   - DISTDIR=$(mktemp -d /tmp/dist-test.XXXX)
@@ -104,14 +104,14 @@ script:
   - ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks all
 
   # build & run tests, build benchmarks
-  - ${CABAL} new-build -w ${HC} ${TEST} ${BENCH} all
-  - if [ "x$TEST" = "x--enable-tests" ]; then ${CABAL} new-test -w ${HC} ${TEST} ${BENCH} all; fi
+  - ${CABAL} new-build --constraint "quickcheck-classes -aeson -semigroupoids -semirings comonad -distributive" -w ${HC} ${TEST} ${BENCH} all
+  - if [ "x$TEST" = "x--enable-tests" ]; then ${CABAL} new-test --constraint "quickcheck-classes -aeson -semigroupoids -semirings comonad -distributive" -w ${HC} ${TEST} ${BENCH} all; fi
 
   # cabal check
   - (cd poly-* && ${CABAL} check)
 
   # haddock
-  - ${CABAL} new-haddock -w ${HC} ${TEST} ${BENCH} all
+  - ${CABAL} new-haddock -w ${HC} --disable-tests --disable-benchmarks all
 
   # Build without installed constraints for packages in global-db
   - rm -f cabal.project.local; ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks all;
@@ -120,18 +120,18 @@ script:
   - rm -rf cabal.project.local
 
   # Constraint set semirings-0.2.0.0
-  - if [ $HCNUMVER -eq 80202 ] ; then ${CABAL} new-build -w ${HC} ${TEST} ${BENCH} --constraint='semirings == 0.2.0.0' --constraint='quickcheck-classes == 0.5.0.0' all ; fi
+  - if [ $HCNUMVER -eq 80202 ] ; then ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks --constraint='semirings == 0.2.0.0' --constraint='quickcheck-classes == 0.5.0.0' all ; fi
   # Constraint set semirings-0.3.1.2
-  - if [ $HCNUMVER -eq 80404 ] ; then ${CABAL} new-build -w ${HC} ${TEST} ${BENCH} --constraint='semirings == 0.3.1.2' all ; fi
+  - if [ $HCNUMVER -eq 80404 ] ; then ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks --constraint='semirings == 0.3.1.2' all ; fi
   # Constraint set semirings-0.4.1
-  - if [ $HCNUMVER -eq 80605 ] ; then ${CABAL} new-build -w ${HC} ${TEST} ${BENCH} --constraint='semirings == 0.4.1' all ; fi
+  - if [ $HCNUMVER -eq 80605 ] ; then ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks --constraint='semirings == 0.4.1' all ; fi
   # Constraint set semirings-0.4.1
-  - if [ $HCNUMVER -eq 80801 ] ; then ${CABAL} new-build -w ${HC} ${TEST} ${BENCH} --constraint='semirings == 0.5' all ; fi
+  - if [ $HCNUMVER -eq 80801 ] ; then ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks --constraint='semirings == 0.5' all ; fi
 
   # Constraint set quickcheck-classes-0.5.0.0
-  - if [ $HCNUMVER -eq 80605 ] ; then ${CABAL} new-build -w ${HC} ${TEST} ${BENCH} --constraint='quickcheck-classes == 0.5.0.0' all ; fi
+  - if [ $HCNUMVER -eq 80605 ] ; then ${CABAL} new-build --constraint "quickcheck-classes -aeson -semigroupoids -semirings comonad -distributive" -w ${HC} ${TEST} --disable-benchmarks --constraint='quickcheck-classes == 0.5.0.0' all ; fi
   # Constraint set quickcheck-classes-0.6.0.0
-  - if [ $HCNUMVER -eq 80801 ] ; then ${CABAL} new-build -w ${HC} ${TEST} ${BENCH} --constraint='quickcheck-classes == 0.6.0.0' all ; fi
+  - if [ $HCNUMVER -eq 80801 ] ; then ${CABAL} new-build --constraint "quickcheck-classes -aeson -semigroupoids -semirings comonad -distributive" -w ${HC} ${TEST} --disable-benchmarks --constraint='quickcheck-classes == 0.6.0.0' all ; fi
 
 # REGENDATA ["--config","cabal.haskell-ci","--output",".travis.yml","poly.cabal"]
 # EOF
