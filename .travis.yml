@@ -31,23 +31,15 @@ before_cache:
 matrix:
   include:
     - compiler: "ghc-8.8.1"
-      env: GHCHEAD=true
-      addons: {apt: {packages: [ghc-ppa-tools,cabal-install-2.4,ghc-8.8.1], sources: [hvr-ghc]}}
+      addons: {apt: {packages: [ghc-ppa-tools,cabal-install-3.0,ghc-8.8.1], sources: [hvr-ghc]}}
     - compiler: "ghc-8.6.5"
-      addons: {apt: {packages: [ghc-ppa-tools,cabal-install-2.4,ghc-8.6.5], sources: [hvr-ghc]}}
+      addons: {apt: {packages: [ghc-ppa-tools,cabal-install-3.0,ghc-8.6.5], sources: [hvr-ghc]}}
     - compiler: "ghc-8.4.4"
-      addons: {apt: {packages: [ghc-ppa-tools,cabal-install-2.4,ghc-8.4.4], sources: [hvr-ghc]}}
+      addons: {apt: {packages: [ghc-ppa-tools,cabal-install-3.0,ghc-8.4.4], sources: [hvr-ghc]}}
     - compiler: "ghc-8.2.2"
-      addons: {apt: {packages: [ghc-ppa-tools,cabal-install-2.4,ghc-8.2.2], sources: [hvr-ghc]}}
+      addons: {apt: {packages: [ghc-ppa-tools,cabal-install-3.0,ghc-8.2.2], sources: [hvr-ghc]}}
     - compiler: "ghc-8.0.2"
-      addons: {apt: {packages: [ghc-ppa-tools,cabal-install-2.4,ghc-8.0.2], sources: [hvr-ghc]}}
-    - compiler: "ghc-head"
-      env: GHCHEAD=true
-      addons: {apt: {packages: [ghc-ppa-tools,cabal-install-head,ghc-head], sources: [hvr-ghc]}}
-
-  allow_failures:
-    - compiler: "ghc-8.8.1"
-    - compiler: "ghc-head"
+      addons: {apt: {packages: [ghc-ppa-tools,cabal-install-3.0,ghc-8.0.2], sources: [hvr-ghc]}}
 
 before_install:
   - HC=/opt/ghc/bin/${CC}
@@ -63,8 +55,8 @@ before_install:
 install:
   - ${CABAL} --version
   - echo "$(${HC} --version) [$(${HC} --print-project-git-commit-id 2> /dev/null || echo '?')]"
-  - TEST=--enable-tests
-  - BENCH=--enable-benchmarks
+  - TEST=${TEST---enable-tests}
+  - BENCH=${BENCH---enable-benchmarks}
   - GHCHEAD=${GHCHEAD-false}
   - travis_retry ${CABAL} update -v
   - sed -i.bak 's/^jobs:/-- jobs:/' $CABALHOME/config
@@ -84,10 +76,10 @@ install:
   - cat cabal.project.local || true
   - if [ -f "./configure.ac" ]; then (cd "." && autoreconf -i); fi
   - rm -f cabal.project.freeze
-  - ${CABAL} new-freeze -w ${HC} ${TEST} ${BENCH} --project-file="cabal.project" --dry
+  - ${CABAL} new-freeze --constraint "quickcheck-classes -aeson -semigroupoids comonad -distributive" -w ${HC} ${TEST} ${BENCH} --project-file="cabal.project" --dry
   - "cat \"cabal.project.freeze\" | sed -E 's/^(constraints: *| *)//' | sed 's/any.//'"
   - rm  "cabal.project.freeze"
-  - ${CABAL} new-build -w ${HC} ${TEST} ${BENCH} --project-file="cabal.project" --dep -j2 all
+  - ${CABAL} new-build --constraint "quickcheck-classes -aeson -semigroupoids comonad -distributive" -w ${HC} ${TEST} ${BENCH} --project-file="cabal.project" --dep -j2 all
   - ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks --project-file="cabal.project" --dep -j2 all
   - rm -rf .ghc.environment.* "."/dist
   - DISTDIR=$(mktemp -d /tmp/dist-test.XXXX)
@@ -112,14 +104,14 @@ script:
   - ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks all
 
   # build & run tests, build benchmarks
-  - ${CABAL} new-build -w ${HC} ${TEST} ${BENCH} all
-  - if [ "x$TEST" = "x--enable-tests" ]; then ${CABAL} new-test -w ${HC} ${TEST} ${BENCH} all; fi
+  - ${CABAL} new-build --constraint "quickcheck-classes -aeson -semigroupoids comonad -distributive" -w ${HC} ${TEST} ${BENCH} all
+  - if [ "x$TEST" = "x--enable-tests" ]; then ${CABAL} new-test --constraint "quickcheck-classes -aeson -semigroupoids comonad -distributive" -w ${HC} ${TEST} ${BENCH} all; fi
 
   # cabal check
   - (cd poly-* && ${CABAL} check)
 
   # haddock
-  - ${CABAL} new-haddock -w ${HC} ${TEST} ${BENCH} all
+  - ${CABAL} new-haddock -w ${HC} --disable-tests --disable-benchmarks all
 
   # Build without installed constraints for packages in global-db
   - rm -f cabal.project.local; ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks all;
@@ -128,16 +120,18 @@ script:
   - rm -rf cabal.project.local
 
   # Constraint set semirings-0.2.0.0
-  - if [ $HCNUMVER -eq 80605 ] ; then ${CABAL} new-build -w ${HC} ${TEST} ${BENCH} --constraint='semirings == 0.2.0.0' --constraint='quickcheck-classes == 0.5.0.0' all ; fi
+  - if [ $HCNUMVER -eq 80202 ] ; then ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks --constraint='semirings == 0.2.0.0' --constraint='quickcheck-classes == 0.5.0.0' all ; fi
   # Constraint set semirings-0.3.1.2
-  - if [ $HCNUMVER -eq 80605 ] ; then ${CABAL} new-build -w ${HC} ${TEST} ${BENCH} --constraint='semirings == 0.3.1.2' all ; fi
+  - if [ $HCNUMVER -eq 80404 ] ; then ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks --constraint='semirings == 0.3.1.2' all ; fi
   # Constraint set semirings-0.4.1
-  - if [ $HCNUMVER -eq 80605 ] ; then ${CABAL} new-build -w ${HC} ${TEST} ${BENCH} --constraint='semirings == 0.4.1' all ; fi
+  - if [ $HCNUMVER -eq 80605 ] ; then ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks --constraint='semirings == 0.4.1' all ; fi
+  # Constraint set semirings-0.4.1
+  - if [ $HCNUMVER -eq 80801 ] ; then ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks --constraint='semirings == 0.5' all ; fi
 
   # Constraint set quickcheck-classes-0.5.0.0
-  - if [ $HCNUMVER -eq 80605 ] ; then ${CABAL} new-build -w ${HC} ${TEST} ${BENCH} --constraint='quickcheck-classes == 0.5.0.0' all ; fi
+  - if [ $HCNUMVER -eq 80605 ] ; then ${CABAL} new-build --constraint "quickcheck-classes -aeson -semigroupoids comonad -distributive" -w ${HC} ${TEST} --disable-benchmarks --constraint='quickcheck-classes == 0.5.0.0' all ; fi
   # Constraint set quickcheck-classes-0.6.0.0
-  - if [ $HCNUMVER -eq 80605 ] ; then ${CABAL} new-build -w ${HC} ${TEST} ${BENCH} --constraint='quickcheck-classes == 0.6.0.0' all ; fi
+  - if [ $HCNUMVER -eq 80801 ] ; then ${CABAL} new-build --constraint "quickcheck-classes -aeson -semigroupoids comonad -distributive" -w ${HC} ${TEST} --disable-benchmarks --constraint='quickcheck-classes == 0.6.0.0' all ; fi
 
 # REGENDATA ["--config","cabal.haskell-ci","--output",".travis.yml","poly.cabal"]
 # EOF
