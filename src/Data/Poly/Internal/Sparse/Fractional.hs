@@ -28,17 +28,19 @@ import Prelude hiding (quotRem, quot, rem, gcd)
 import Control.Arrow
 import Control.Exception
 import Data.Euclidean
+#if !MIN_VERSION_semirings(0,5,0)
 import Data.Semiring (Ring)
+#endif
 import qualified Data.Vector.Generic as G
 
 import Data.Poly.Internal.Sparse
 import Data.Poly.Internal.Sparse.GcdDomain ()
 
 #if !MIN_VERSION_semirings(0,5,0)
-type Field a = (Fractional a, GcdDomain a, Ring a)
+type Field a = (Euclidean a, Ring a)
 #endif
 
-instance (Eq a, Eq (v (Word, a)), Field a, G.Vector v (Word, a)) => Euclidean (Poly v a) where
+instance (Eq a, Eq (v (Word, a)), Field a, Fractional a, G.Vector v (Word, a)) => Euclidean (Poly v a) where
   degree (Poly xs)
     | G.null xs = 0
     | otherwise = 1 + fromIntegral (fst (G.last xs))
@@ -74,7 +76,7 @@ quotientRemainder ts ys = case leading ys of
 -- >>> gcdExt (X^3 + 3 * X :: UPoly Double) (3 * X^4 + 3 * X^2 :: UPoly Double)
 -- (1.0 * X + 0.0,(-0.16666666666666666) * X^2 + (-0.0) * X + 0.3333333333333333)
 gcdExt
-  :: (Eq a, Field a, G.Vector v (Word, a), Eq (v (Word, a)))
+  :: (Eq a, Field a, Fractional a, G.Vector v (Word, a), Eq (v (Word, a)))
   => Poly v a
   -> Poly v a
   -> (Poly v a, Poly v a)
@@ -100,7 +102,7 @@ gcdExt xs ys = case scaleMonic gs of
 -- >>> scaleMonic (3 * X^4 + 3 * X^2 :: UPoly Double)
 -- Just (0.3333333333333333, 1.0 * X^4 + 0.0 * X^3 + 1.0 * X^2 + 0.0 * X + 0.0)
 scaleMonic
-  :: (Eq a, Field a, G.Vector v (Word, a), Eq (v (Word, a)))
+  :: (Eq a, Field a, Fractional a, G.Vector v (Word, a), Eq (v (Word, a)))
   => Poly v a
   -> Maybe (a, Poly v a)
 scaleMonic xs = case leading xs of
