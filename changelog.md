@@ -1,3 +1,9 @@
+# 0.3.2.0
+
+* Add `NFData` instance.
+* Implement extended GCD.
+* Rename `PolyOverFractional` to `PolyOverField`.
+
 # 0.3.1.0
 
 * Implement Karatsuba multiplication.
