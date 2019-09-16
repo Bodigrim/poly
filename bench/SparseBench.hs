@@ -67,4 +67,3 @@ doIntegral :: UPoly Double -> Double
 doIntegral xs = U.foldl' (\acc (_, x) -> acc + x) 0 zs
   where
     zs = unPoly $ integral xs
-

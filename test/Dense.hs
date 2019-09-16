@@ -281,5 +281,4 @@ gcdExtTests = localOption (QuickCheckMaxSize 12) $ testGroup "gcdExt"
 sameUpToUnits :: (Eq a, GcdDomain a) => a -> a -> Bool
 sameUpToUnits x y = x == y ||
   isJust (x `divide` y) && isJust (y `divide` x)
-
 #endif

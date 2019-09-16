@@ -7,6 +7,7 @@
 -- GcdDomain for Fractional underlying
 --
 
+{-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE PatternSynonyms            #-}
@@ -28,14 +29,20 @@ import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.Euclidean
+#if !MIN_VERSION_semirings(0,5,0)
 import Data.Semiring (Ring)
+#endif
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as MG
 
 import Data.Poly.Internal.Dense
 import Data.Poly.Internal.Dense.GcdDomain ()
 
-instance (Eq a, Eq (v a), Ring a, GcdDomain a, Fractional a, G.Vector v a) => Euclidean (Poly v a) where
+#if !MIN_VERSION_semirings(0,5,0)
+type Field a = (Euclidean a, Ring a)
+#endif
+
+instance (Eq a, Eq (v a), Field a, Fractional a, Fractional a, G.Vector v a) => Euclidean (Poly v a) where
   degree (Poly xs) = fromIntegral (G.length xs)
 
   quotRem (Poly xs) (Poly ys) = (toPoly qs, toPoly rs)
@@ -131,16 +138,16 @@ gcdM xs ys = do
 {-# INLINE gcdM #-}
 
 -- | Execute the extended Euclidean algorithm.
--- For polynomials 'a' and 'b', compute their unique greatest common divisor 'g'
--- and the unique coefficient polynomial 's' satisfying 'a''s' + 'b''t' = 'g',
--- such that either 'g' is monic, or 'g = 0' and 's' is monic, or 'g = s = 0'.
+-- For polynomials @a@ and @b@, compute their unique greatest common divisor @g@
+-- and the unique coefficient polynomial @s@ satisfying @as + bt = g@,
+-- such that either @g@ is monic, or @g = 0@ and @s@ is monic, or @g = s = 0@.
 --
 -- >>> gcdExt (X^2 + 1 :: UPoly Double) (X^3 + 3 * X :: UPoly Double)
 -- (1.0, 0.5 * X^2 + (-0.0) * X + 1.0)
 -- >>> gcdExt (X^3 + 3 * X :: UPoly Double) (3 * X^4 + 3 * X^2 :: UPoly Double)
 -- (1.0 * X + 0.0,(-0.16666666666666666) * X^2 + (-0.0) * X + 0.3333333333333333)
 gcdExt
-  :: (Eq a, Fractional a, GcdDomain a, Ring a, G.Vector v a, Eq (v a))
+  :: (Eq a, Field a, Fractional a, G.Vector v a, Eq (v a))
   => Poly v a
   -> Poly v a
   -> (Poly v a, Poly v a)
@@ -166,7 +173,7 @@ gcdExt xs ys = case scaleMonic gs of
 -- >>> scaleMonic (3 * X^4 + 3 * X^2 :: UPoly Double)
 -- Just (0.3333333333333333, 1.0 * X^4 + 0.0 * X^3 + 1.0 * X^2 + 0.0 * X + 0.0)
 scaleMonic
-  :: (Eq a, Fractional a, GcdDomain a, Ring a, G.Vector v a, Eq (v a))
+  :: (Eq a, Field a, Fractional a, G.Vector v a, Eq (v a))
   => Poly v a
   -> Maybe (a, Poly v a)
 scaleMonic xs = case leading xs of
