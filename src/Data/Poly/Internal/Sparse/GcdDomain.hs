@@ -31,10 +31,9 @@ import qualified Data.Vector.Generic as G
 
 import Data.Poly.Internal.Sparse
 
--- | Consider using 'Data.Poly.Sparse.Semiring.PolyOverFractional' wrapper,
+-- | Consider using 'Data.Poly.Sparse.Semiring.PolyOverField' wrapper,
 -- which provides a much faster implementation of
--- 'Data.Euclidean.gcd' for 'Fractional'
--- coefficients.
+-- 'Data.Euclidean.gcd' for polynomials over 'Field'.
 instance (Eq a, Ring a, GcdDomain a, Eq (v (Word, a)), G.Vector v (Word, a)) => GcdDomain (Poly v a) where
   divide xs ys = case leading ys of
     Nothing -> throw DivideByZero

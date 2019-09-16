@@ -111,8 +111,8 @@ doGcdExt n = V.sum gs
 doGcdFrac :: Int -> Rational
 doGcdFrac n = V.sum gs
   where
-    xs = PolyOverFractional $ toPoly $ V.generate n ((+ 1) . (* 2) . fromIntegral)
-    ys = PolyOverFractional $ toPoly $ V.generate n ((+ 2) . (* 3) . fromIntegral)
-    gs = unPoly $ unPolyOverFractional $ xs `gcd` ys
+    xs = PolyOverField $ toPoly $ V.generate n ((+ 1) . (* 2) . fromIntegral)
+    ys = PolyOverField $ toPoly $ V.generate n ((+ 2) . (* 3) . fromIntegral)
+    gs = unPoly $ unPolyOverField $ xs `gcd` ys
 
 #endif

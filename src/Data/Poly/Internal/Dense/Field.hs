@@ -1,10 +1,10 @@
 -- |
--- Module:      Data.Poly.Internal.Dense.Fractional
+-- Module:      Data.Poly.Internal.Dense.Field
 -- Copyright:   (c) 2019 Andrew Lelechenko
 -- Licence:     BSD3
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
 --
--- GcdDomain for Fractional underlying
+-- GcdDomain for Field underlying
 --
 
 {-# LANGUAGE ConstraintKinds            #-}
@@ -18,8 +18,8 @@
 
 #if MIN_VERSION_semirings(0,4,2)
 
-module Data.Poly.Internal.Dense.Fractional
-  ( fractionalGcd
+module Data.Poly.Internal.Dense.Field
+  ( fieldGcd
   , gcdExt
   ) where
 
@@ -115,16 +115,16 @@ remainderM xs ys
         MG.unsafeModify xs (\c -> c `minus` r `times` y `quot` yLast) (i + k)
 {-# INLINE remainderM #-}
 
-fractionalGcd
+fieldGcd
   :: (Eq a, Field a, G.Vector v a)
   => Poly v a
   -> Poly v a
   -> Poly v a
-fractionalGcd (Poly xs) (Poly ys) = toPoly' $ runST $ do
+fieldGcd (Poly xs) (Poly ys) = toPoly' $ runST $ do
   xs' <- G.thaw xs
   ys' <- G.thaw ys
   gcdM xs' ys'
-{-# INLINE fractionalGcd #-}
+{-# INLINE fieldGcd #-}
 
 gcdM
   :: (PrimMonad m, Eq a, Field a, G.Vector v a)
@@ -184,6 +184,6 @@ scaleMonic xs = case leading xs of
 
 #else
 
-module Data.Poly.Internal.Dense.Fractional () where
+module Data.Poly.Internal.Dense.Field () where
 
 #endif

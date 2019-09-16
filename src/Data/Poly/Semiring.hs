@@ -24,9 +24,12 @@ module Data.Poly.Semiring
   , eval
   , deriv
 #if MIN_VERSION_semirings(0,4,2)
-  -- * Fractional coefficients
-  , PolyOverFractional(..)
+  -- * Polynomials over 'Field'
+  , PolyOverField(..)
   , gcdExt
+  , PolyOverFractional
+  , pattern PolyOverFractional
+  , unPolyOverFractional
 #endif
   ) where
 
@@ -36,9 +39,9 @@ import qualified Data.Vector.Generic as G
 import Data.Poly.Internal.Dense (Poly(..), VPoly, UPoly, leading)
 import qualified Data.Poly.Internal.Dense as Dense
 #if MIN_VERSION_semirings(0,4,2)
-import Data.Poly.Internal.Dense.Fractional (gcdExt)
+import Data.Poly.Internal.Dense.Field (gcdExt)
 import Data.Poly.Internal.Dense.GcdDomain ()
-import Data.Poly.Internal.PolyOverFractional
+import Data.Poly.Internal.PolyOverField
 #endif
 
 -- | Make 'Poly' from a vector of coefficients

@@ -25,15 +25,18 @@ module Data.Poly
   , deriv
   , integral
 #if MIN_VERSION_semirings(0,4,2)
-  -- * Fractional coefficients
-  , PolyOverFractional(..)
+  -- * Polynomials over 'Field'
+  , PolyOverField(..)
   , gcdExt
+  , PolyOverFractional
+  , pattern PolyOverFractional
+  , unPolyOverFractional
 #endif
   ) where
 
 import Data.Poly.Internal.Dense
 #if MIN_VERSION_semirings(0,4,2)
-import Data.Poly.Internal.Dense.Fractional (gcdExt)
+import Data.Poly.Internal.Dense.Field (gcdExt)
 import Data.Poly.Internal.Dense.GcdDomain ()
-import Data.Poly.Internal.PolyOverFractional
+import Data.Poly.Internal.PolyOverField
 #endif

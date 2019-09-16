@@ -30,11 +30,11 @@ library
     Data.Poly.Sparse.Semiring
   other-modules:
     Data.Poly.Internal.Dense
-    Data.Poly.Internal.Dense.Fractional
+    Data.Poly.Internal.Dense.Field
     Data.Poly.Internal.Dense.GcdDomain
-    Data.Poly.Internal.PolyOverFractional
+    Data.Poly.Internal.PolyOverField
     Data.Poly.Internal.Sparse
-    Data.Poly.Internal.Sparse.Fractional
+    Data.Poly.Internal.Sparse.Field
     Data.Poly.Internal.Sparse.GcdDomain
   build-depends:
     base >= 4.9 && < 5,
