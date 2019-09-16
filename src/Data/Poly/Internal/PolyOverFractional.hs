@@ -37,11 +37,11 @@ newtype PolyOverFractional poly = PolyOverFractional { unPolyOverFractional :: p
 type Field a = (Euclidean a, Ring a)
 #endif
 
-instance (Eq a, Eq (v a), Field a, Fractional a, G.Vector v a) => GcdDomain (PolyOverFractional (Dense.Poly v a)) where
+instance (Eq a, Eq (v a), Field a, G.Vector v a) => GcdDomain (PolyOverFractional (Dense.Poly v a)) where
   gcd (PolyOverFractional x) (PolyOverFractional y) = PolyOverFractional (Dense.fractionalGcd x y)
   {-# INLINE gcd #-}
 
-instance (Eq a, Eq (v a), Field a, Fractional a, G.Vector v a) => Euclidean (PolyOverFractional (Dense.Poly v a)) where
+instance (Eq a, Eq (v a), Field a, G.Vector v a) => Euclidean (PolyOverFractional (Dense.Poly v a)) where
   degree (PolyOverFractional x) =
     degree x
   quotRem (PolyOverFractional x) (PolyOverFractional y) =

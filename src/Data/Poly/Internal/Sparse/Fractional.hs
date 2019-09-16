@@ -31,16 +31,17 @@ import Data.Euclidean
 #if !MIN_VERSION_semirings(0,5,0)
 import Data.Semiring (Ring)
 #endif
+import Data.Semiring (minus, plus, times, zero)
 import qualified Data.Vector.Generic as G
 
 import Data.Poly.Internal.Sparse
 import Data.Poly.Internal.Sparse.GcdDomain ()
 
 #if !MIN_VERSION_semirings(0,5,0)
-type Field a = (Euclidean a, Ring a)
+type Field a = (Euclidean a, Ring a, Fractional a)
 #endif
 
-instance (Eq a, Eq (v (Word, a)), Field a, Fractional a, G.Vector v (Word, a)) => Euclidean (Poly v a) where
+instance (Eq a, Eq (v (Word, a)), Field a, G.Vector v (Word, a)) => Euclidean (Poly v a) where
   degree (Poly xs)
     | G.null xs = 0
     | otherwise = 1 + fromIntegral (fst (G.last xs))
@@ -48,7 +49,7 @@ instance (Eq a, Eq (v (Word, a)), Field a, Fractional a, G.Vector v (Word, a)) =
   quotRem = quotientRemainder
 
 quotientRemainder
-  :: (Eq a, Fractional a, G.Vector v (Word, a))
+  :: (Eq a, Field a, G.Vector v (Word, a))
   => Poly v a
   -> Poly v a
   -> (Poly v a, Poly v a)
@@ -57,14 +58,14 @@ quotientRemainder ts ys = case leading ys of
   Just (yp, yc) -> go ts
     where
       go xs = case leading xs of
-        Nothing -> (0, 0)
+        Nothing -> (zero, zero)
         Just (xp, xc) -> case xp `compare` yp of
-          LT -> (0, xs)
+          LT -> (zero, xs)
           EQ -> (zs, xs')
-          GT -> first (+ zs) $ go xs'
+          GT -> first (`plus` zs) $ go xs'
           where
-            zs = Poly $ G.singleton (xp - yp, xc / yc)
-            xs' = xs - zs * ys
+            zs = Poly $ G.singleton (xp `minus` yp, xc `quot` yc)
+            xs' = xs `minus` zs `times` ys
 
 -- | Execute the extended Euclidean algorithm.
 -- For polynomials @a@ and @b@, compute their unique greatest common divisor @g@
