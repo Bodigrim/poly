@@ -3,6 +3,7 @@
 * Add `NFData` instance.
 * Implement extended GCD.
 * Rename `PolyOverFractional` to `PolyOverField`.
+* Add `integral` with `Semiring`-based interface.
 
 # 0.3.1.0
 
