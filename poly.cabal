@@ -69,6 +69,7 @@ test-suite poly-tests
 benchmark poly-gauge
   build-depends:
     base >=4.9 && <5,
+    deepseq >= 1.1 && < 1.5,
     gauge >= 0.1,
     poly,
     semirings >= 0.2,
