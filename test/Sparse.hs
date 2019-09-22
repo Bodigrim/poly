@@ -252,6 +252,8 @@ derivTests :: TestTree
 derivTests = testGroup "deriv"
   [ testProperty "deriv = S.deriv" $
     \(p :: Poly V.Vector Integer) -> deriv p === S.deriv p
+  , testProperty "integral = S.integral" $
+    \(p :: Poly V.Vector Rational) -> integral p === S.integral p
   , testProperty "deriv . integral = id" $
     \(p :: Poly V.Vector Rational) -> deriv (integral p) === p
   , testProperty "deriv c = 0" $

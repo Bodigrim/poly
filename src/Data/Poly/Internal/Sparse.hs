@@ -37,8 +37,12 @@ module Data.Poly.Internal.Sparse
   , pattern X'
   , eval'
   , deriv'
+#if MIN_VERSION_semirings(0,5,0)
+  , integral'
+#endif
   ) where
 
+import Prelude hiding (quot)
 import Control.DeepSeq (NFData)
 import Control.Monad
 import Control.Monad.Primitive
@@ -56,6 +60,9 @@ import GHC.Exts
 #if !MIN_VERSION_semirings(0,4,0)
 import Data.Semigroup
 import Numeric.Natural
+#endif
+#if MIN_VERSION_semirings(0,5,0)
+import Data.Euclidean (Field, quot)
 #endif
 
 -- | Polynomials of one variable with coefficients from @a@,
@@ -538,6 +545,14 @@ integral (Poly xs)
   = Poly
   $ G.map (\(p, c) -> (p + 1, c / (fromIntegral p + 1))) xs
 {-# INLINE integral #-}
+
+#if MIN_VERSION_semirings(0,5,0)
+integral' :: (Eq a, Field a, G.Vector v (Word, a)) => Poly v a -> Poly v a
+integral' (Poly xs)
+  = Poly
+  $ G.map (\(p, c) -> (p + 1, c `quot` Semiring.fromIntegral (p + 1))) xs
+{-# INLINE integral' #-}
+#endif
 
 -- | Create an identity polynomial.
 pattern X :: (Eq a, Num a, G.Vector v (Word, a), Eq (v (Word, a))) => Poly v a

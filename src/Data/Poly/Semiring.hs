@@ -23,6 +23,9 @@ module Data.Poly.Semiring
   , pattern X
   , eval
   , deriv
+#if MIN_VERSION_semirings(0,5,0)
+  , integral
+#endif
 #if MIN_VERSION_semirings(0,4,2)
   -- * Polynomials over 'Field'
   , PolyOverField(..)
@@ -42,6 +45,9 @@ import qualified Data.Poly.Internal.Dense as Dense
 import Data.Poly.Internal.Dense.Field (gcdExt)
 import Data.Poly.Internal.Dense.GcdDomain ()
 import Data.Poly.Internal.PolyOverField
+#endif
+#if MIN_VERSION_semirings(0,5,0)
+import Data.Euclidean (Field)
 #endif
 
 -- | Make 'Poly' from a vector of coefficients
@@ -85,3 +91,13 @@ eval = Dense.eval'
 -- 3 * X^2 + 0 * X + 3
 deriv :: (Eq a, Semiring a, G.Vector v a) => Poly v a -> Poly v a
 deriv = Dense.deriv'
+
+#if MIN_VERSION_semirings(0,5,0)
+-- | Compute an indefinite integral of a polynomial,
+-- setting constant term to zero.
+--
+-- >>> integral (3 * X^2 + 3) :: UPoly Double
+-- 1.0 * X^3 + 0.0 * X^2 + 3.0 * X + 0.0
+integral :: (Eq a, Field a, G.Vector v a) => Poly v a -> Poly v a
+integral = Dense.integral'
+#endif

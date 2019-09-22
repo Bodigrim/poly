@@ -24,6 +24,9 @@ module Data.Poly.Sparse.Semiring
   , pattern X
   , eval
   , deriv
+#if MIN_VERSION_semirings(0,5,0)
+  , integral
+#endif
 #if MIN_VERSION_semirings(0,4,2)
   -- * Polynomials over 'Field'
   , gcdExt
@@ -38,6 +41,9 @@ import qualified Data.Poly.Internal.Sparse as Sparse
 #if MIN_VERSION_semirings(0,4,2)
 import Data.Poly.Internal.Sparse.Field (gcdExt)
 import Data.Poly.Internal.Sparse.GcdDomain ()
+#endif
+#if MIN_VERSION_semirings(0,5,0)
+import Data.Euclidean (Field)
 #endif
 
 -- | Make 'Poly' from a list of (power, coefficient) pairs.
@@ -81,3 +87,13 @@ eval = Sparse.eval'
 -- 3 * X^2 + 3
 deriv :: (Eq a, Semiring a, G.Vector v (Word, a)) => Poly v a -> Poly v a
 deriv = Sparse.deriv'
+
+#if MIN_VERSION_semirings(0,5,0)
+-- | Compute an indefinite integral of a polynomial,
+-- setting constant term to zero.
+--
+-- >>> integral (3 * X^2 + 3) :: UPoly Double
+-- 1.0 * X^3 + 3.0 * X
+integral :: (Eq a, Field a, G.Vector v (Word, a)) => Poly v a -> Poly v a
+integral = Sparse.integral'
+#endif
