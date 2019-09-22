@@ -47,6 +47,7 @@ import Control.DeepSeq (NFData)
 import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
+import Data.Bits
 import Data.List (intersperse)
 import Data.Ord
 import Data.Semiring (Semiring(..), Ring())
@@ -421,8 +422,8 @@ convolution p add mult xs ys
       = pure $ G.unsafeSlice from len buffer
       | otherwise = do
         let nSlices = G.length slices
-        slicesNew <- MG.unsafeNew ((nSlices + 1) `quot` 2)
-        forM_ [0 .. (nSlices - 2) `quot` 2] $ \i -> do
+        slicesNew <- MG.unsafeNew ((nSlices + 1) `shiftR` 1)
+        forM_ [0 .. (nSlices - 2) `shiftR` 1] $ \i -> do
           let (from1, len1) = G.unsafeIndex slices (2 * i)
               (from2, len2) = G.unsafeIndex slices (2 * i + 1)
               slice1 = G.unsafeSlice from1 len1 buffer
@@ -436,7 +437,7 @@ convolution p add mult xs ys
               slice1 = G.unsafeSlice from len buffer
               slice3 = MG.unsafeSlice from len bufferNew
           G.unsafeCopy slice3 slice1
-          MG.unsafeWrite slicesNew (nSlices `quot` 2) (from, len)
+          MG.unsafeWrite slicesNew (nSlices `shiftR` 1) (from, len)
 
         slicesNew' <- G.unsafeFreeze slicesNew
         buffer'    <- G.unsafeThaw   buffer

@@ -46,6 +46,7 @@ import Control.DeepSeq (NFData)
 import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
+import Data.Bits
 import Data.List (foldl', intersperse)
 import Data.Semiring (Semiring(..), Ring())
 import qualified Data.Semiring as Semiring
@@ -287,7 +288,7 @@ karatsuba xs ys
     lenYs = G.length ys
     lenZs = lenXs + lenYs - 1
 
-    m    = ((lenXs `min` lenYs) + 1) `quot` 2
+    m    = ((lenXs `min` lenYs) + 1) `shiftR` 1
 
     xs0  = G.slice 0 m xs
     xs1  = G.slice m (lenXs - m) xs
