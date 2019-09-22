@@ -23,7 +23,7 @@ module Data.Poly.Internal.Dense.Field
   , gcdExt
   ) where
 
-import Prelude hiding (quot, rem, gcd)
+import Prelude hiding (quotRem, quot, rem, gcd)
 import Control.Exception
 import Control.Monad
 import Control.Monad.Primitive
@@ -160,10 +160,10 @@ gcdExt xs ys = case scaleMonic gs of
   where
     (gs, ss) = go ys xs zero one
       where
-        go r r' s s'
-          | r == zero = (r', s')
-          | otherwise = case r' `quot` r of
-            q -> go (r' `minus` q `times` r) r (s' `minus` q `times` s) s
+        go r' r s' s
+          | r' == zero = (r, s)
+          | otherwise  = case r `quotRem` r' of
+            (q, r'') -> go r'' r' (s `minus` q `times` s') s'
 {-# INLINE gcdExt #-}
 
 -- | Scale a non-zero polynomial such that its leading coefficient is one,
