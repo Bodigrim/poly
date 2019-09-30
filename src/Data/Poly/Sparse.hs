@@ -7,7 +7,8 @@
 -- Sparse polynomials with 'Num' instance.
 --
 
-{-# LANGUAGE PatternSynonyms     #-}
+{-# LANGUAGE CPP             #-}
+{-# LANGUAGE PatternSynonyms #-}
 
 module Data.Poly.Sparse
   ( Poly
@@ -23,8 +24,14 @@ module Data.Poly.Sparse
   , eval
   , deriv
   , integral
+#if MIN_VERSION_semirings(0,4,2)
+  -- * Polynomials over 'Field'
+  , gcdExt
+#endif
   ) where
 
 import Data.Poly.Internal.Sparse
-import Data.Poly.Internal.Sparse.Fractional ()
+#if MIN_VERSION_semirings(0,4,2)
+import Data.Poly.Internal.Sparse.Field (gcdExt)
 import Data.Poly.Internal.Sparse.GcdDomain ()
+#endif

@@ -36,13 +36,17 @@ module Data.Poly.Internal.Dense
   , pattern X'
   , eval'
   , deriv'
+#if MIN_VERSION_semirings(0,5,0)
+  , integral'
+#endif
   ) where
 
-import Prelude hiding (quotRem, rem, gcd, lcm, (^))
+import Prelude hiding (quotRem, quot, rem, gcd, lcm, (^))
 import Control.DeepSeq (NFData)
 import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
+import Data.Bits
 import Data.List (foldl', intersperse)
 import Data.Semiring (Semiring(..), Ring())
 import qualified Data.Semiring as Semiring
@@ -54,6 +58,9 @@ import GHC.Exts
 #if !MIN_VERSION_semirings(0,4,0)
 import Data.Semigroup
 import Numeric.Natural
+#endif
+#if MIN_VERSION_semirings(0,5,0)
+import Data.Euclidean (Field, quot)
 #endif
 
 -- | Polynomials of one variable with coefficients from @a@,
@@ -281,7 +288,7 @@ karatsuba xs ys
     lenYs = G.length ys
     lenZs = lenXs + lenYs - 1
 
-    m    = ((lenXs `min` lenYs) + 1) `quot` 2
+    m    = ((lenXs `min` lenYs) + 1) `shiftR` 1
 
     xs0  = G.slice 0 m xs
     xs1  = G.slice m (lenXs - m) xs
@@ -422,6 +429,21 @@ integral (Poly xs)
     where
       lenXs = G.length xs
 {-# INLINE integral #-}
+
+#if MIN_VERSION_semirings(0,5,0)
+integral' :: (Eq a, Field a, G.Vector v a) => Poly v a -> Poly v a
+integral' (Poly xs)
+  | G.null xs = Poly G.empty
+  | otherwise = toPoly' $ runST $ do
+    zs <- MG.unsafeNew (lenXs + 1)
+    MG.unsafeWrite zs zero zero
+    forM_ [0 .. lenXs - 1] $ \i ->
+      MG.unsafeWrite zs (i + 1) (G.unsafeIndex xs i `quot` Semiring.fromIntegral (i + 1))
+    G.unsafeFreeze zs
+    where
+      lenXs = G.length xs
+{-# INLINE integral' #-}
+#endif
 
 -- | Create an identity polynomial.
 pattern X :: (Eq a, Num a, G.Vector v a, Eq (v a)) => Poly v a

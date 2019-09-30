@@ -37,12 +37,17 @@ module Data.Poly.Internal.Sparse
   , pattern X'
   , eval'
   , deriv'
+#if MIN_VERSION_semirings(0,5,0)
+  , integral'
+#endif
   ) where
 
+import Prelude hiding (quot)
 import Control.DeepSeq (NFData)
 import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
+import Data.Bits
 import Data.List (intersperse)
 import Data.Ord
 import Data.Semiring (Semiring(..), Ring())
@@ -56,6 +61,9 @@ import GHC.Exts
 #if !MIN_VERSION_semirings(0,4,0)
 import Data.Semigroup
 import Numeric.Natural
+#endif
+#if MIN_VERSION_semirings(0,5,0)
+import Data.Euclidean (Field, quot)
 #endif
 
 -- | Polynomials of one variable with coefficients from @a@,
@@ -414,8 +422,8 @@ convolution p add mult xs ys
       = pure $ G.unsafeSlice from len buffer
       | otherwise = do
         let nSlices = G.length slices
-        slicesNew <- MG.unsafeNew ((nSlices + 1) `quot` 2)
-        forM_ [0 .. (nSlices - 2) `quot` 2] $ \i -> do
+        slicesNew <- MG.unsafeNew ((nSlices + 1) `shiftR` 1)
+        forM_ [0 .. (nSlices - 2) `shiftR` 1] $ \i -> do
           let (from1, len1) = G.unsafeIndex slices (2 * i)
               (from2, len2) = G.unsafeIndex slices (2 * i + 1)
               slice1 = G.unsafeSlice from1 len1 buffer
@@ -429,7 +437,7 @@ convolution p add mult xs ys
               slice1 = G.unsafeSlice from len buffer
               slice3 = MG.unsafeSlice from len bufferNew
           G.unsafeCopy slice3 slice1
-          MG.unsafeWrite slicesNew (nSlices `quot` 2) (from, len)
+          MG.unsafeWrite slicesNew (nSlices `shiftR` 1) (from, len)
 
         slicesNew' <- G.unsafeFreeze slicesNew
         buffer'    <- G.unsafeThaw   buffer
@@ -538,6 +546,14 @@ integral (Poly xs)
   = Poly
   $ G.map (\(p, c) -> (p + 1, c / (fromIntegral p + 1))) xs
 {-# INLINE integral #-}
+
+#if MIN_VERSION_semirings(0,5,0)
+integral' :: (Eq a, Field a, G.Vector v (Word, a)) => Poly v a -> Poly v a
+integral' (Poly xs)
+  = Poly
+  $ G.map (\(p, c) -> (p + 1, c `quot` Semiring.fromIntegral (p + 1))) xs
+{-# INLINE integral' #-}
+#endif
 
 -- | Create an identity polynomial.
 pattern X :: (Eq a, Num a, G.Vector v (Word, a), Eq (v (Word, a))) => Poly v a

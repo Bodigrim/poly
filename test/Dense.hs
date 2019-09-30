@@ -34,9 +34,9 @@ instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (Poly v a) w
   shrink = fmap (S.toPoly . G.fromList) . shrink . G.toList . unPoly
 
 #if MIN_VERSION_semirings(0,4,2)
-instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (PolyOverFractional (Poly v a)) where
-  arbitrary = PolyOverFractional . S.toPoly . G.fromList . (\xs -> take (length xs `mod` 10) xs) <$> arbitrary
-  shrink = fmap (PolyOverFractional . S.toPoly . G.fromList) . shrink . G.toList . unPoly . unPolyOverFractional
+instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (PolyOverField (Poly v a)) where
+  arbitrary = PolyOverField . S.toPoly . G.fromList . (\xs -> take (length xs `mod` 10) xs) <$> arbitrary
+  shrink = fmap (PolyOverField . S.toPoly . G.fromList) . shrink . G.toList . unPoly . unPolyOverField
 #endif
 
 newtype ShortPoly a = ShortPoly { unShortPoly :: a }
@@ -122,7 +122,7 @@ euclideanTests
   [
 #if MIN_VERSION_semirings(0,4,2) && MIN_VERSION_quickcheck_classes(0,6,3)
     gcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Integer)))
-  , gcdDomainLaws (Proxy :: Proxy (PolyOverFractional (Poly V.Vector Rational)))
+  , gcdDomainLaws (Proxy :: Proxy (PolyOverField (Poly V.Vector Rational)))
   , euclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
 #endif
   ]
@@ -247,6 +247,8 @@ derivTests :: TestTree
 derivTests = testGroup "deriv"
   [ testProperty "deriv = S.deriv" $
     \(p :: Poly V.Vector Integer) -> deriv p === S.deriv p
+  , testProperty "integral = S.integral" $
+    \(p :: Poly V.Vector Rational) -> integral p === S.integral p
   , testProperty "deriv . integral = id" $
     \(p :: Poly V.Vector Rational) -> deriv (integral p) === p
   , testProperty "deriv c = 0" $
@@ -281,5 +283,4 @@ gcdExtTests = localOption (QuickCheckMaxSize 12) $ testGroup "gcdExt"
 sameUpToUnits :: (Eq a, GcdDomain a) => a -> a -> Bool
 sameUpToUnits x y = x == y ||
   isJust (x `divide` y) && isJust (y `divide` x)
-
 #endif

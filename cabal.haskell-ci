@@ -13,6 +13,11 @@ constraint-set semirings-0.4.1
   constraints:
     semirings == 0.4.1
 
+constraint-set semirings-0.5
+  ghc: ==8.6.5
+  constraints:
+    semirings == 0.5
+
 constraint-set quickcheck-classes-0.5.0.0
   ghc: ==8.6.5
   constraints:
