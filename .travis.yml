@@ -125,7 +125,7 @@ script:
   - if [ $HCNUMVER -eq 80404 ] ; then ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks --constraint='semirings == 0.3.1.2' all ; fi
   # Constraint set semirings-0.4.1
   - if [ $HCNUMVER -eq 80605 ] ; then ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks --constraint='semirings == 0.4.1' all ; fi
-  # Constraint set semirings-0.4.1
+  # Constraint set semirings-0.5
   - if [ $HCNUMVER -eq 80801 ] ; then ${CABAL} new-build -w ${HC} --disable-tests --disable-benchmarks --constraint='semirings == 0.5' all ; fi
 
   # Constraint set quickcheck-classes-0.5.0.0

@@ -252,10 +252,12 @@ derivTests :: TestTree
 derivTests = testGroup "deriv"
   [ testProperty "deriv = S.deriv" $
     \(p :: Poly V.Vector Integer) -> deriv p === S.deriv p
+#if MIN_VERSION_semirings(0,5,0)
   , testProperty "integral = S.integral" $
     \(p :: Poly V.Vector Rational) -> integral p === S.integral p
   , testProperty "deriv . integral = id" $
     \(p :: Poly V.Vector Rational) -> deriv (integral p) === p
+#endif
   , testProperty "deriv c = 0" $
     \c -> deriv (monomial 0 c :: Poly V.Vector Int) === 0
   , testProperty "deriv cX = c" $
