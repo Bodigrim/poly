@@ -1,3 +1,7 @@
+# 0.4.0.0
+
+* Implement orthogonal polynomials.
+
 # 0.3.3.0
 
 * Add function `subst`.
