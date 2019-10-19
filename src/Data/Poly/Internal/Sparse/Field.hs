@@ -93,7 +93,7 @@ gcdExt xs ys = case scaleMonic gs of
           | r' == zero = (r, s)
           | otherwise  = case r `quotRem` r' of
             (q, r'') -> go r'' r' (s `minus` q `times` s') s'
-{-# INLINE gcdExt #-}
+{-# INLINABLE gcdExt #-}
 
 -- | Scale a non-zero polynomial such that its leading coefficient is one,
 -- returning the reciprocal of the leading coefficient in the scaling.

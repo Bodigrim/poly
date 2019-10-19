@@ -278,7 +278,7 @@ plusPolyM p add xs ys zs = go 0 0 0
         GT -> do
           MG.unsafeWrite zs iz (yp, yc)
           go ix (iy + 1) (iz + 1)
-{-# INLINE plusPolyM #-}
+{-# INLINABLE plusPolyM #-}
 
 minusPoly
   :: G.Vector v (Word, a)
@@ -323,7 +323,7 @@ minusPoly p neg sub xs ys = runST $ do
   where
     lenXs = G.length xs
     lenYs = G.length ys
-{-# INLINE minusPoly #-}
+{-# INLINABLE minusPoly #-}
 
 scaleM
   :: (PrimMonad m, G.Vector v (Word, a))
@@ -443,7 +443,7 @@ convolution p add mult xs ys
         buffer'    <- G.unsafeThaw   buffer
         bufferNew' <- G.unsafeFreeze bufferNew
         gogo slicesNew' bufferNew' buffer'
-{-# INLINE convolution #-}
+{-# INLINABLE convolution #-}
 
 -- | Create a monomial from a power and a coefficient.
 monomial :: (Eq a, Num a, G.Vector v (Word, a)) => Word -> a -> Poly v a
