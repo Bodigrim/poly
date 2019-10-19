@@ -27,6 +27,7 @@ module Data.Poly.Internal.Dense
   , scale
   , pattern X
   , eval
+  , subst
   , deriv
   , integral
   -- * Semiring interface
@@ -35,6 +36,7 @@ module Data.Poly.Internal.Dense
   , scale'
   , pattern X'
   , eval'
+  , subst'
   , deriv'
 #if MIN_VERSION_semirings(0,5,0)
   , integral'
@@ -373,17 +375,35 @@ fst' (a :*: _) = a
 --
 -- >>> eval (X^2 + 1 :: UPoly Int) 3
 -- 10
--- >>> eval (X^2 + 1 :: VPoly (UPoly Int)) (X + 1)
--- 1 * X^2 + 2 * X + 2
 eval :: (Num a, G.Vector v a) => Poly v a -> a -> a
-eval (Poly cs) x = fst' $
-  G.foldl' (\(acc :*: xn) cn -> acc + cn * xn :*: x * xn) (0 :*: 1) cs
+eval = substitute (*)
 {-# INLINE eval #-}
 
 eval' :: (Semiring a, G.Vector v a) => Poly v a -> a -> a
-eval' (Poly cs) x = fst' $
-  G.foldl' (\(acc :*: xn) cn -> acc `plus` cn `times` xn :*: x `times` xn) (zero :*: one) cs
+eval' = substitute' times
 {-# INLINE eval' #-}
+
+-- | Substitute another polynomial instead of 'X'.
+--
+-- >>> subst (X^2 + 1 :: UPoly Int) (X + 1 :: UPoly Int)
+-- 1 * X^2 + 2 * X + 2
+subst :: (Eq a, Num a, G.Vector v a, G.Vector w a) => Poly v a -> Poly w a -> Poly w a
+subst = substitute (scale 0)
+{-# INLINE subst #-}
+
+subst' :: (Eq a, Semiring a, G.Vector v a, G.Vector w a) => Poly v a -> Poly w a -> Poly w a
+subst' = substitute' (scale' 0)
+{-# INLINE subst' #-}
+
+substitute :: (G.Vector v a, Num b) => (a -> b -> b) -> Poly v a -> b -> b
+substitute f (Poly cs) x = fst' $
+  G.foldl' (\(acc :*: xn) cn -> acc + f cn xn :*: x * xn) (0 :*: 1) cs
+{-# INLINE substitute #-}
+
+substitute' :: (G.Vector v a, Semiring b) => (a -> b -> b) -> Poly v a -> b -> b
+substitute' f (Poly cs) x = fst' $
+  G.foldl' (\(acc :*: xn) cn -> acc `plus` f cn xn :*: x `times` xn) (zero :*: one) cs
+{-# INLINE substitute' #-}
 
 -- | Take a derivative.
 --

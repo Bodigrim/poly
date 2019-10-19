@@ -22,6 +22,7 @@ module Data.Poly.Sparse
   , scale
   , pattern X
   , eval
+  , subst
   , deriv
   , integral
 #if MIN_VERSION_semirings(0,4,2)

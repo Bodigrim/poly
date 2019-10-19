@@ -213,8 +213,9 @@ monomialRef p c = [(p, c)]
 
 evalTests :: TestTree
 evalTests = testGroup "eval" $ concat
-  [ evalTestGroup (Proxy :: Proxy (Poly U.Vector Int8))
-  , evalTestGroup (Proxy :: Proxy (Poly V.Vector Integer))
+  [ evalTestGroup  (Proxy :: Proxy (Poly U.Vector Int8))
+  , evalTestGroup  (Proxy :: Proxy (Poly V.Vector Integer))
+  , substTestGroup (Proxy :: Proxy (Poly U.Vector Int8))
   ]
 
 evalTestGroup
@@ -248,6 +249,27 @@ evalTestGroup _ =
     e' :: Poly v a -> a -> a
     e' = S.eval
 
+substTestGroup
+  :: forall v a.
+     (Eq a, Num a, Semiring a, Arbitrary a, Show a, Eq (v (Word, a)), Show (v (Word, a)), G.Vector v (Word, a))
+  => Proxy (Poly v a)
+  -> [TestTree]
+substTestGroup _ =
+  [ testProperty "subst x p = p" $
+    \p -> e X p === p
+  , testProperty "subst (monomial 0 c) p = monomial 0 c" $
+    \c p -> e (monomial 0 c) p === monomial 0 c
+  , testProperty "subst' x p = p" $
+    \p -> e' S.X p === p
+  , testProperty "subst' (S.monomial 0 c) p = S.monomial 0 c" $
+    \c p -> e' (S.monomial 0 c) p === S.monomial 0 c
+  ]
+  where
+    e :: Poly v a -> Poly v a -> Poly v a
+    e = subst
+    e' :: Poly v a -> Poly v a -> Poly v a
+    e' = S.subst
+
 derivTests :: TestTree
 derivTests = testGroup "deriv"
   [ testProperty "deriv = S.deriv" $
@@ -266,11 +288,9 @@ derivTests = testGroup "deriv"
     \p q -> deriv (p + q) === (deriv p + deriv q :: Poly V.Vector Int)
   , testProperty "deriv (p * q) = p * deriv q + q * deriv p" $
     \p q -> deriv (p * q) === (p * deriv q + q * deriv p :: Poly V.Vector Int)
-  -- The following property takes too long for a regular test-suite
-  -- , testProperty "deriv (eval p q) = deriv q * eval (deriv p) q" $
+  -- , testProperty "deriv (subst p q) = deriv q * subst (deriv p) q" $
   --   \(p :: Poly V.Vector Int) (q :: Poly U.Vector Int) ->
-  --     deriv (eval (toPoly $ fmap (fmap $ monomial 0) $ unPoly p) q) ===
-  --       deriv q * eval (toPoly $ fmap (fmap $ monomial 0) $ unPoly $ deriv p) q
+  --     deriv (subst p q) === deriv q * subst (deriv p) q
   ]
 
 #if MIN_VERSION_semirings(0,4,2)
