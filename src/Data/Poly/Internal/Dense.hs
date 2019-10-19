@@ -39,6 +39,7 @@ module Data.Poly.Internal.Dense
   , subst'
   , deriv'
 #if MIN_VERSION_semirings(0,5,0)
+  , unscale'
   , integral'
 #endif
   ) where
@@ -62,7 +63,7 @@ import Data.Semigroup
 import Numeric.Natural
 #endif
 #if MIN_VERSION_semirings(0,5,0)
-import Data.Euclidean (Field, quot)
+import Data.Euclidean (Euclidean, Field, quot)
 #endif
 
 -- | Polynomials of one variable with coefficients from @a@,
@@ -363,6 +364,17 @@ scale yp yc (Poly xs) = toPoly $ scaleInternal 0 (*) yp yc xs
 
 scale' :: (Eq a, Semiring a, G.Vector v a) => Word -> a -> Poly v a -> Poly v a
 scale' yp yc (Poly xs) = toPoly' $ scaleInternal zero times yp yc xs
+
+#if MIN_VERSION_semirings(0,5,0)
+unscale' :: (Eq a, Euclidean a, G.Vector v a) => Word -> a -> Poly v a -> Poly v a
+unscale' yp yc (Poly xs) = toPoly' $ runST $ do
+  let lenZs = G.length xs - fromIntegral yp
+  zs <- MG.unsafeNew lenZs
+  forM_ [0 .. lenZs - 1] $ \k ->
+    MG.unsafeWrite zs k (G.unsafeIndex xs (k + fromIntegral yp) `quot` yc)
+  G.unsafeFreeze zs
+{-# INLINE unscale' #-}
+#endif
 
 data StrictPair a b = !a :*: !b
 
