@@ -1,3 +1,8 @@
+# 0.3.3.0
+
+* Add function `subst`.
+* Fix compatibility issues.
+
 # 0.3.2.0
 
 * Add `NFData` instance.
