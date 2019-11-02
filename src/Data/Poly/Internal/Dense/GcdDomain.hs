@@ -118,7 +118,7 @@ gcdM xs ys
       MG.unsafeModify xs (`times` zx)
     xs' <- dropWhileEndM isZero xs
     gcdM xs' ys
-{-# INLINE gcdM #-}
+{-# INLINABLE gcdM #-}
 
 isZeroM
   :: (Eq a, Semiring a, PrimMonad m, G.Vector v a)
@@ -169,6 +169,6 @@ quotient xs ys
                 go (i - 1)
 
     go (lenQs - 1)
-{-# INLINE quotient #-}
+{-# INLINABLE quotient #-}
 
 #endif

@@ -226,7 +226,7 @@ plusPoly add xs ys = runST $ do
     (G.unsafeSlice  lenMn (lenMx - lenMn) (if lenXs <= lenYs then ys else xs))
 
   G.unsafeFreeze zs
-{-# INLINE plusPoly #-}
+{-# INLINABLE plusPoly #-}
 
 minusPoly
   :: G.Vector v a
@@ -253,7 +253,7 @@ minusPoly neg sub xs ys = runST $ do
       (G.unsafeSlice  lenYs (lenXs - lenYs) xs)
 
   G.unsafeFreeze zs
-{-# INLINE minusPoly #-}
+{-# INLINABLE minusPoly #-}
 
 karatsubaThreshold :: Int
 karatsubaThreshold = 32
@@ -303,7 +303,7 @@ karatsuba xs ys
     zs0  = karatsuba xs0 ys0
     zs2  = karatsuba xs1 ys1
     zs11 = karatsuba xs01 ys01
-{-# INLINE karatsuba #-}
+{-# INLINABLE karatsuba #-}
 
 convolution
   :: G.Vector v a
@@ -323,7 +323,7 @@ convolution zer add mul xs ys
     lenXs = G.length xs
     lenYs = G.length ys
     lenZs = lenXs + lenYs - 1
-{-# INLINE convolution #-}
+{-# INLINABLE convolution #-}
 
 -- | Create a monomial from a power and a coefficient.
 monomial :: (Eq a, Num a, G.Vector v a) => Word -> a -> Poly v a
@@ -353,7 +353,7 @@ scaleInternal zer mul yp yc xs = runST $ do
   forM_ [0 .. lenXs - 1] $ \k ->
     MG.unsafeWrite zs (fromIntegral yp + k) (mul yc $ G.unsafeIndex xs k)
   G.unsafeFreeze zs
-{-# INLINE scaleInternal #-}
+{-# INLINABLE scaleInternal #-}
 
 -- | Multiply a polynomial by a monomial, expressed as a power and a coefficient.
 --
@@ -373,7 +373,7 @@ unscale' yp yc (Poly xs) = toPoly' $ runST $ do
   forM_ [0 .. lenZs - 1] $ \k ->
     MG.unsafeWrite zs k (G.unsafeIndex xs (k + fromIntegral yp) `quot` yc)
   G.unsafeFreeze zs
-{-# INLINE unscale' #-}
+{-# INLINABLE unscale' #-}
 #endif
 
 data StrictPair a b = !a :*: !b
@@ -460,7 +460,7 @@ integral (Poly xs)
     G.unsafeFreeze zs
     where
       lenXs = G.length xs
-{-# INLINE integral #-}
+{-# INLINABLE integral #-}
 
 #if MIN_VERSION_semirings(0,5,0)
 integral' :: (Eq a, Field a, G.Vector v a) => Poly v a -> Poly v a
@@ -474,7 +474,7 @@ integral' (Poly xs)
     G.unsafeFreeze zs
     where
       lenXs = G.length xs
-{-# INLINE integral' #-}
+{-# INLINABLE integral' #-}
 #endif
 
 -- | Create an identity polynomial.

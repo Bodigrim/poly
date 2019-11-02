@@ -237,7 +237,7 @@ plusPoly p add xs ys = runST $ do
   zs <- MG.unsafeNew (G.length xs + G.length ys)
   lenZs <- plusPolyM p add xs ys zs
   G.unsafeFreeze $ MG.unsafeSlice 0 lenZs zs
-{-# INLINE plusPoly #-}
+{-# INLINABLE plusPoly #-}
 
 plusPolyM
   :: (PrimMonad m, G.Vector v (Word, a))
@@ -349,7 +349,7 @@ scaleM p mul xs (yp, yc) zs = go 0 0
           go (ix + 1) (iz + 1)
         else
           go (ix + 1) iz
-{-# INLINE scaleM #-}
+{-# INLINABLE scaleM #-}
 
 scaleInternal
   :: G.Vector v (Word, a)
@@ -363,7 +363,7 @@ scaleInternal p mul yp yc (Poly xs) = runST $ do
   zs <- MG.unsafeNew (G.length xs)
   len <- scaleM p (flip mul) xs (yp, yc) zs
   fmap Poly $ G.unsafeFreeze $ MG.unsafeSlice 0 len zs
-{-# INLINE scaleInternal #-}
+{-# INLINABLE scaleInternal #-}
 
 -- | Multiply a polynomial by a monomial, expressed as a power and a coefficient.
 --
@@ -562,7 +562,7 @@ derivPoly p mul xs
               go (ix + 1) iz
     lenZs <- go 0 0
     G.unsafeFreeze $ MG.unsafeSlice 0 lenZs zs
-{-# INLINE derivPoly #-}
+{-# INLINABLE derivPoly #-}
 
 -- | Compute an indefinite integral of a polynomial,
 -- setting constant term to zero.

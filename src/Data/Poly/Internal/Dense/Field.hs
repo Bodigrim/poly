@@ -79,7 +79,7 @@ quotientAndRemainder xs ys
         MG.unsafeModify rs (\c -> c `minus` q `times` G.unsafeIndex ys k) (i + k)
     let rs' = MG.unsafeSlice 0 lenYs rs
     (,) <$> G.unsafeFreeze qs <*> G.unsafeFreeze rs'
-{-# INLINE quotientAndRemainder #-}
+{-# INLINABLE quotientAndRemainder #-}
 
 remainder
   :: (Field a, G.Vector v a)
@@ -93,7 +93,7 @@ remainder xs ys
     ys' <- G.unsafeThaw ys
     remainderM rs ys'
     G.unsafeFreeze $ MG.unsafeSlice 0 (G.length xs `min` G.length ys) rs
-{-# INLINE remainder #-}
+{-# INLINABLE remainder #-}
 
 remainderM
   :: (PrimMonad m, Field a, G.Vector v a)
@@ -115,7 +115,7 @@ remainderM xs ys
         -- do not move r / yLast outside the loop,
         -- because of numerical instability
         MG.unsafeModify xs (\c -> c `minus` r `times` y `quot` yLast) (i + k)
-{-# INLINE remainderM #-}
+{-# INLINABLE remainderM #-}
 
 fieldGcd
   :: (Eq a, Field a, G.Vector v a)
