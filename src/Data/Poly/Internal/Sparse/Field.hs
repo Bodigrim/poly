@@ -27,9 +27,11 @@ module Data.Poly.Internal.Sparse.Field
 import Prelude hiding (quotRem, quot, rem, gcd)
 import Control.Arrow
 import Control.Exception
-import Data.Euclidean
+import Data.Euclidean (Euclidean(..))
 #if !MIN_VERSION_semirings(0,5,0)
 import Data.Semiring (Ring)
+#else
+import Data.Euclidean (Field)
 #endif
 import Data.Semiring (minus, plus, times, zero, one)
 import qualified Data.Vector.Generic as G

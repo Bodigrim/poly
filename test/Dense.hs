@@ -12,7 +12,7 @@ module Dense
 
 import Prelude hiding (gcd, quotRem, rem)
 #if MIN_VERSION_semirings(0,4,2)
-import Data.Euclidean
+import Data.Euclidean (Euclidean(..), GcdDomain(..))
 #endif
 import Data.Int
 import Data.Maybe
@@ -273,8 +273,10 @@ derivTests :: TestTree
 derivTests = testGroup "deriv"
   [ testProperty "deriv = S.deriv" $
     \(p :: Poly V.Vector Integer) -> deriv p === S.deriv p
+#if MIN_VERSION_semirings(0,5,0)
   , testProperty "integral = S.integral" $
     \(p :: Poly V.Vector Rational) -> integral p === S.integral p
+#endif
   , testProperty "deriv . integral = id" $
     \(p :: Poly V.Vector Rational) -> deriv (integral p) === p
   , testProperty "deriv c = 0" $

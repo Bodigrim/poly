@@ -28,9 +28,11 @@ import Control.Exception
 import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
-import Data.Euclidean
+import Data.Euclidean (Euclidean(..))
 #if !MIN_VERSION_semirings(0,5,0)
 import Data.Semiring (Ring)
+#else
+import Data.Euclidean (Field)
 #endif
 import Data.Semiring (times, minus, zero, one)
 import qualified Data.Vector.Generic as G

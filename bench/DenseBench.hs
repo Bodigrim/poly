@@ -8,17 +8,14 @@ module DenseBench
   ) where
 
 import Prelude hiding (quotRem, gcd)
-import Control.DeepSeq
 import Gauge.Main
 import Data.Poly
 import qualified Data.Vector.Unboxed as U
-#if MIN_VERSION_semirings(0,4,2)
-import Control.Exception
-import Data.Bits
-import Data.Coerce
-import Data.Euclidean
-import Data.Semiring (Semiring(..), Ring, isZero)
-import qualified Data.Semiring as S (negate)
+#if MIN_VERSION_semirings(0,5,2)
+import Data.Euclidean (Euclidean(..), GcdDomain(..), Field)
+import qualified Data.Poly.Semiring as S (toPoly)
+import Data.Semiring (Semiring(..), Ring, Mod2(..))
+import qualified Data.Semiring as S (fromIntegral)
 import qualified Data.Vector as V
 #endif
 
@@ -29,7 +26,7 @@ benchSuite = bgroup "dense" $ concat
   , map benchEval     [100, 1000, 10000]
   , map benchDeriv    [100, 1000, 10000]
   , map benchIntegral [100, 1000, 10000]
-#if MIN_VERSION_semirings(0,4,2)
+#if MIN_VERSION_semirings(0,5,2)
   , map benchQuotRem    [10, 100]
   , map benchGcd        [10, 100]
   , map benchGcdExtRat  [10, 20, 40]
@@ -54,7 +51,7 @@ benchDeriv k = bench ("deriv/" ++ show k) $ nf doDeriv k
 benchIntegral :: Int -> Benchmark
 benchIntegral k = bench ("integral/" ++ show k) $ nf doIntegral k
 
-#if MIN_VERSION_semirings(0,4,2)
+#if MIN_VERSION_semirings(0,5,2)
 
 benchQuotRem :: Int -> Benchmark
 benchQuotRem k = bench ("quotRem/" ++ show k) $ nf doQuotRem k
@@ -69,10 +66,10 @@ benchGcdFracRat :: Int -> Benchmark
 benchGcdFracRat k = bench ("gcdFrac/Rational/" ++ show k) $ nf (doGcdFrac @Rational) k
 
 benchGcdExtM :: Int -> Benchmark
-benchGcdExtM k = bench ("gcdExt/Mod2/" ++ show k) $ nf (doGcdExt @Mod2) k
+benchGcdExtM k = bench ("gcdExt/Mod2/" ++ show k) $ nf (getMod2 . doGcdExt @Mod2) k
 
 benchGcdFracM :: Int -> Benchmark
-benchGcdFracM k = bench ("gcdFrac/Mod2/" ++ show k) $ nf (doGcdFrac @Mod2) k
+benchGcdFracM k = bench ("gcdFrac/Mod2/" ++ show k) $ nf (getMod2 . doGcdFrac @Mod2) k
 
 #endif
 
@@ -101,13 +98,13 @@ doIntegral n = U.sum zs
     xs = toPoly $ U.generate n ((* 2) . fromIntegral)
     zs = unPoly $ integral xs
 
-#if MIN_VERSION_semirings(0,4,2)
+#if MIN_VERSION_semirings(0,5,2)
 
-gen1 :: Num a => Int -> a
-gen1 k = fromIntegral (truncate (pi * fromIntegral k :: Double) `mod` (k + 1))
+gen1 :: Ring a => Int -> a
+gen1 k = S.fromIntegral (truncate (pi * fromIntegral k :: Double) `mod` (k + 1))
 
-gen2 :: Num a => Int -> a
-gen2 k = fromIntegral (truncate (exp 1.0 * fromIntegral k :: Double) `mod` (k + 1))
+gen2 :: Ring a => Int -> a
+gen2 k = S.fromIntegral (truncate (exp 1.0 * fromIntegral k :: Double) `mod` (k + 1))
 
 doQuotRem :: Int -> Double
 doQuotRem n = U.sum (unPoly qs) + U.sum (unPoly rs)
@@ -123,48 +120,18 @@ doGcd n = V.sum gs
     ys = toPoly $ V.generate n gen2
     gs = unPoly $ xs `gcd` ys
 
-doGcdExt :: (Eq a, Num a, Field a) => Int -> a
-doGcdExt n = V.sum gs
+doGcdExt :: (Eq a, Field a) => Int -> a
+doGcdExt n = V.foldl' plus zero gs
   where
-    xs = toPoly $ V.generate n gen1
-    ys = toPoly $ V.generate n gen2
+    xs = S.toPoly $ V.generate n gen1
+    ys = S.toPoly $ V.generate n gen2
     gs = unPoly $ fst $ xs `gcdExt` ys
 
-doGcdFrac :: (Eq a, Num a, Field a) => Int -> a
-doGcdFrac n = V.sum gs
+doGcdFrac :: (Eq a, Field a) => Int -> a
+doGcdFrac n = V.foldl' plus zero gs
   where
-    xs = PolyOverField $ toPoly $ V.generate n gen1
-    ys = PolyOverField $ toPoly $ V.generate n gen2
+    xs = PolyOverField $ S.toPoly $ V.generate n gen1
+    ys = PolyOverField $ S.toPoly $ V.generate n gen2
     gs = unPoly $ unPolyOverField $ xs `gcd` ys
-
--- | Inspired by 'semirings'.
-newtype Mod2 = Mod2 { _getMod2 :: Bool }
-  deriving (Eq, NFData)
-
-instance Num Mod2 where
-  (+) = coerce (xor @Bool)
-  (*) = coerce (&&)
-  negate = id
-  abs    = id
-  signum = id
-  fromInteger = Mod2 . odd
-
-instance Semiring Mod2 where
-  plus  = coerce (xor @Bool)
-  times = coerce (&&)
-  fromNatural = Mod2 . odd
-
-instance Ring Mod2 where
-  negate = id
-
-instance GcdDomain Mod2 where
-
-instance Euclidean Mod2 where
-  degree = const 0
-  quotRem x y
-    | isZero y  = throw DivideByZero
-    | otherwise = (x, zero)
-
-instance Field Mod2
 
 #endif

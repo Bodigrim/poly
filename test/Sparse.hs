@@ -13,7 +13,7 @@ module Sparse
 
 import Prelude hiding (gcd, quotRem, rem)
 #if MIN_VERSION_semirings(0,4,2)
-import Data.Euclidean
+import Data.Euclidean (Euclidean(..), GcdDomain(..))
 #endif
 import Data.Function
 import Data.Int
