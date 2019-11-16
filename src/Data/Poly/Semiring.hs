@@ -30,7 +30,6 @@ module Data.Poly.Semiring
 #if MIN_VERSION_semirings(0,4,2)
   -- * Polynomials over 'Field'
   , PolyOverField(..)
-  , gcdExt
   , PolyOverFractional
   , pattern PolyOverFractional
   , unPolyOverFractional
@@ -43,7 +42,7 @@ import qualified Data.Vector.Generic as G
 import Data.Poly.Internal.Dense (Poly(..), VPoly, UPoly, leading)
 import qualified Data.Poly.Internal.Dense as Dense
 #if MIN_VERSION_semirings(0,4,2)
-import Data.Poly.Internal.Dense.Field (gcdExt)
+import Data.Poly.Internal.Dense.Field ()
 import Data.Poly.Internal.Dense.GcdDomain ()
 import Data.Poly.Internal.PolyOverField
 #endif

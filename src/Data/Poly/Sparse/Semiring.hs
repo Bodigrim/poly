@@ -28,10 +28,6 @@ module Data.Poly.Sparse.Semiring
 #if MIN_VERSION_semirings(0,5,0)
   , integral
 #endif
-#if MIN_VERSION_semirings(0,4,2)
-  -- * Polynomials over 'Field'
-  , gcdExt
-#endif
   ) where
 
 import Data.Semiring (Semiring)
@@ -40,7 +36,7 @@ import qualified Data.Vector.Generic as G
 import Data.Poly.Internal.Sparse (Poly(..), VPoly, UPoly, leading)
 import qualified Data.Poly.Internal.Sparse as Sparse
 #if MIN_VERSION_semirings(0,4,2)
-import Data.Poly.Internal.Sparse.Field (gcdExt)
+import Data.Poly.Internal.Sparse.Field ()
 import Data.Poly.Internal.Sparse.GcdDomain ()
 #endif
 #if MIN_VERSION_semirings(0,5,0)

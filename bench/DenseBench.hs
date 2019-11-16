@@ -29,9 +29,7 @@ benchSuite = bgroup "dense" $ concat
 #if MIN_VERSION_semirings(0,5,2)
   , map benchQuotRem    [10, 100]
   , map benchGcd        [10, 100]
-  , map benchGcdExtRat  [10, 20, 40]
   , map benchGcdFracRat [10, 20, 40]
-  , map benchGcdExtM    [10, 100, 1000]
   , map benchGcdFracM   [10, 100, 1000]
 #endif
   ]
@@ -59,14 +57,8 @@ benchQuotRem k = bench ("quotRem/" ++ show k) $ nf doQuotRem k
 benchGcd :: Int -> Benchmark
 benchGcd k = bench ("gcd/" ++ show k) $ nf doGcd k
 
-benchGcdExtRat :: Int -> Benchmark
-benchGcdExtRat k = bench ("gcdExt/Rational/" ++ show k) $ nf (doGcdExt @Rational) k
-
 benchGcdFracRat :: Int -> Benchmark
 benchGcdFracRat k = bench ("gcdFrac/Rational/" ++ show k) $ nf (doGcdFrac @Rational) k
-
-benchGcdExtM :: Int -> Benchmark
-benchGcdExtM k = bench ("gcdExt/Mod2/" ++ show k) $ nf (getMod2 . doGcdExt @Mod2) k
 
 benchGcdFracM :: Int -> Benchmark
 benchGcdFracM k = bench ("gcdFrac/Mod2/" ++ show k) $ nf (getMod2 . doGcdFrac @Mod2) k
@@ -119,13 +111,6 @@ doGcd n = V.sum gs
     xs = toPoly $ V.generate n gen1
     ys = toPoly $ V.generate n gen2
     gs = unPoly $ xs `gcd` ys
-
-doGcdExt :: (Eq a, Field a) => Int -> a
-doGcdExt n = V.foldl' plus zero gs
-  where
-    xs = S.toPoly $ V.generate n gen1
-    ys = S.toPoly $ V.generate n gen2
-    gs = unPoly $ fst $ xs `gcdExt` ys
 
 doGcdFrac :: (Eq a, Field a) => Int -> a
 doGcdFrac n = V.foldl' plus zero gs

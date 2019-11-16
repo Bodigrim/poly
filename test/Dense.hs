@@ -15,7 +15,6 @@ import Prelude hiding (gcd, quotRem, rem)
 import Data.Euclidean (Euclidean(..), GcdDomain(..))
 #endif
 import Data.Int
-import Data.Maybe
 import Data.Poly
 import qualified Data.Poly.Semiring as S
 import Data.Proxy
@@ -61,9 +60,6 @@ testSuite = testGroup "Dense"
     , lawsTests
     , evalTests
     , derivTests
-#if MIN_VERSION_semirings(0,4,2)
-    , gcdExtTests
-#endif
     ]
 
 lawsTests :: TestTree
@@ -291,22 +287,3 @@ derivTests = testGroup "deriv"
     \(p :: Poly V.Vector Int) (q :: Poly U.Vector Int) ->
       deriv (subst p q) === deriv q * subst (deriv p) q
   ]
-
-#if MIN_VERSION_semirings(0,4,2)
-gcdExtTests :: TestTree
-gcdExtTests = localOption (QuickCheckMaxSize 12) $ testGroup "gcdExt"
-  [ testProperty "gcdExt == S.gcdExt" $
-    \(a :: Poly V.Vector Rational) b ->
-      gcdExt a b === S.gcdExt a b
-  , testProperty "g == as (mod b) for gcdExt" $
-    \(a :: Poly V.Vector Rational) b -> b /= 0 ==>
-      uncurry ((. flip rem b) . (===) . flip rem b) ((* a) <$> gcdExt a b)
-  , testProperty "fst . gcdExt == gcd (mod units)" $
-    \(a :: Poly V.Vector Rational) b ->
-      fst (gcdExt a b) `sameUpToUnits` gcd a b
-  ]
-
-sameUpToUnits :: (Eq a, GcdDomain a) => a -> a -> Bool
-sameUpToUnits x y = x == y ||
-  isJust (x `divide` y) && isJust (y `divide` x)
-#endif
