@@ -29,7 +29,7 @@ import Data.Vector.Unboxed.Mutable (MVector)
 import qualified Data.Vector.Generic.Mutable as M
 import Data.Vector.Unboxed (Unbox)
 
-data Quaternion a = Quaternion a a a a
+data Quaternion a = Quaternion !a !a !a !a
   deriving (Eq, Ord, Show, Generic)
 
 instance Ring a => Semiring (Quaternion a) where
