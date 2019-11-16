@@ -105,7 +105,7 @@ toLaurent off (Poly xs) = go 0
     go k
       | k >= G.length xs
       = Laurent 0 zero
-      | G.unsafeIndex xs k == zero
+      | (G.!) xs k == zero
       = go (k + 1)
       | otherwise
       = Laurent (off + k) (Poly (G.unsafeDrop k xs))
@@ -121,7 +121,7 @@ toLaurentNum off (Poly xs) = go 0
     go k
       | k >= G.length xs
       = Laurent 0 0
-      | G.unsafeIndex xs k == 0
+      | (G.!) xs k == 0
       = go (k + 1)
       | otherwise
       = Laurent (off + k) (Poly (G.unsafeDrop k xs))

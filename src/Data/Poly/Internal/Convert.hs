@@ -79,14 +79,14 @@ sparseToDenseInternal
 sparseToDenseInternal z (Sparse.MultiPoly xs)
   | G.null xs = Dense.Poly G.empty
   | otherwise = runST $ do
-  let len = fromIntegral (SU.head (fst (G.unsafeLast xs)) + 1)
-  ys <- MG.unsafeNew len
+  let len = fromIntegral (SU.head (fst (G.last xs)) + 1)
+  ys <- MG.new len
   MG.set ys z
   let go xi yi
         | xi >= G.length xs = pure ()
-        | (yi', c) <- G.unsafeIndex xs xi
+        | (yi', c) <- (G.!) xs xi
         , yi == fromIntegral (SU.head yi')
-        = MG.unsafeWrite ys yi c >> go (xi + 1) (yi + 1)
+        = MG.write ys yi c >> go (xi + 1) (yi + 1)
         | otherwise = go xi (yi + 1)
   go 0 0
   Dense.Poly <$> G.unsafeFreeze ys

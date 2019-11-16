@@ -68,9 +68,9 @@ gcdNonEmpty xs ys = runST $ do
     let lenZs = MG.length zs'
         go acc 0 = pure acc
         go acc n = do
-          t <- MG.unsafeRead zs' (n - 1)
+          t <- MG.read zs' (n - 1)
           go (acc `gcd` t) (n - 1)
-    a <- MG.unsafeRead zs' (lenZs - 1)
+    a <- MG.read zs' (lenZs - 1)
     z <- go a (lenZs - 1)
 
     forM_ [0 .. lenZs - 1] $ \i ->
@@ -90,8 +90,8 @@ gcdM xs ys
   | otherwise = do
   let lenXs = MG.length xs
       lenYs = MG.length ys
-  xLast <- MG.unsafeRead xs (lenXs - 1)
-  yLast <- MG.unsafeRead ys (lenYs - 1)
+  xLast <- MG.read xs (lenXs - 1)
+  yLast <- MG.read ys (lenYs - 1)
   let z  = xLast `lcm` yLast
       zx = z `divide'` xLast
       zy = z `divide'` yLast
@@ -100,7 +100,7 @@ gcdM xs ys
     | lenYs <= lenXs
     , Just xy <- xLast `divide` yLast -> do
       forM_ [0 .. lenYs - 1] $ \i -> do
-        y <- MG.unsafeRead ys i
+        y <- MG.read ys i
         when (y /= zero) $
           MG.unsafeModify
             xs
@@ -111,7 +111,7 @@ gcdM xs ys
     | lenXs <= lenYs
     , Just yx <- yLast `divide` xLast -> do
       forM_ [0 .. lenXs - 1] $ \i -> do
-        x <- MG.unsafeRead xs i
+        x <- MG.read xs i
         when (x /= zero) $
           MG.unsafeModify
             ys
@@ -121,7 +121,7 @@ gcdM xs ys
       gcdM xs ys'
     | lenYs <= lenXs -> do
       forM_ [0 .. lenYs - 1] $ \i -> do
-        y <- MG.unsafeRead ys i
+        y <- MG.read ys i
         MG.unsafeModify
           xs
           (\x -> x `times` zx `minus` y `times` zy)
@@ -132,7 +132,7 @@ gcdM xs ys
       gcdM xs' ys
     | otherwise -> do
       forM_ [0 .. lenXs - 1] $ \i -> do
-        x <- MG.unsafeRead xs i
+        x <- MG.read xs i
         MG.unsafeModify
           ys
           (\y -> y `times` zy `minus` x `times` zx)
@@ -154,7 +154,7 @@ isZeroM xs = go (MG.length xs)
   where
     go 0 = pure True
     go n = do
-      x <- MG.unsafeRead xs (n - 1)
+      x <- MG.read xs (n - 1)
       if x == zero then go (n - 1) else pure False
 {-# INLINE isZeroM #-}
 
@@ -171,9 +171,9 @@ quotient xs ys
     let lenXs = G.length xs
         lenYs = G.length ys
         lenQs = lenXs - lenYs + 1
-    qs <- MG.unsafeNew lenQs
-    rs <- MG.unsafeNew lenXs
-    G.unsafeCopy rs xs
+    qs <- MG.new lenQs
+    rs <- MG.new lenXs
+    G.copy rs xs
 
     let go i
           | i < 0 = do
@@ -182,15 +182,15 @@ quotient xs ys
               then Just <$> G.unsafeFreeze qs
               else pure Nothing
           | otherwise = do
-            r <- MG.unsafeRead rs (lenYs - 1 + i)
-            case r `divide` G.unsafeLast ys of
+            r <- MG.read rs (lenYs - 1 + i)
+            case r `divide` G.last ys of
               Nothing -> pure Nothing
               Just q -> do
-                MG.unsafeWrite qs i q
+                MG.write qs i q
                 forM_ [0 .. lenYs - 1] $ \k ->
                   MG.unsafeModify
                     rs
-                    (\c -> c `minus` q `times` G.unsafeIndex ys k)
+                    (\c -> c `minus` q `times` (G.!) ys k)
                     (i + k)
                 go (i - 1)
 

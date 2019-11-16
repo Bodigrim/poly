@@ -36,7 +36,7 @@ import Data.Poly.Internal.Multi.GcdDomain ()
 instance (Eq a, Field a, G.Vector v (SU.Vector 1 Word, a)) => Euclidean (Poly v a) where
   degree (MultiPoly xs)
     | G.null xs = 0
-    | otherwise = fromIntegral (SU.head (fst (G.unsafeLast xs)))
+    | otherwise = fromIntegral (SU.head (fst (G.last xs)))
 
   quotRem = quotientRemainder zero plus minus times quot
 

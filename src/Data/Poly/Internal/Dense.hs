@@ -199,10 +199,10 @@ dropWhileEnd
   => (a -> Bool)
   -> v a
   -> v a
-dropWhileEnd p xs = G.unsafeSlice 0 (go (G.length xs)) xs
+dropWhileEnd p xs = G.slice 0 (go (G.length xs)) xs
   where
     go 0 = 0
-    go n = if p (G.unsafeIndex xs (n - 1)) then go (n - 1) else n
+    go n = if p ((G.!) xs (n - 1)) then go (n - 1) else n
 {-# INLINE dropWhileEnd #-}
 
 dropWhileEndM
@@ -212,10 +212,10 @@ dropWhileEndM
   -> m (G.Mutable v (PrimState m) a)
 dropWhileEndM p xs = go (MG.length xs)
   where
-    go 0 = pure $ MG.unsafeSlice 0 0 xs
+    go 0 = pure $ MG.slice 0 0 xs
     go n = do
-      x <- MG.unsafeRead xs (n - 1)
-      if p x then go (n - 1) else pure (MG.unsafeSlice 0 n xs)
+      x <- MG.read xs (n - 1)
+      if p x then go (n - 1) else pure (MG.slice 0 n xs)
 {-# INLINE dropWhileEndM #-}
 
 plusPoly
@@ -230,12 +230,12 @@ plusPoly add xs ys = runST $ do
       lenMn = lenXs `min` lenYs
       lenMx = lenXs `max` lenYs
 
-  zs <- MG.unsafeNew lenMx
+  zs <- MG.new lenMx
   forM_ [0 .. lenMn - 1] $ \i ->
-    MG.unsafeWrite zs i (add (G.unsafeIndex xs i) (G.unsafeIndex ys i))
-  G.unsafeCopy
-    (MG.unsafeSlice lenMn (lenMx - lenMn) zs)
-    (G.unsafeSlice  lenMn (lenMx - lenMn) (if lenXs <= lenYs then ys else xs))
+    MG.write zs i (add ((G.!) xs i) ((G.!) ys i))
+  G.copy
+    (MG.slice lenMn (lenMx - lenMn) zs)
+    (G.slice  lenMn (lenMx - lenMn) (if lenXs <= lenYs then ys else xs))
 
   G.unsafeFreeze zs
 {-# INLINABLE plusPoly #-}
@@ -253,16 +253,16 @@ minusPoly neg sub xs ys = runST $ do
       lenMn = lenXs `min` lenYs
       lenMx = lenXs `max` lenYs
 
-  zs <- MG.unsafeNew lenMx
+  zs <- MG.new lenMx
   forM_ [0 .. lenMn - 1] $ \i ->
-    MG.unsafeWrite zs i (sub (G.unsafeIndex xs i) (G.unsafeIndex ys i))
+    MG.write zs i (sub ((G.!) xs i) ((G.!) ys i))
 
   if lenXs < lenYs
     then forM_ [lenXs .. lenYs - 1] $ \i ->
-      MG.unsafeWrite zs i (neg (G.unsafeIndex ys i))
-    else G.unsafeCopy
-      (MG.unsafeSlice lenYs (lenXs - lenYs) zs)
-      (G.unsafeSlice  lenYs (lenXs - lenYs) xs)
+      MG.write zs i (neg ((G.!) ys i))
+    else G.copy
+      (MG.slice lenYs (lenXs - lenYs) zs)
+      (G.slice  lenYs (lenXs - lenYs) xs)
 
   G.unsafeFreeze zs
 {-# INLINABLE minusPoly #-}
@@ -279,24 +279,24 @@ karatsuba xs ys
   | lenXs <= karatsubaThreshold || lenYs <= karatsubaThreshold
   = convolution 0 (+) (*) xs ys
   | otherwise = runST $ do
-    zs <- MG.unsafeNew lenZs
+    zs <- MG.new lenZs
     forM_ [0 .. lenZs - 1] $ \k -> do
       let z0 = if k < G.length zs0
-               then G.unsafeIndex zs0 k
+               then (G.!) zs0 k
                else 0
           z11 = if k - m >= 0 && k - m < G.length zs11
-               then G.unsafeIndex zs11 (k - m)
+               then (G.!) zs11 (k - m)
                else 0
           z10 = if k - m >= 0 && k - m < G.length zs0
-               then G.unsafeIndex zs0 (k - m)
+               then (G.!) zs0 (k - m)
                else 0
           z12 = if k - m >= 0 && k - m < G.length zs2
-               then G.unsafeIndex zs2 (k - m)
+               then (G.!) zs2 (k - m)
                else 0
           z2 = if k - 2 * m >= 0 && k - 2 * m < G.length zs2
-               then G.unsafeIndex zs2 (k - 2 * m)
+               then (G.!) zs2 (k - 2 * m)
                else 0
-      MG.unsafeWrite zs k (z0 + (z11 - z10 - z12) + z2)
+      MG.write zs k (z0 + (z11 - z10 - z12) + z2)
     G.unsafeFreeze zs
   where
     lenXs = G.length xs
@@ -328,7 +328,7 @@ convolution
 convolution zer add mul xs ys
   | lenXs == 0 || lenYs == 0 = G.empty
   | otherwise = G.generate lenZs $ \k -> foldl'
-    (\acc i -> acc `add` mul (G.unsafeIndex xs i) (G.unsafeIndex ys (k - i)))
+    (\acc i -> acc `add` mul ((G.!) xs i) ((G.!) ys (k - i)))
     zer
     [max (k - lenYs + 1) 0 .. min k (lenXs - 1)]
   where
@@ -361,11 +361,11 @@ scaleInternal
   -> v a
 scaleInternal zer mul yp yc xs = runST $ do
   let lenXs = G.length xs
-  zs <- MG.unsafeNew (fromIntegral yp + lenXs)
+  zs <- MG.new (fromIntegral yp + lenXs)
   forM_ [0 .. fromIntegral yp - 1] $ \k ->
-    MG.unsafeWrite zs k zer
+    MG.write zs k zer
   forM_ [0 .. lenXs - 1] $ \k ->
-    MG.unsafeWrite zs (fromIntegral yp + k) (mul yc $ G.unsafeIndex xs k)
+    MG.write zs (fromIntegral yp + k) (mul yc $ (G.!) xs k)
   G.unsafeFreeze zs
 {-# INLINABLE scaleInternal #-}
 
@@ -384,9 +384,9 @@ scale' yp yc (Poly xs) = toPoly' $ scaleInternal zero times yp yc xs
 unscale' :: (Eq a, Euclidean a, G.Vector v a) => Word -> a -> Poly v a -> Poly v a
 unscale' yp yc (Poly xs) = toPoly' $ runST $ do
   let lenZs = G.length xs - fromIntegral yp
-  zs <- MG.unsafeNew lenZs
+  zs <- MG.new lenZs
   forM_ [0 .. lenZs - 1] $ \k ->
-    MG.unsafeWrite zs k (G.unsafeIndex xs (k + fromIntegral yp) `quot` yc)
+    MG.write zs k ((G.!) xs (k + fromIntegral yp) `quot` yc)
   G.unsafeFreeze zs
 {-# INLINABLE unscale' #-}
 
@@ -464,10 +464,10 @@ integral :: (Eq a, Fractional a, G.Vector v a) => Poly v a -> Poly v a
 integral (Poly xs)
   | G.null xs = Poly G.empty
   | otherwise = toPoly $ runST $ do
-    zs <- MG.unsafeNew (lenXs + 1)
-    MG.unsafeWrite zs 0 0
+    zs <- MG.new (lenXs + 1)
+    MG.write zs 0 0
     forM_ [0 .. lenXs - 1] $ \i ->
-      MG.unsafeWrite zs (i + 1) (G.unsafeIndex xs i * recip (fromIntegral i + 1))
+      MG.write zs (i + 1) ((G.!) xs i * recip (fromIntegral i + 1))
     G.unsafeFreeze zs
     where
       lenXs = G.length xs
@@ -477,10 +477,10 @@ integral' :: (Eq a, Field a, G.Vector v a) => Poly v a -> Poly v a
 integral' (Poly xs)
   | G.null xs = Poly G.empty
   | otherwise = toPoly' $ runST $ do
-    zs <- MG.unsafeNew (lenXs + 1)
-    MG.unsafeWrite zs zero zero
+    zs <- MG.new (lenXs + 1)
+    MG.write zs zero zero
     forM_ [0 .. lenXs - 1] $ \i ->
-      MG.unsafeWrite zs (i + 1) (G.unsafeIndex xs i `quot` Semiring.fromIntegral (i + 1))
+      MG.write zs (i + 1) ((G.!) xs i `quot` Semiring.fromIntegral (i + 1))
     G.unsafeFreeze zs
     where
       lenXs = G.length xs

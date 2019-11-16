@@ -47,7 +47,7 @@ dft primRoot (xs :: v a)
       one
 
     go !offset !shift
-      | shift >= n = G.unsafeSlice offset 1 xs
+      | shift >= n = G.slice offset 1 xs
       | otherwise = runST $ do
         let halfLen = 1 `unsafeShiftL` (n - shift - 1)
             ys0 = go offset (shift + 1)
@@ -57,17 +57,17 @@ dft primRoot (xs :: v a)
         -- This corresponds to k = 0 in the loop below.
         -- It improves performance by avoiding multiplication
         -- by roots V.! 0 = 1.
-        let y00 = G.unsafeIndex ys0 0
-            y10 = G.unsafeIndex ys1 0
-        MG.unsafeWrite ys 0       $! y00 `plus`  y10
-        MG.unsafeWrite ys halfLen $! y00 `minus` y10
+        let y00 = (G.!) ys0 0
+            y10 = (G.!) ys1 0
+        MG.write ys 0       $! y00 `plus`  y10
+        MG.write ys halfLen $! y00 `minus` y10
 
         forM_ [1..halfLen - 1] $ \k -> do
-          let y0 = G.unsafeIndex ys0 k
-              y1 = G.unsafeIndex ys1 k `times`
-                   G.unsafeIndex roots (k `unsafeShiftL` shift)
-          MG.unsafeWrite ys k             $! y0 `plus`  y1
-          MG.unsafeWrite ys (k + halfLen) $! y0 `minus` y1
+          let y0 = (G.!) ys0 k
+              y1 = (G.!) ys1 k `times`
+                   (G.!) roots (k `unsafeShiftL` shift)
+          MG.write ys k             $! y0 `plus`  y1
+          MG.write ys (k + halfLen) $! y0 `minus` y1
         G.unsafeFreeze ys
 {-# INLINABLE dft #-}
 
