@@ -43,7 +43,7 @@ library
     primitive >= 0.6,
     semirings >= 0.2,
     vector >= 0.12.0.2,
-    vector-algorithms >= 0.7
+    vector-algorithms >= 0.8.0.3
   default-language: Haskell2010
   ghc-options: -Wall
 
