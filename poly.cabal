@@ -25,6 +25,7 @@ library
   hs-source-dirs: src
   exposed-modules:
     Data.Poly
+    Data.Poly.Laurent
     Data.Poly.Orthogonal
     Data.Poly.Semiring
     Data.Poly.Sparse
