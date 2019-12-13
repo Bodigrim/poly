@@ -22,6 +22,7 @@ module Data.Poly.Semiring
   , scale
   , pattern X
   , eval
+  , subst
   , deriv
 #if MIN_VERSION_semirings(0,5,0)
   , integral
@@ -29,7 +30,6 @@ module Data.Poly.Semiring
 #if MIN_VERSION_semirings(0,4,2)
   -- * Polynomials over 'Field'
   , PolyOverField(..)
-  , gcdExt
   , PolyOverFractional
   , pattern PolyOverFractional
   , unPolyOverFractional
@@ -42,7 +42,7 @@ import qualified Data.Vector.Generic as G
 import Data.Poly.Internal.Dense (Poly(..), VPoly, UPoly, leading)
 import qualified Data.Poly.Internal.Dense as Dense
 #if MIN_VERSION_semirings(0,4,2)
-import Data.Poly.Internal.Dense.Field (gcdExt)
+import Data.Poly.Internal.Dense.Field ()
 import Data.Poly.Internal.Dense.GcdDomain ()
 import Data.Poly.Internal.PolyOverField
 #endif
@@ -80,10 +80,15 @@ pattern X = Dense.X'
 --
 -- >>> eval (X^2 + 1 :: UPoly Int) 3
 -- 10
--- >>> eval (X^2 + 1 :: VPoly (UPoly Int)) (X + 1)
--- 1 * X^2 + 2 * X + 2
 eval :: (Semiring a, G.Vector v a) => Poly v a -> a -> a
 eval = Dense.eval'
+
+-- | Substitute another polynomial instead of 'X'.
+--
+-- >>> subst (X^2 + 1 :: UPoly Int) (X + 1 :: UPoly Int)
+-- 1 * X^2 + 2 * X + 2
+subst :: (Eq a, Semiring a, G.Vector v a, G.Vector w a) => Poly v a -> Poly w a -> Poly w a
+subst = Dense.subst'
 
 -- | Take a derivative.
 --

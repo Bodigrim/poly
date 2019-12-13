@@ -12,10 +12,9 @@ module Dense
 
 import Prelude hiding (gcd, quotRem, rem)
 #if MIN_VERSION_semirings(0,4,2)
-import Data.Euclidean
+import Data.Euclidean (Euclidean(..), GcdDomain(..))
 #endif
 import Data.Int
-import Data.Maybe
 import Data.Poly
 import qualified Data.Poly.Semiring as S
 import Data.Proxy
@@ -25,9 +24,9 @@ import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed as U
 import Test.Tasty
 import Test.Tasty.QuickCheck hiding (scale, numTests)
-import Test.QuickCheck.Classes
 
 import Quaternion
+import TestUtils
 
 instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (Poly v a) where
   arbitrary = S.toPoly . G.fromList <$> arbitrary
@@ -61,96 +60,81 @@ testSuite = testGroup "Dense"
     , lawsTests
     , evalTests
     , derivTests
-#if MIN_VERSION_semirings(0,4,2)
-    , gcdExtTests
-#endif
     ]
 
 lawsTests :: TestTree
 lawsTests = testGroup "Laws"
-  [ semiringTests
-  , ringTests
-  , numTests
-  , euclideanTests
-  , isListTests
-  , showTests
+  $ semiringTests ++ ringTests ++ numTests ++ euclideanTests ++ gcdDomainTests ++ isListTests ++ showTests
+
+semiringTests :: [TestTree]
+semiringTests =
+  [ mySemiringLaws (Proxy :: Proxy (Poly U.Vector ()))
+  , mySemiringLaws (Proxy :: Proxy (Poly U.Vector Int8))
+  , mySemiringLaws (Proxy :: Proxy (Poly V.Vector Integer))
+  , mySemiringLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
   ]
 
-semiringTests :: TestTree
-semiringTests
-  = testGroup "Semiring"
-  $ map (uncurry testProperty)
-  $ concatMap lawsProperties
-  [ semiringLaws (Proxy :: Proxy (Poly U.Vector ()))
-  , semiringLaws (Proxy :: Proxy (Poly U.Vector Int8))
-  , semiringLaws (Proxy :: Proxy (Poly V.Vector Integer))
-  , semiringLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
-  ]
-
-ringTests :: TestTree
-ringTests
-  = testGroup "Ring"
-  $ map (uncurry testProperty)
-  $ concatMap lawsProperties
-  [
+ringTests :: [TestTree]
 #if MIN_VERSION_quickcheck_classes(0,6,1)
-    ringLaws (Proxy :: Proxy (Poly U.Vector ()))
-  , ringLaws (Proxy :: Proxy (Poly U.Vector Int8))
-  , ringLaws (Proxy :: Proxy (Poly V.Vector Integer))
-  , ringLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
-#endif
+ringTests =
+  [ myRingLaws (Proxy :: Proxy (Poly U.Vector ()))
+  , myRingLaws (Proxy :: Proxy (Poly U.Vector Int8))
+  , myRingLaws (Proxy :: Proxy (Poly V.Vector Integer))
+  , myRingLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
   ]
+#else
+ringTests = []
+#endif
 
-numTests :: TestTree
-numTests
-  = testGroup "Num"
-  $ map (uncurry testProperty)
-  $ concatMap lawsProperties
-  [
+numTests :: [TestTree]
 #if MIN_VERSION_quickcheck_classes(0,6,3)
-    numLaws (Proxy :: Proxy (Poly U.Vector Int8))
-  , numLaws (Proxy :: Proxy (Poly V.Vector Integer))
-  , numLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
-#endif
+numTests =
+  [ myNumLaws (Proxy :: Proxy (Poly U.Vector Int8))
+  , myNumLaws (Proxy :: Proxy (Poly V.Vector Integer))
+  , myNumLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
   ]
+#else
+numTests = []
+#endif
 
-euclideanTests :: TestTree
-euclideanTests
-  = testGroup "Euclidean"
-  $ map (uncurry testProperty)
-  $ concatMap lawsProperties
-  [
+gcdDomainTests :: [TestTree]
 #if MIN_VERSION_semirings(0,4,2) && MIN_VERSION_quickcheck_classes(0,6,3)
-    gcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Integer)))
-  , gcdDomainLaws (Proxy :: Proxy (PolyOverField (Poly V.Vector Rational)))
-  , euclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
+gcdDomainTests =
+  [ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Integer)))
+  , myGcdDomainLaws (Proxy :: Proxy (PolyOverField (Poly V.Vector Rational)))
+  ]
+#else
+gcdDomainTests = []
 #endif
+
+euclideanTests :: [TestTree]
+#if MIN_VERSION_semirings(0,4,2) && MIN_VERSION_quickcheck_classes(0,6,3)
+euclideanTests =
+  [ myEuclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
+  ]
+#else
+euclideanTests = []
+#endif
+
+isListTests :: [TestTree]
+isListTests =
+  [ myIsListLaws (Proxy :: Proxy (Poly U.Vector ()))
+  , myIsListLaws (Proxy :: Proxy (Poly U.Vector Int8))
+  , myIsListLaws (Proxy :: Proxy (Poly V.Vector Integer))
+  , myIsListLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
   ]
 
-isListTests :: TestTree
-isListTests
-  = testGroup "IsList"
-  $ map (uncurry testProperty)
-  $ concatMap lawsProperties
-  [ isListLaws (Proxy :: Proxy (Poly U.Vector ()))
-  , isListLaws (Proxy :: Proxy (Poly U.Vector Int8))
-  , isListLaws (Proxy :: Proxy (Poly V.Vector Integer))
-  , isListLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
-  ]
-
-showTests :: TestTree
-showTests
-  = testGroup "Show"
-  $ map (uncurry testProperty)
-  $ concatMap lawsProperties
-  [
+showTests :: [TestTree]
 #if MIN_VERSION_quickcheck_classes(0,6,0)
-    showLaws (Proxy :: Proxy (Poly U.Vector ()))
-  , showLaws (Proxy :: Proxy (Poly U.Vector Int8))
-  , showLaws (Proxy :: Proxy (Poly V.Vector Integer))
-  , showLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
-#endif
+showTests =
+  [ myShowLaws (Proxy :: Proxy (Poly U.Vector ()))
+  , myShowLaws (Proxy :: Proxy (Poly U.Vector Int8))
+  , myShowLaws (Proxy :: Proxy (Poly V.Vector Integer))
+  , myShowLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
   ]
+#else
+showTests = []
+#endif
 
 arithmeticTests :: TestTree
 arithmeticTests = testGroup "Arithmetic"
@@ -199,7 +183,8 @@ otherTestGroup _ =
     \p c -> c /= 0 ==> leading (monomial p c :: UPoly a) === Just (p, c)
   , testProperty "monomial matches reference" $
     \p (c :: a) -> monomial p c === toPoly (V.fromList (monomialRef p c))
-  , testProperty "scale matches multiplication by monomial" $
+  , tenTimesLess $
+    testProperty "scale matches multiplication by monomial" $
     \p c (xs :: UPoly a) -> scale p c xs === monomial p c * xs
   ]
 
@@ -208,8 +193,9 @@ monomialRef p c = replicate (fromIntegral p) 0 ++ [c]
 
 evalTests :: TestTree
 evalTests = testGroup "eval" $ concat
-  [ evalTestGroup (Proxy :: Proxy (Poly U.Vector Int8))
-  , evalTestGroup (Proxy :: Proxy (Poly V.Vector Integer))
+  [ evalTestGroup  (Proxy :: Proxy (Poly U.Vector Int8))
+  , evalTestGroup  (Proxy :: Proxy (Poly V.Vector Integer))
+  , substTestGroup (Proxy :: Proxy (Poly U.Vector Int8))
   ]
 
 evalTestGroup
@@ -243,12 +229,41 @@ evalTestGroup _ =
     e' :: Poly v a -> a -> a
     e' = S.eval
 
+substTestGroup
+  :: forall v a.
+     (Eq a, Num a, Semiring a, Arbitrary a, Show a, Eq (v a), Show (v a), G.Vector v a)
+  => Proxy (Poly v a)
+  -> [TestTree]
+substTestGroup _ =
+  [ tenTimesLess $ tenTimesLess $ tenTimesLess $
+    testProperty "subst (p + q) r = subst p r + subst q r" $
+    \p q r -> e (p + q) r === e p r + e q r
+  , testProperty "subst x p = p" $
+    \p -> e X p === p
+  , testProperty "subst (monomial 0 c) p = monomial 0 c" $
+    \c p -> e (monomial 0 c) p === monomial 0 c
+  , tenTimesLess $ tenTimesLess $ tenTimesLess $
+    testProperty "subst' (p + q) r = subst' p r + subst' q r" $
+    \p q r -> e' (p + q) r === e' p r + e' q r
+  , testProperty "subst' x p = p" $
+    \p -> e' S.X p === p
+  , testProperty "subst' (S.monomial 0 c) p = S.monomial 0 c" $
+    \c p -> e' (S.monomial 0 c) p === S.monomial 0 c
+  ]
+  where
+    e :: Poly v a -> Poly v a -> Poly v a
+    e = subst
+    e' :: Poly v a -> Poly v a -> Poly v a
+    e' = S.subst
+
 derivTests :: TestTree
 derivTests = testGroup "deriv"
   [ testProperty "deriv = S.deriv" $
     \(p :: Poly V.Vector Integer) -> deriv p === S.deriv p
+#if MIN_VERSION_semirings(0,5,0)
   , testProperty "integral = S.integral" $
     \(p :: Poly V.Vector Rational) -> integral p === S.integral p
+#endif
   , testProperty "deriv . integral = id" $
     \(p :: Poly V.Vector Rational) -> deriv (integral p) === p
   , testProperty "deriv c = 0" $
@@ -259,28 +274,8 @@ derivTests = testGroup "deriv"
     \p q -> deriv (p + q) === (deriv p + deriv q :: Poly V.Vector Int)
   , testProperty "deriv (p * q) = p * deriv q + q * deriv p" $
     \p q -> deriv (p * q) === (p * deriv q + q * deriv p :: Poly V.Vector Int)
-  -- The following property takes too long for a regular test-suite
-  -- , testProperty "deriv (eval p q) = deriv q * eval (deriv p) q" $
-  --   \(p :: Poly V.Vector Int) (q :: Poly U.Vector Int) ->
-  --     deriv (eval (toPoly $ fmap (monomial 0) $ unPoly p) q) ===
-  --       deriv q * eval (toPoly $ fmap (monomial 0) $ unPoly $ deriv p) q
+  , tenTimesLess $ tenTimesLess $ tenTimesLess $
+    testProperty "deriv (subst p q) = deriv q * subst (deriv p) q" $
+    \(p :: Poly V.Vector Int) (q :: Poly U.Vector Int) ->
+      deriv (subst p q) === deriv q * subst (deriv p) q
   ]
-
-#if MIN_VERSION_semirings(0,4,2)
-gcdExtTests :: TestTree
-gcdExtTests = localOption (QuickCheckMaxSize 12) $ testGroup "gcdExt"
-  [ testProperty "gcdExt == S.gcdExt" $
-    \(a :: Poly V.Vector Rational) b ->
-      gcdExt a b === S.gcdExt a b
-  , testProperty "g == as (mod b) for gcdExt" $
-    \(a :: Poly V.Vector Rational) b -> b /= 0 ==>
-      uncurry ((. flip rem b) . (===) . flip rem b) ((* a) <$> gcdExt a b)
-  , testProperty "fst . gcdExt == gcd (mod units)" $
-    \(a :: Poly V.Vector Rational) b ->
-      fst (gcdExt a b) `sameUpToUnits` gcd a b
-  ]
-
-sameUpToUnits :: (Eq a, GcdDomain a) => a -> a -> Bool
-sameUpToUnits x y = x == y ||
-  isJust (x `divide` y) && isJust (y `divide` x)
-#endif

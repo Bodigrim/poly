@@ -22,12 +22,12 @@ module Data.Poly
   , scale
   , pattern X
   , eval
+  , subst
   , deriv
   , integral
 #if MIN_VERSION_semirings(0,4,2)
   -- * Polynomials over 'Field'
   , PolyOverField(..)
-  , gcdExt
   , PolyOverFractional
   , pattern PolyOverFractional
   , unPolyOverFractional
@@ -36,7 +36,7 @@ module Data.Poly
 
 import Data.Poly.Internal.Dense
 #if MIN_VERSION_semirings(0,4,2)
-import Data.Poly.Internal.Dense.Field (gcdExt)
+import Data.Poly.Internal.Dense.Field ()
 import Data.Poly.Internal.Dense.GcdDomain ()
 import Data.Poly.Internal.PolyOverField
 #endif

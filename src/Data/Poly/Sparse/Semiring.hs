@@ -23,13 +23,10 @@ module Data.Poly.Sparse.Semiring
   , scale
   , pattern X
   , eval
+  , subst
   , deriv
 #if MIN_VERSION_semirings(0,5,0)
   , integral
-#endif
-#if MIN_VERSION_semirings(0,4,2)
-  -- * Polynomials over 'Field'
-  , gcdExt
 #endif
   ) where
 
@@ -39,7 +36,7 @@ import qualified Data.Vector.Generic as G
 import Data.Poly.Internal.Sparse (Poly(..), VPoly, UPoly, leading)
 import qualified Data.Poly.Internal.Sparse as Sparse
 #if MIN_VERSION_semirings(0,4,2)
-import Data.Poly.Internal.Sparse.Field (gcdExt)
+import Data.Poly.Internal.Sparse.Field ()
 import Data.Poly.Internal.Sparse.GcdDomain ()
 #endif
 #if MIN_VERSION_semirings(0,5,0)
@@ -76,10 +73,15 @@ pattern X = Sparse.X'
 --
 -- >>> eval (X^2 + 1 :: UPoly Int) 3
 -- 10
--- >>> eval (X^2 + 1 :: VPoly (UPoly Int)) (X + 1)
--- 1 * X^2 + 2 * X + 2
 eval :: (Semiring a, G.Vector v (Word, a)) => Poly v a -> a -> a
 eval = Sparse.eval'
+
+-- | Substitute another polynomial instead of 'X'.
+--
+-- >>> subst (X^2 + 1 :: UPoly Int) (X + 1 :: UPoly Int)
+-- 1 * X^2 + 2 * X + 2
+subst :: (Eq a, Semiring a, G.Vector v (Word, a), G.Vector w (Word, a)) => Poly v a -> Poly w a -> Poly w a
+subst = Sparse.subst'
 
 -- | Take a derivative.
 --

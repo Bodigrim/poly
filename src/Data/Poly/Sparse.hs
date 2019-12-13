@@ -22,16 +22,13 @@ module Data.Poly.Sparse
   , scale
   , pattern X
   , eval
+  , subst
   , deriv
   , integral
-#if MIN_VERSION_semirings(0,4,2)
-  -- * Polynomials over 'Field'
-  , gcdExt
-#endif
   ) where
 
 import Data.Poly.Internal.Sparse
 #if MIN_VERSION_semirings(0,4,2)
-import Data.Poly.Internal.Sparse.Field (gcdExt)
+import Data.Poly.Internal.Sparse.Field ()
 import Data.Poly.Internal.Sparse.GcdDomain ()
 #endif

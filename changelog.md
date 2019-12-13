@@ -1,3 +1,13 @@
+# 0.4.0.0
+
+* Implement orthogonal polynomials.
+* Decomission extended GCD, use `Data.Euclidean.gcdExt`.
+
+# 0.3.3.0
+
+* Add function `subst`.
+* Fix compatibility issues.
+
 # 0.3.2.0
 
 * Add `NFData` instance.

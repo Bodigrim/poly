@@ -27,6 +27,7 @@ module Data.Poly.Internal.Dense
   , scale
   , pattern X
   , eval
+  , subst
   , deriv
   , integral
   -- * Semiring interface
@@ -35,8 +36,10 @@ module Data.Poly.Internal.Dense
   , scale'
   , pattern X'
   , eval'
+  , subst'
   , deriv'
 #if MIN_VERSION_semirings(0,5,0)
+  , unscale'
   , integral'
 #endif
   ) where
@@ -60,7 +63,7 @@ import Data.Semigroup
 import Numeric.Natural
 #endif
 #if MIN_VERSION_semirings(0,5,0)
-import Data.Euclidean (Field, quot)
+import Data.Euclidean (Euclidean, Field, quot)
 #endif
 
 -- | Polynomials of one variable with coefficients from @a@,
@@ -223,7 +226,7 @@ plusPoly add xs ys = runST $ do
     (G.unsafeSlice  lenMn (lenMx - lenMn) (if lenXs <= lenYs then ys else xs))
 
   G.unsafeFreeze zs
-{-# INLINE plusPoly #-}
+{-# INLINABLE plusPoly #-}
 
 minusPoly
   :: G.Vector v a
@@ -250,7 +253,7 @@ minusPoly neg sub xs ys = runST $ do
       (G.unsafeSlice  lenYs (lenXs - lenYs) xs)
 
   G.unsafeFreeze zs
-{-# INLINE minusPoly #-}
+{-# INLINABLE minusPoly #-}
 
 karatsubaThreshold :: Int
 karatsubaThreshold = 32
@@ -300,7 +303,7 @@ karatsuba xs ys
     zs0  = karatsuba xs0 ys0
     zs2  = karatsuba xs1 ys1
     zs11 = karatsuba xs01 ys01
-{-# INLINE karatsuba #-}
+{-# INLINABLE karatsuba #-}
 
 convolution
   :: G.Vector v a
@@ -320,7 +323,7 @@ convolution zer add mul xs ys
     lenXs = G.length xs
     lenYs = G.length ys
     lenZs = lenXs + lenYs - 1
-{-# INLINE convolution #-}
+{-# INLINABLE convolution #-}
 
 -- | Create a monomial from a power and a coefficient.
 monomial :: (Eq a, Num a, G.Vector v a) => Word -> a -> Poly v a
@@ -350,7 +353,7 @@ scaleInternal zer mul yp yc xs = runST $ do
   forM_ [0 .. lenXs - 1] $ \k ->
     MG.unsafeWrite zs (fromIntegral yp + k) (mul yc $ G.unsafeIndex xs k)
   G.unsafeFreeze zs
-{-# INLINE scaleInternal #-}
+{-# INLINABLE scaleInternal #-}
 
 -- | Multiply a polynomial by a monomial, expressed as a power and a coefficient.
 --
@@ -361,6 +364,17 @@ scale yp yc (Poly xs) = toPoly $ scaleInternal 0 (*) yp yc xs
 
 scale' :: (Eq a, Semiring a, G.Vector v a) => Word -> a -> Poly v a -> Poly v a
 scale' yp yc (Poly xs) = toPoly' $ scaleInternal zero times yp yc xs
+
+#if MIN_VERSION_semirings(0,5,0)
+unscale' :: (Eq a, Euclidean a, G.Vector v a) => Word -> a -> Poly v a -> Poly v a
+unscale' yp yc (Poly xs) = toPoly' $ runST $ do
+  let lenZs = G.length xs - fromIntegral yp
+  zs <- MG.unsafeNew lenZs
+  forM_ [0 .. lenZs - 1] $ \k ->
+    MG.unsafeWrite zs k (G.unsafeIndex xs (k + fromIntegral yp) `quot` yc)
+  G.unsafeFreeze zs
+{-# INLINABLE unscale' #-}
+#endif
 
 data StrictPair a b = !a :*: !b
 
@@ -373,17 +387,35 @@ fst' (a :*: _) = a
 --
 -- >>> eval (X^2 + 1 :: UPoly Int) 3
 -- 10
--- >>> eval (X^2 + 1 :: VPoly (UPoly Int)) (X + 1)
--- 1 * X^2 + 2 * X + 2
 eval :: (Num a, G.Vector v a) => Poly v a -> a -> a
-eval (Poly cs) x = fst' $
-  G.foldl' (\(acc :*: xn) cn -> acc + cn * xn :*: x * xn) (0 :*: 1) cs
+eval = substitute (*)
 {-# INLINE eval #-}
 
 eval' :: (Semiring a, G.Vector v a) => Poly v a -> a -> a
-eval' (Poly cs) x = fst' $
-  G.foldl' (\(acc :*: xn) cn -> acc `plus` cn `times` xn :*: x `times` xn) (zero :*: one) cs
+eval' = substitute' times
 {-# INLINE eval' #-}
+
+-- | Substitute another polynomial instead of 'X'.
+--
+-- >>> subst (X^2 + 1 :: UPoly Int) (X + 1 :: UPoly Int)
+-- 1 * X^2 + 2 * X + 2
+subst :: (Eq a, Num a, G.Vector v a, G.Vector w a) => Poly v a -> Poly w a -> Poly w a
+subst = substitute (scale 0)
+{-# INLINE subst #-}
+
+subst' :: (Eq a, Semiring a, G.Vector v a, G.Vector w a) => Poly v a -> Poly w a -> Poly w a
+subst' = substitute' (scale' 0)
+{-# INLINE subst' #-}
+
+substitute :: (G.Vector v a, Num b) => (a -> b -> b) -> Poly v a -> b -> b
+substitute f (Poly cs) x = fst' $
+  G.foldl' (\(acc :*: xn) cn -> acc + f cn xn :*: x * xn) (0 :*: 1) cs
+{-# INLINE substitute #-}
+
+substitute' :: (G.Vector v a, Semiring b) => (a -> b -> b) -> Poly v a -> b -> b
+substitute' f (Poly cs) x = fst' $
+  G.foldl' (\(acc :*: xn) cn -> acc `plus` f cn xn :*: x `times` xn) (zero :*: one) cs
+{-# INLINE substitute' #-}
 
 -- | Take a derivative.
 --
@@ -428,7 +460,7 @@ integral (Poly xs)
     G.unsafeFreeze zs
     where
       lenXs = G.length xs
-{-# INLINE integral #-}
+{-# INLINABLE integral #-}
 
 #if MIN_VERSION_semirings(0,5,0)
 integral' :: (Eq a, Field a, G.Vector v a) => Poly v a -> Poly v a
@@ -442,7 +474,7 @@ integral' (Poly xs)
     G.unsafeFreeze zs
     where
       lenXs = G.length xs
-{-# INLINE integral' #-}
+{-# INLINABLE integral' #-}
 #endif
 
 -- | Create an identity polynomial.
