@@ -44,26 +44,27 @@ module Data.Poly.Internal.Dense
 #endif
   ) where
 
-import Prelude hiding (quotRem, quot, rem, gcd, lcm, (^))
-import Control.DeepSeq (NFData)
-import Control.Monad
-import Control.Monad.Primitive
-import Control.Monad.ST
-import Data.Bits
-import Data.List (foldl', intersperse)
-import Data.Semiring (Semiring(..), Ring())
-import qualified Data.Semiring as Semiring
-import qualified Data.Vector as V
-import qualified Data.Vector.Generic as G
+import           Control.DeepSeq             (NFData)
+import           Control.Monad
+import           Control.Monad.Primitive
+import           Control.Monad.ST
+import           Data.Bits
+import           Data.List                   (foldl', intersperse)
+import           Data.Semiring               (Ring, Semiring (..))
+import qualified Data.Semiring               as Semiring
+import qualified Data.Vector                 as V
+import qualified Data.Vector.Generic         as G
 import qualified Data.Vector.Generic.Mutable as MG
-import qualified Data.Vector.Unboxed as U
-import GHC.Exts
+import qualified Data.Vector.Unboxed         as U
+import           GHC.Exts
+import           Prelude                     hiding (gcd, lcm, quot, quotRem,
+                                              rem, (^))
 #if !MIN_VERSION_semirings(0,4,0)
-import Data.Semigroup
-import Numeric.Natural
+import           Data.Semigroup
+import           Numeric.Natural
 #endif
 #if MIN_VERSION_semirings(0,5,0)
-import Data.Euclidean (Euclidean, Field, quot)
+import           Data.Euclidean              (Euclidean, Field, quot)
 #endif
 
 -- | Polynomials of one variable with coefficients from @a@,

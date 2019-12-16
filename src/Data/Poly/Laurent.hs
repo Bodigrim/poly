@@ -47,7 +47,8 @@ module Data.Poly.Laurent
   , ULaurent
   , VLaurent
   , leading
---   -- * Num interface
+  , (^-)
+  -- * Num interface
   , toLaurent
   , monomial
   , scale
@@ -63,15 +64,20 @@ module Data.Poly.Laurent
   )
 where
 
-import           Control.DeepSeq          (NFData)
-import           Data.Poly.Internal.Dense (Poly (..), scale, scale', toPoly,
-                                           toPoly')
-import qualified Data.Poly.Internal.Dense as Poly
-import           Data.Semiring            (Semiring (..))
-import qualified Data.Vector              as V
-import qualified Data.Vector.Generic      as G
-import qualified Data.Vector.Unboxed      as U
-import           GHC.Generics             (Generic)
+import           Control.DeepSeq             (NFData)
+import           Control.Monad
+import           Control.Monad.Primitive
+import           Control.Monad.ST
+import           Data.List                   (foldl', intersperse)
+import           Data.Poly.Internal.Dense    (Poly (..), toPoly, toPoly')
+import qualified Data.Poly.Internal.Dense    as Poly
+import           Data.Semiring               (Semiring (..))
+import qualified Data.Semiring               as S
+import qualified Data.Vector                 as V
+import qualified Data.Vector.Generic         as G
+import qualified Data.Vector.Generic.Mutable as MG
+import qualified Data.Vector.Unboxed         as U
+import           GHC.Generics                (Generic)
 
 -- TODO: Move this to Laurent/Dense.hs
 
@@ -85,8 +91,8 @@ type ULaurent a = Laurent U.Vector a
 instance (Eq a, Num a, G.Vector v a) => Num (Laurent v a) where
   Laurent n xs * Laurent m ys = Laurent (n + m) (xs * ys)
   Laurent n xs + Laurent m ys
-    | n <= m    = Laurent n (xs + scale (fromIntegral (m - n)) 1 ys)
-    | otherwise = Laurent m (scale (fromIntegral (n - m)) 1 xs + ys)
+    | n <= m    = Laurent n (xs + Poly.scale (fromIntegral (m - n)) 1 ys)
+    | otherwise = Laurent m (Poly.scale (fromIntegral (n - m)) 1 xs + ys)
   negate (Laurent n xs) = Laurent n (negate xs)
   abs    = id
   signum = const 1
@@ -96,19 +102,21 @@ instance (Eq a, Num a, G.Vector v a) => Num (Laurent v a) where
   {-# INLINE fromInteger #-}
   {-# INLINE (*) #-}
 
--- instance (Show a, G.Vector v (Int, a)) => Show (Laurent v a) where
---   showsPrec d (Poly xs)
---     | G.null xs
---       = showString "0"
---     | otherwise
---       = showParen (d > 0)
---       $ foldl (.) id
---       $ intersperse (showString " + ")
---       $ G.foldl (\acc (i, c) -> showCoeff i c : acc) [] xs
---     where
---       showCoeff 0 c = showsPrec 7 c
---       showCoeff 1 c = showsPrec 7 c . showString " * X"
---       showCoeff i c = showsPrec 7 c . showString " * X^" . showsPrec 6 i
+instance (Show a, G.Vector v a) => Show (Laurent v a) where
+  showsPrec d (Laurent n (Poly xs))
+    | G.null xs
+      = showString "0"
+    | G.length xs == 1
+      = showsPrec d (G.head xs)
+    | otherwise
+      = showParen (d > 0)
+      $ foldl (.) id
+      $ intersperse (showString " + ")
+      $ G.ifoldl (\acc i c -> showCoeff (i + n) c : acc) [] xs
+    where
+      showCoeff 0 c = showsPrec 7 c
+      showCoeff 1 c = showsPrec 7 c . showString " * X"
+      showCoeff i c = showsPrec 7 c . showString " * X^" . showsPrec 7 i
 
 instance (Eq a, Semiring a, G.Vector v a) => Semiring (Laurent v a) where
   zero = Laurent 0 zero
@@ -116,8 +124,8 @@ instance (Eq a, Semiring a, G.Vector v a) => Semiring (Laurent v a) where
 
   Laurent n xs `times` Laurent m ys = Laurent (n + m) (xs `times` ys)
   Laurent n xs `plus` Laurent m ys
-    | n <= m    = Laurent n (xs `plus` scale' (fromIntegral (m - n)) one ys)
-    | otherwise = Laurent m (scale' (fromIntegral (n - m)) one xs `plus` ys)
+    | n <= m    = Laurent n (xs `plus` Poly.scale' (fromIntegral (m - n)) one ys)
+    | otherwise = Laurent m (Poly.scale' (fromIntegral (n - m)) one xs `plus` ys)
   {-# INLINE zero #-}
   {-# INLINE one #-}
   {-# INLINE plus #-}
@@ -155,6 +163,35 @@ monomial' p c
   | otherwise  = Laurent p (Poly $ G.singleton c)
 {-# INLINE monomial' #-}
 
+-- | Multiply a polynomial by a monomial, expressed as a power and a coefficient.
+--
+-- >>> scale (-5) 3 (X^-2 + 1) :: UPoly Int
+-- 3 * X^4 + 0 * X^3 + 3 * X^2 + 0 * X + 0
+-- TODO: Fix this
+scale :: (Eq a, Num a, G.Vector v a) => Int -> a -> Laurent v a -> Laurent v a
+scale yp yc (Laurent n (Poly xs)) = Laurent n (toPoly $ scaleInternal 0 (*) yp yc xs)
+
+scale' :: (Eq a, Semiring a, G.Vector v a) => Int -> a -> Laurent v a -> Laurent v a
+scale' yp yc (Laurent n (Poly xs)) = Laurent n (toPoly' $ scaleInternal zero times yp yc xs)
+
+scaleInternal
+  :: (Eq a, G.Vector v a)
+  => a
+  -> (a -> a -> a)
+  -> Int
+  -> a
+  -> v a
+  -> v a
+scaleInternal zer mul yp yc xs = runST $ do
+  let lenXs = G.length xs
+  zs <- MG.unsafeNew (fromIntegral yp + lenXs)
+  forM_ [0 .. fromIntegral yp - 1] $ \k ->
+    MG.unsafeWrite zs k zer
+  forM_ [0 .. lenXs - 1] $ \k ->
+    MG.unsafeWrite zs (fromIntegral yp + k) (mul yc $ G.unsafeIndex xs k)
+  G.unsafeFreeze zs
+{-# INLINABLE scaleInternal #-}
+
 -- | Create an identity polynomial.
 pattern X :: (Eq a, Num a, G.Vector v a, Eq (v a)) => Laurent v a
 pattern X <- ((==) var -> True)
@@ -168,9 +205,9 @@ var
 
 -- | Evaluate at a given point.
 --
--- >>> eval (X^2 + 1 :: UPoly Int) 3
+-- >>> eval (X^-2 + 1 :: UPoly Rational) 3
 -- 10
-eval :: (Num a, G.Vector v a) => Laurent v a -> a -> a
+eval :: (Num a, G.Vector v a, G.Vector v (Int, a), G.Vector v Int, Fractional a) => Laurent v a -> a -> a
 eval = substitute (*)
 {-# INLINE eval #-}
 
@@ -185,11 +222,45 @@ infixr 1 :*:
 fst' :: StrictPair a b -> a
 fst' (a :*: _) = a
 
--- substitute :: (G.Vector v a, Num b) => (a -> b -> b) -> Laurent v a -> b -> b
--- substitute f (Laurent n (Poly cs)) x = fst' $
---   G.foldl' (\(acc :*: xn) cn -> acc + f cn xn :*: x * xn) (0 :*: 1) cs
--- {-# INLINE substitute #-}
+-- | Substitute another polynomial instead of 'X'.
+--
+-- >>> subst (X^2 + 1 :: UPoly Int) (X + 1 :: UPoly Int)
+-- 1 * X^2 + 2 * X + 2
+-- subst :: (Eq a, Num a, G.Vector v a, G.Vector v (Int, a), G.Vector v Int, G.Vector w a) => Laurent v a -> Laurent w a -> Laurent w a
+-- subst = substitute (scale 0)
+-- {-# INLINE subst #-}
 
+substitute :: (G.Vector v a, G.Vector v (Int, a), G.Vector v Int, Fractional b)
+  => (a -> b -> b)
+  -> Laurent v a
+  -> b
+  -> b
+substitute f (Laurent n (Poly cs)) x
+  | n >= 0 = fst' $
+      G.foldl' (\(acc :*: xn) cn -> acc + f cn xn :*: x * xn) (0 :*: 1) cs
+  | otherwise = fst' $
+      G.foldl' (\(acc :*: xn) (i, cn) -> acc + f cn xn :*: pow x i)
+                (0 :*: pow x n)
+                (G.zip (G.fromList [(n+1)..(n + G.basicLength cs)]) cs)
+  where
+    pow b i
+      | i < 0 = recip b ^ negate i
+      | otherwise = b ^ i
+{-# INLINE substitute #-}
+
+substitute' :: (G.Vector v a, G.Vector v (Int, a), G.Vector v Int, S.Ring b) => (a -> b -> b) -> Laurent v a -> b -> b
+substitute' f (Laurent n (Poly cs)) x
+  | n >= 0 = fst' $
+      G.foldl' (\(acc :*: xn) cn -> acc `plus` f cn xn :*: x `times` xn) (zero :*: one) cs
+  | otherwise = fst' $
+      G.foldl' (\(acc :*: xn) (i, cn) -> acc `plus` f cn xn :*: pow x i)
+                (zero :*: pow x n)
+                (G.zip (G.fromList [(n+1)..(n + G.basicLength cs)]) cs)
+  where
+    pow b i
+      | i < 0 = S.negate b S.^ negate i
+      | otherwise = b S.^ i
+{-# INLINE substitute' #-}
 -- | Return a leading power and coefficient of a non-zero Laurent polynomial.
 --
 -- >>> leading ((2 * X^-1 + 1) * (2 * X^-2 - 1) :: UPoly Int)
@@ -201,4 +272,15 @@ leading (Laurent n (Poly v))
   | G.null v  = Nothing
   | otherwise = Just (n + G.length v - 1, G.last v)
 
+-- | Exponentiation of an identity Laurent polynomial to a negative integer.
+infixr 8 ^-
+(^-) :: (Eq a, Num a, G.Vector v a, Eq (v a)) => Laurent v a -> Int -> Laurent v a
+X ^- n = monomial (-n) 1
+_ ^- _ = error "(^-): not the identity Laurent polynomial"
+{-# INLINE (^-) #-}
 
+-- infixr 8 -^
+-- (-^) :: (Eq a, Semiring a, G.Vector v (Int, a), Eq (v (Int, a))) => Poly v a -> Int -> Poly v a
+-- X' -^ n = monomial' (-n) one
+-- _  -^ _ = error "(-^): not the identity Laurent polynomial"
+-- {-# INLINE (-^) #-}
