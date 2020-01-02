@@ -32,11 +32,18 @@ module Data.Poly
   , pattern PolyOverFractional
   , unPolyOverFractional
 #endif
+  -- * Laurent interface
+  , Laurent
+  , VLaurent
+  , ULaurent
+  , toLaurent
   ) where
 
-import Data.Poly.Internal.Dense
+import           Data.Poly.Internal.Dense
+import           Data.Poly.Internal.Dense.Laurent   (Laurent, ULaurent,
+                                                     VLaurent, toLaurent)
 #if MIN_VERSION_semirings(0,4,2)
-import Data.Poly.Internal.Dense.Field ()
-import Data.Poly.Internal.Dense.GcdDomain ()
-import Data.Poly.Internal.PolyOverField
+import           Data.Poly.Internal.Dense.Field     ()
+import           Data.Poly.Internal.Dense.GcdDomain ()
+import           Data.Poly.Internal.PolyOverField
 #endif

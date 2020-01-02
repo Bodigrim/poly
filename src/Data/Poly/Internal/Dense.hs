@@ -8,6 +8,7 @@
 --
 
 {-# LANGUAGE CPP                        #-}
+{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE PatternSynonyms            #-}
@@ -30,6 +31,8 @@ module Data.Poly.Internal.Dense
   , subst
   , deriv
   , integral
+  , quotPoly
+  , quotRemPoly
   -- * Semiring interface
   , toPoly'
   , monomial'
@@ -57,8 +60,7 @@ import qualified Data.Vector.Generic         as G
 import qualified Data.Vector.Generic.Mutable as MG
 import qualified Data.Vector.Unboxed         as U
 import           GHC.Exts
-import           Prelude                     hiding (gcd, lcm, quot, quotRem,
-                                              rem, (^))
+import           Prelude                     hiding (gcd, lcm, quot, rem, (^))
 #if !MIN_VERSION_semirings(0,4,0)
 import           Data.Semigroup
 import           Numeric.Natural
@@ -143,6 +145,11 @@ leading (Poly v)
   | G.null v  = Nothing
   | otherwise = Just (fromIntegral (G.length v - 1), G.last v)
 
+degree :: G.Vector v a => Poly v a -> Word
+degree p = case leading p of
+  Nothing     -> 0
+  Just (d, _) -> d
+
 -- | Note that 'abs' = 'id' and 'signum' = 'const' 1.
 instance (Eq a, Num a, G.Vector v a) => Num (Poly v a) where
   Poly xs + Poly ys = toPoly $ plusPoly (+) xs ys
@@ -159,6 +166,25 @@ instance (Eq a, Num a, G.Vector v a) => Num (Poly v a) where
   {-# INLINE negate #-}
   {-# INLINE fromInteger #-}
   {-# INLINE (*) #-}
+
+quotPoly :: forall a v. (Eq a, Integral a, G.Vector v a) => Poly v a -> Poly v a -> Poly v a
+quotPoly a b = fst $ quotRemPoly a b
+
+quotRemPoly :: forall a v. (Eq a, Integral a, G.Vector v a) => Poly v a -> Poly v a -> (Poly v a, Poly v a)
+p@(Poly (G.toList -> xs)) `quotRemPoly` q@(Poly (G.toList -> ys))
+    = bimap (toPoly . G.fromList) (toPoly . G.fromList) $ go mempty xs (fromIntegral (degree p) - fromIntegral (degree q))
+    where
+      bimap f g ~(a, b) = (f a, g b)
+      v0 :: a
+      v0  | null ys    = 0
+          | otherwise  = head ys
+      go :: [a] -> [a] -> Int -> ([a], [a])
+      go w u n
+        | null u || n < 0   = (w, u)
+        | otherwise         = go (w0:w) u' (n-1)
+        where
+          w0 = head u `div` v0
+          u' = tail (zipWith (+) u (map (negate w0 *) ys))
 
 instance (Eq a, Semiring a, G.Vector v a) => Semiring (Poly v a) where
   zero = Poly G.empty
