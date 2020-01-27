@@ -66,9 +66,8 @@ where
 
 import           Control.DeepSeq             (NFData)
 import           Control.Monad
-import           Control.Monad.Primitive
 import           Control.Monad.ST
-import           Data.List                   (foldl', intersperse)
+import           Data.List                   (intersperse)
 import           Data.Poly.Internal.Dense    (Poly (..), toPoly, toPoly')
 import qualified Data.Poly.Internal.Dense    as Poly
 import           Data.Semiring               (Semiring (..))
@@ -102,14 +101,28 @@ instance (Eq a, Num a, G.Vector v a) => Num (Laurent v a) where
   {-# INLINE fromInteger #-}
   {-# INLINE (*) #-}
 
-quotLaurent :: (Eq a, Integral a, G.Vector v a) => Laurent v a -> Laurent v a -> Laurent v a
-quotLaurent (Laurent n p@(Poly (G.toList -> xs))) (Laurent m q@(Poly (G.toList -> ys)))
+quotRemLaurent :: (Eq a, Integral a, G.Vector v a) => Laurent v a -> Laurent v a -> (Laurent v a, Laurent v a)
+quotRemLaurent (reduceLaurent -> Laurent n p@(Poly (G.toList -> xs))) (reduceLaurent -> Laurent m q@(Poly (G.toList -> ys)))
   = if lenDiff < 0
-    then Laurent (n - m + lenDiff)
-          (toPoly (G.fromList (replicate (abs lenDiff) 0 ++ xs)) `Poly.quotPoly` q)
-    else Laurent (n - m) (p `Poly.quotPoly` q)
+    then  let (t, r) = toPoly (G.fromList (replicate (abs lenDiff) 0 ++ xs)) `Poly.quotRemPoly` q
+          in ( Laurent (n - m + lenDiff) t
+             , Laurent (n + lenDiff) r
+             )
+    else  let (t, r) = p `Poly.quotRemPoly` q
+          in ( Laurent (n - m) t
+             , Laurent n r
+             )
     where
       lenDiff = length xs - length ys
+
+reduceLaurent :: (Eq a, Num a, G.Vector v a) => Laurent v a -> Laurent v a
+reduceLaurent (Laurent n (Poly (G.toList -> xs))) = go n xs
+  where
+    go _ [] = 0
+    go e (y:ys)
+      = if e < 0 && y == 0
+        then go (e + 1) ys
+        else Laurent e (toPoly $ G.fromList (y:ys))
 
 instance (Show a, G.Vector v a) => Show (Laurent v a) where
   showsPrec d (Laurent n (Poly xs))
@@ -236,7 +249,7 @@ fst' (a :*: _) = a
 -- >>> subst (X^2 + 1 :: UPoly Int) (X + 1 :: UPoly Int)
 -- 1 * X^2 + 2 * X + 2
 subst :: (Eq a, Integral a, G.Vector v a, G.Vector v (Int, a), G.Vector v Int) => Laurent v a -> Laurent v a -> Laurent v a
-subst = substitute (scale 0) (1 `quotLaurent`)
+subst = substitute (scale 0) (error "")-- (1 `quotLaurent`)
 {-# INLINE subst #-}
 
 substitute :: (Num b, G.Vector v a, G.Vector v (Int, a), G.Vector v Int)
