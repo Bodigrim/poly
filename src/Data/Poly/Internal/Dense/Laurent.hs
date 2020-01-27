@@ -15,33 +15,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns        #-}
 
---   ( Poly(..)
---   , VPoly
---   , UPoly
---   , leading
---   , dropWhileEndM
---   -- * Num interface
---   , toPoly
---   , monomial
---   , scale
---   , scaleInternal
---   , pattern X
---   , eval
---   , subst
---   , deriv
---   , integral
---   -- * Semiring interface
---   , toPoly'
---   , monomial'
---   , scale'
---   , pattern X'
---   , eval'
---   , subst'
---   , deriv'
--- #if MIN_VERSION_semirings(0,5,0)
---   , unscale'
---   , integral'
--- #endif
+
 module Data.Poly.Internal.Dense.Laurent
   ( Laurent(..)
   , ULaurent
@@ -61,22 +35,23 @@ module Data.Poly.Internal.Dense.Laurent
    -- * Semiring interface
   , toLaurent'
   , monomial'
+  -- XXX: Add remaining
   )
 where
 
-import           Control.DeepSeq             (NFData)
-import           Control.Monad
-import           Control.Monad.ST
-import           Data.List                   (intersperse)
-import           Data.Poly.Internal.Dense    (Poly (..), toPoly, toPoly')
+import Control.DeepSeq             (NFData)
+import Control.Monad
+import Control.Monad.ST
+import Data.List (intersperse)
+import Data.Poly.Internal.Dense (Poly (..), toPoly, toPoly')
 import qualified Data.Poly.Internal.Dense    as Poly
-import           Data.Semiring               (Semiring (..))
-import qualified Data.Semiring               as S
-import qualified Data.Vector                 as V
-import qualified Data.Vector.Generic         as G
+import Data.Semiring (Semiring (..))
+import qualified Data.Semiring as S
+import qualified Data.Vector as V
+import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as MG
-import qualified Data.Vector.Unboxed         as U
-import           GHC.Generics                (Generic)
+import qualified Data.Vector.Unboxed as U
+import GHC.Generics (Generic)
 
 -- TODO: Move this to Internal/Dense/Laurent.hs
 
