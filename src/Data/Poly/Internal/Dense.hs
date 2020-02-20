@@ -31,8 +31,6 @@ module Data.Poly.Internal.Dense
   , subst
   , deriv
   , integral
-  , quotPoly
-  , quotRemPoly
   -- * Semiring interface
   , toPoly'
   , monomial'
@@ -166,25 +164,6 @@ instance (Eq a, Num a, G.Vector v a) => Num (Poly v a) where
   {-# INLINE negate #-}
   {-# INLINE fromInteger #-}
   {-# INLINE (*) #-}
-
-quotPoly :: forall a v. (Eq a, Integral a, G.Vector v a) => Poly v a -> Poly v a -> Poly v a
-quotPoly a b = fst $ quotRemPoly a b
-
-quotRemPoly :: forall a v. (Eq a, Integral a, G.Vector v a) => Poly v a -> Poly v a -> (Poly v a, Poly v a)
-p@(Poly (G.toList -> xs)) `quotRemPoly` q@(Poly (G.toList -> ys))
-    = bimap (toPoly . G.fromList) (toPoly . G.fromList) $ go mempty xs (fromIntegral (degree p) - fromIntegral (degree q))
-    where
-      bimap f g ~(a, b) = (f a, g b)
-      v0 :: a
-      v0  | null ys    = 0
-          | otherwise  = head ys
-      go :: [a] -> [a] -> Int -> ([a], [a])
-      go w u n
-        | null u || n < 0   = (w, u)
-        | otherwise         = go (w0:w) u' (n-1)
-        where
-          w0 = head u `div` v0
-          u' = tail (zipWith (+) u (map (negate w0 *) ys))
 
 instance (Eq a, Semiring a, G.Vector v a) => Semiring (Poly v a) where
   zero = Poly G.empty

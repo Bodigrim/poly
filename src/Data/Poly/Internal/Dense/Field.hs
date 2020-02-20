@@ -14,12 +14,14 @@
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
 
+
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 #if MIN_VERSION_semirings(0,4,2)
 
 module Data.Poly.Internal.Dense.Field
   ( fieldGcd
+  , Field
   ) where
 
 import Prelude hiding (quotRem, quot, rem, gcd)
@@ -144,3 +146,7 @@ gcdM xs ys = do
 module Data.Poly.Internal.Dense.Field () where
 
 #endif
+
+
+
+
