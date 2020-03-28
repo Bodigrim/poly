@@ -32,9 +32,9 @@ The simplest way to construct a polynomial is using the pattern `X`:
 1 * X^2 + (-3) * X + 2
 ```
 
-(Unfortunately, a type is often ambiguous and must be given explicitly.)
+(Unfortunately, types are often ambiguous and must be given explicitly.)
 
-While being convenient to read and write in REPL, `X` is relatively slow. The fastest approach is to use `toPoly`, providing it with a vector of coefficients (head is the constant term):
+While being convenient to read and write in REPL, `X` is relatively slow. The fastest approach is to use `toPoly`, providing it with a vector of coefficients (constant term first):
 
 ```haskell
 > toPoly (Data.Vector.Unboxed.fromList [2, -3, 1 :: Int])
@@ -99,7 +99,7 @@ and reciprocals `deriv` / `integral`:
 
 ## Deconstruction
 
-Use `unPoly` to deconstruct a polynomial to a vector of coefficients (head is the constant term):
+Use `unPoly` to deconstruct a polynomial to a vector of coefficients (constant term first):
 
 ```haskell
 > unPoly (X^2 - 3 * X + 2 :: UPoly Int)
