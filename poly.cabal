@@ -25,6 +25,7 @@ library
   hs-source-dirs: src
   exposed-modules:
     Data.Poly
+    Data.Poly.Laurent
     Data.Poly.Orthogonal
     Data.Poly.Semiring
     Data.Poly.Sparse
@@ -52,6 +53,7 @@ test-suite poly-tests
   main-is: Main.hs
   other-modules:
     Dense
+    DenseLaurent
     Orthogonal
     Quaternion
     Sparse

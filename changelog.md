@@ -1,5 +1,6 @@
 # 0.4.0.0
 
+* Implement Laurent polynomials.
 * Implement orthogonal polynomials.
 * Decomission extended GCD, use `Data.Euclidean.gcdExt`.
 * Decomission `PolyOverFractional`, use `PolyOverField`.

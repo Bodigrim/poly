@@ -7,6 +7,7 @@
 
 module Dense
   ( testSuite
+  , ShortPoly(..)
   ) where
 
 import Prelude hiding (gcd, quotRem, rem)

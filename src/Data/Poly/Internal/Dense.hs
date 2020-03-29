@@ -36,6 +36,7 @@ module Data.Poly.Internal.Dense
   , pattern X'
   , eval'
   , subst'
+  , substitute'
   , deriv'
   , unscale'
   , integral'
