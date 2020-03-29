@@ -7,7 +7,6 @@
 -- GcdDomain for GcdDomain underlying
 --
 
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE PatternSynonyms            #-}
@@ -19,8 +18,6 @@
 
 module Data.Poly.Internal.Sparse.GcdDomain
   () where
-
-#if MIN_VERSION_semirings(0,4,2)
 
 import Prelude hiding (gcd, lcm, (^))
 import Control.Exception
@@ -75,5 +72,3 @@ gcdHelper xs ys = case leading xs of
         gx = fromMaybe err $ divide g xc
         gy = fromMaybe err $ divide g yc
         err = error "gcd: violated internal invariant"
-
-#endif

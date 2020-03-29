@@ -1,28 +1,17 @@
-{-# LANGUAGE CPP              #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 module TestUtils
   ( tenTimesLess
   , mySemiringLaws
-#if MIN_VERSION_quickcheck_classes(0,6,1)
   , myRingLaws
-#endif
-#if MIN_VERSION_quickcheck_classes(0,6,3)
   , myNumLaws
-#endif
-#if MIN_VERSION_semirings(0,4,2) && MIN_VERSION_quickcheck_classes(0,6,3)
   , myGcdDomainLaws
   , myEuclideanLaws
-#endif
   , myIsListLaws
-#if MIN_VERSION_quickcheck_classes(0,6,0)
   , myShowLaws
-#endif
   ) where
 
-#if MIN_VERSION_semirings(0,4,2)
 import Data.Euclidean
-#endif
 import Data.Proxy
 import Data.Semiring
 import GHC.Exts
@@ -50,14 +39,11 @@ mySemiringLaws proxy = testGroup tpclss $ map tune props
       where
         test = uncurry testProperty pair
 
-#if MIN_VERSION_quickcheck_classes(0,6,1)
 myRingLaws :: (Eq a, Ring a, Arbitrary a, Show a) => Proxy a -> TestTree
 myRingLaws proxy = testGroup tpclss $ map (uncurry testProperty) props
   where
     Laws tpclss props = ringLaws proxy
-#endif
 
-#if MIN_VERSION_quickcheck_classes(0,6,3)
 myNumLaws :: (Eq a, Num a, Arbitrary a, Show a) => Proxy a -> TestTree
 myNumLaws proxy = testGroup tpclss $ map tune props
   where
@@ -75,9 +61,7 @@ myNumLaws proxy = testGroup tpclss $ map tune props
       _ -> test
       where
         test = uncurry testProperty pair
-#endif
 
-#if MIN_VERSION_semirings(0,4,2) && MIN_VERSION_quickcheck_classes(0,6,3)
 myGcdDomainLaws :: (Eq a, GcdDomain a, Arbitrary a, Show a) => Proxy a -> TestTree
 myGcdDomainLaws proxy = testGroup tpclss $ map tune props
   where
@@ -97,14 +81,12 @@ myEuclideanLaws :: (Eq a, Euclidean a, Arbitrary a, Show a) => Proxy a -> TestTr
 myEuclideanLaws proxy = testGroup tpclss $ map (uncurry testProperty) props
   where
     Laws tpclss props = euclideanLaws proxy
-#endif
 
 myIsListLaws :: (Eq a, IsList a, Arbitrary a, Show a, Show (Item a), Arbitrary (Item a)) => Proxy a -> TestTree
 myIsListLaws proxy = testGroup tpclss $ map (uncurry testProperty) props
   where
     Laws tpclss props = isListLaws proxy
 
-#if MIN_VERSION_quickcheck_classes(0,6,0)
 myShowLaws :: (Eq a, Arbitrary a, Show a) => Proxy a -> TestTree
 myShowLaws proxy = testGroup tpclss $ map tune props
   where
@@ -115,4 +97,3 @@ myShowLaws proxy = testGroup tpclss $ map tune props
       _ -> test
       where
         test = uncurry testProperty pair
-#endif

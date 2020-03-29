@@ -7,7 +7,6 @@
 -- Dense polynomials of one variable.
 --
 
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE PatternSynonyms            #-}
@@ -38,10 +37,8 @@ module Data.Poly.Internal.Dense
   , eval'
   , subst'
   , deriv'
-#if MIN_VERSION_semirings(0,5,0)
   , unscale'
   , integral'
-#endif
   ) where
 
 import Prelude hiding (quotRem, quot, rem, gcd, lcm, (^))
@@ -50,6 +47,7 @@ import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.Bits
+import Data.Euclidean (Euclidean, Field, quot)
 import Data.List (foldl', intersperse)
 import Data.Semiring (Semiring(..), Ring())
 import qualified Data.Semiring as Semiring
@@ -58,13 +56,6 @@ import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as MG
 import qualified Data.Vector.Unboxed as U
 import GHC.Exts
-#if !MIN_VERSION_semirings(0,4,0)
-import Data.Semigroup
-import Numeric.Natural
-#endif
-#if MIN_VERSION_semirings(0,5,0)
-import Data.Euclidean (Euclidean, Field, quot)
-#endif
 
 -- | Polynomials of one variable with coefficients from @a@,
 -- backed by a 'G.Vector' @v@ (boxed, unboxed, storable, etc.).
@@ -171,13 +162,11 @@ instance (Eq a, Semiring a, G.Vector v a) => Semiring (Poly v a) where
   {-# INLINE plus #-}
   {-# INLINE times #-}
 
-#if MIN_VERSION_semirings(0,4,0)
   fromNatural n = if n' == zero then zero else Poly $ G.singleton n'
     where
       n' :: a
       n' = fromNatural n
   {-# INLINE fromNatural #-}
-#endif
 
 instance (Eq a, Ring a, G.Vector v a) => Ring (Poly v a) where
   negate (Poly xs) = Poly $ G.map Semiring.negate xs
@@ -365,7 +354,6 @@ scale yp yc (Poly xs) = toPoly $ scaleInternal 0 (*) yp yc xs
 scale' :: (Eq a, Semiring a, G.Vector v a) => Word -> a -> Poly v a -> Poly v a
 scale' yp yc (Poly xs) = toPoly' $ scaleInternal zero times yp yc xs
 
-#if MIN_VERSION_semirings(0,5,0)
 unscale' :: (Eq a, Euclidean a, G.Vector v a) => Word -> a -> Poly v a -> Poly v a
 unscale' yp yc (Poly xs) = toPoly' $ runST $ do
   let lenZs = G.length xs - fromIntegral yp
@@ -374,7 +362,6 @@ unscale' yp yc (Poly xs) = toPoly' $ runST $ do
     MG.unsafeWrite zs k (G.unsafeIndex xs (k + fromIntegral yp) `quot` yc)
   G.unsafeFreeze zs
 {-# INLINABLE unscale' #-}
-#endif
 
 data StrictPair a b = !a :*: !b
 
@@ -433,17 +420,6 @@ deriv' (Poly xs)
   | otherwise = toPoly' $ G.imap (\i x -> fromNatural (fromIntegral (i + 1)) `times` x) $ G.tail xs
 {-# INLINE deriv' #-}
 
-#if !MIN_VERSION_semirings(0,4,0)
-fromNatural :: Semiring a => Natural -> a
-fromNatural 0 = zero
-fromNatural n = getAdd' (stimes n (Add' one))
-
-newtype Add' a = Add' { getAdd' :: a }
-
-instance Semiring a => Semigroup (Add' a) where
-  Add' a <> Add' b = Add' (a `plus` b)
-#endif
-
 -- | Compute an indefinite integral of a polynomial,
 -- setting constant term to zero.
 --
@@ -462,7 +438,6 @@ integral (Poly xs)
       lenXs = G.length xs
 {-# INLINABLE integral #-}
 
-#if MIN_VERSION_semirings(0,5,0)
 integral' :: (Eq a, Field a, G.Vector v a) => Poly v a -> Poly v a
 integral' (Poly xs)
   | G.null xs = Poly G.empty
@@ -475,7 +450,6 @@ integral' (Poly xs)
     where
       lenXs = G.length xs
 {-# INLINABLE integral' #-}
-#endif
 
 -- | Create an identity polynomial.
 pattern X :: (Eq a, Num a, G.Vector v a, Eq (v a)) => Poly v a

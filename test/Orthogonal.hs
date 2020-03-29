@@ -1,23 +1,14 @@
-{-# LANGUAGE CPP             #-}
 {-# LANGUAGE OverloadedLists #-}
 
 module Orthogonal
   ( testSuite
   ) where
 
-#if !MIN_VERSION_semirings(0,5,0)
-
 import Test.Tasty
-
-testSuite :: TestTree
-testSuite = testGroup "Orthogonal" []
-
-#else
 
 import Data.List
 import Data.Poly (VPoly, deriv, eval, integral)
 import Data.Poly.Orthogonal
-import Test.Tasty
 import Test.Tasty.QuickCheck
 
 testSuite :: TestTree
@@ -162,5 +153,3 @@ integral11 x = eval y 1 - eval y (-1)
 
 limit :: Num a => a
 limit = 10
-
-#endif

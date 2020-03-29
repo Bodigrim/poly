@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -12,9 +11,7 @@ module Sparse
   ) where
 
 import Prelude hiding (gcd, quotRem, rem)
-#if MIN_VERSION_semirings(0,4,2)
 import Data.Euclidean (Euclidean(..), GcdDomain(..))
-#endif
 import Data.Function
 import Data.Int
 import Data.List
@@ -36,15 +33,7 @@ instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a)) => Arbitrary (Pol
   shrink = fmap (S.toPoly . G.fromList) . shrink . G.toList . unPoly
 
 newtype ShortPoly a = ShortPoly { unShortPoly :: a }
-  deriving
-    ( Eq
-    , Show
-    , Semiring
-#if MIN_VERSION_semirings(0,4,2)
-    , GcdDomain
-    , Euclidean
-#endif
-    )
+  deriving (Eq, Show, Semiring, GcdDomain, Euclidean)
 
 instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a)) => Arbitrary (ShortPoly (Poly v a)) where
   arbitrary = ShortPoly . S.toPoly . G.fromList . (\xs -> take (length xs `mod` 5) xs) <$> arbitrary
@@ -73,48 +62,32 @@ semiringTests =
   ]
 
 ringTests :: [TestTree]
-#if MIN_VERSION_quickcheck_classes(0,6,1)
 ringTests =
   [ myRingLaws (Proxy :: Proxy (Poly U.Vector ()))
   , myRingLaws (Proxy :: Proxy (Poly U.Vector Int8))
   , myRingLaws (Proxy :: Proxy (Poly V.Vector Integer))
   , myRingLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
   ]
-#else
-ringTests = []
-#endif
 
 numTests :: [TestTree]
-#if MIN_VERSION_quickcheck_classes(0,6,3)
 numTests =
   [ myNumLaws (Proxy :: Proxy (Poly U.Vector Int8))
   , myNumLaws (Proxy :: Proxy (Poly V.Vector Integer))
   , tenTimesLess
   $ myNumLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
   ]
-#else
-numTests = []
-#endif
 
 gcdDomainTests :: [TestTree]
-#if MIN_VERSION_semirings(0,4,2) && MIN_VERSION_quickcheck_classes(0,6,3)
 gcdDomainTests =
   [ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Integer)))
   , tenTimesLess
   $ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
   ]
-#else
-gcdDomainTests = []
-#endif
 
 euclideanTests :: [TestTree]
-#if MIN_VERSION_semirings(0,4,2) && MIN_VERSION_quickcheck_classes(0,6,3)
 euclideanTests =
   [ myEuclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
   ]
-#else
-euclideanTests = []
-#endif
 
 isListTests :: [TestTree]
 isListTests =
@@ -126,7 +99,6 @@ isListTests =
   ]
 
 showTests :: [TestTree]
-#if MIN_VERSION_quickcheck_classes(0,6,0)
 showTests =
   [ myShowLaws (Proxy :: Proxy (Poly U.Vector ()))
   , myShowLaws (Proxy :: Proxy (Poly U.Vector Int8))
@@ -134,9 +106,6 @@ showTests =
   , tenTimesLess
   $ myShowLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
   ]
-#else
-showTests = []
-#endif
 
 arithmeticTests :: TestTree
 arithmeticTests = testGroup "Arithmetic"
@@ -266,12 +235,10 @@ derivTests :: TestTree
 derivTests = testGroup "deriv"
   [ testProperty "deriv = S.deriv" $
     \(p :: Poly V.Vector Integer) -> deriv p === S.deriv p
-#if MIN_VERSION_semirings(0,5,0)
   , testProperty "integral = S.integral" $
     \(p :: Poly V.Vector Rational) -> integral p === S.integral p
   , testProperty "deriv . integral = id" $
     \(p :: Poly V.Vector Rational) -> deriv (integral p) === p
-#endif
   , testProperty "deriv c = 0" $
     \c -> deriv (monomial 0 c :: Poly V.Vector Int) === 0
   , testProperty "deriv cX = c" $

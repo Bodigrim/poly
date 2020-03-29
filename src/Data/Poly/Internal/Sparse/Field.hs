@@ -8,7 +8,6 @@
 --
 
 {-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE PatternSynonyms            #-}
@@ -18,28 +17,17 @@
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-#if MIN_VERSION_semirings(0,4,2)
-
 module Data.Poly.Internal.Sparse.Field () where
 
 import Prelude hiding (quotRem, quot, rem, gcd)
 import Control.Arrow
 import Control.Exception
-import Data.Euclidean (Euclidean(..))
-#if !MIN_VERSION_semirings(0,5,0)
-import Data.Semiring (Ring)
-#else
-import Data.Euclidean (Field)
-#endif
+import Data.Euclidean (Euclidean(..), Field)
 import Data.Semiring (minus, plus, times, zero)
 import qualified Data.Vector.Generic as G
 
 import Data.Poly.Internal.Sparse
 import Data.Poly.Internal.Sparse.GcdDomain ()
-
-#if !MIN_VERSION_semirings(0,5,0)
-type Field a = (Euclidean a, Ring a, Fractional a)
-#endif
 
 instance (Eq a, Eq (v (Word, a)), Field a, G.Vector v (Word, a)) => Euclidean (Poly v a) where
   degree (Poly xs)
@@ -66,9 +54,3 @@ quotientRemainder ts ys = case leading ys of
           where
             zs = Poly $ G.singleton (xp `minus` yp, xc `quot` yc)
             xs' = xs `minus` zs `times` ys
-
-#else
-
-module Data.Poly.Internal.Sparse.Field () where
-
-#endif

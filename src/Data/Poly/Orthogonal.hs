@@ -7,15 +7,8 @@
 -- Classical orthogonal polynomials.
 --
 
-{-# LANGUAGE CPP                 #-}
 {-# LANGUAGE OverloadedLists     #-}
 {-# LANGUAGE RebindableSyntax    #-}
-
-#if !MIN_VERSION_semirings(0,5,0)
-
-module Data.Poly.Orthogonal () where
-
-#else
 
 module Data.Poly.Orthogonal
   ( legendre
@@ -133,5 +126,3 @@ laguerreGen a = xs
     x1 = toPoly [1 + a, -1]
     xs = x0 : x1 : zipWith3 rec (iterate (+ 1) 1) xs (tail xs)
     rec n pm1 p = toPoly [(2 * n + 1 + a) `quot` (n + 1), -1 `quot` (n + 1)] * p - scale 0 ((n + a) `quot` (n + 1)) pm1
-
-#endif

@@ -8,15 +8,12 @@
 --
 
 {-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE PatternSynonyms            #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-
-#if MIN_VERSION_semirings(0,4,2)
 
 module Data.Poly.Internal.Dense.Field
   ( fieldGcd
@@ -27,22 +24,13 @@ import Control.Exception
 import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
-import Data.Euclidean (Euclidean(..))
-#if !MIN_VERSION_semirings(0,5,0)
-import Data.Semiring (Ring)
-#else
-import Data.Euclidean (Field)
-#endif
+import Data.Euclidean (Euclidean(..), Field)
 import Data.Semiring (times, minus, zero)
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as MG
 
 import Data.Poly.Internal.Dense
 import Data.Poly.Internal.Dense.GcdDomain ()
-
-#if !MIN_VERSION_semirings(0,5,0)
-type Field a = (Euclidean a, Ring a, Fractional a)
-#endif
 
 instance (Eq a, Eq (v a), Field a, G.Vector v a) => Euclidean (Poly v a) where
   degree (Poly xs) = fromIntegral (G.length xs)
@@ -138,9 +126,3 @@ gcdM xs ys = do
     remainderM xs ys'
     gcdM ys' xs
 {-# INLINE gcdM #-}
-
-#else
-
-module Data.Poly.Internal.Dense.Field () where
-
-#endif

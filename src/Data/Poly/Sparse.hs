@@ -7,7 +7,6 @@
 -- Sparse polynomials with 'Num' instance.
 --
 
-{-# LANGUAGE CPP             #-}
 {-# LANGUAGE PatternSynonyms #-}
 
 module Data.Poly.Sparse
@@ -28,7 +27,5 @@ module Data.Poly.Sparse
   ) where
 
 import Data.Poly.Internal.Sparse
-#if MIN_VERSION_semirings(0,4,2)
 import Data.Poly.Internal.Sparse.Field ()
 import Data.Poly.Internal.Sparse.GcdDomain ()
-#endif

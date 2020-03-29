@@ -7,13 +7,10 @@
 -- Wrapper with a more efficient 'Euclidean' instance.
 --
 
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE PatternSynonyms            #-}
-
-#if MIN_VERSION_semirings(0,4,2)
 
 module Data.Poly.Internal.PolyOverField
   ( PolyOverField(..)
@@ -49,10 +46,6 @@ unPolyOverFractional :: PolyOverField poly -> poly
 unPolyOverFractional = unPolyOverField
 {-# DEPRECATED unPolyOverFractional "Use 'unPolyOverField'" #-}
 
-#if !MIN_VERSION_semirings(0,5,0)
-type Field a = (Euclidean a, Ring a, Fractional a)
-#endif
-
 instance (Eq a, Eq (v a), Field a, G.Vector v a) => GcdDomain (PolyOverField (Dense.Poly v a)) where
   gcd (PolyOverField x) (PolyOverField y) = PolyOverField (Dense.fieldGcd x y)
   {-# INLINE gcd #-}
@@ -67,9 +60,3 @@ instance (Eq a, Eq (v a), Field a, G.Vector v a) => Euclidean (PolyOverField (De
   rem (PolyOverField x) (PolyOverField y) =
     PolyOverField (rem x y)
   {-# INLINE rem #-}
-
-#else
-
-module Data.Poly.Internal.PolyOverField () where
-
-#endif

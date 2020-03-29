@@ -7,7 +7,6 @@
 -- Dense polynomials and a 'Semiring'-based interface.
 --
 
-{-# LANGUAGE CPP             #-}
 {-# LANGUAGE PatternSynonyms #-}
 
 module Data.Poly.Semiring
@@ -24,31 +23,23 @@ module Data.Poly.Semiring
   , eval
   , subst
   , deriv
-#if MIN_VERSION_semirings(0,5,0)
   , integral
-#endif
-#if MIN_VERSION_semirings(0,4,2)
   -- * Polynomials over 'Field'
   , PolyOverField(..)
   , PolyOverFractional
   , pattern PolyOverFractional
   , unPolyOverFractional
-#endif
   ) where
 
+import Data.Euclidean (Field)
 import Data.Semiring (Semiring)
 import qualified Data.Vector.Generic as G
 
 import Data.Poly.Internal.Dense (Poly(..), VPoly, UPoly, leading)
 import qualified Data.Poly.Internal.Dense as Dense
-#if MIN_VERSION_semirings(0,4,2)
 import Data.Poly.Internal.Dense.Field ()
 import Data.Poly.Internal.Dense.GcdDomain ()
 import Data.Poly.Internal.PolyOverField
-#endif
-#if MIN_VERSION_semirings(0,5,0)
-import Data.Euclidean (Field)
-#endif
 
 -- | Make 'Poly' from a vector of coefficients
 -- (first element corresponds to a constant term).
@@ -97,7 +88,6 @@ subst = Dense.subst'
 deriv :: (Eq a, Semiring a, G.Vector v a) => Poly v a -> Poly v a
 deriv = Dense.deriv'
 
-#if MIN_VERSION_semirings(0,5,0)
 -- | Compute an indefinite integral of a polynomial,
 -- setting constant term to zero.
 --
@@ -105,4 +95,3 @@ deriv = Dense.deriv'
 -- 1.0 * X^3 + 0.0 * X^2 + 3.0 * X + 0.0
 integral :: (Eq a, Field a, G.Vector v a) => Poly v a -> Poly v a
 integral = Dense.integral'
-#endif

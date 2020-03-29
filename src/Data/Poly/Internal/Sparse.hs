@@ -7,7 +7,6 @@
 -- Sparse polynomials of one variable.
 --
 
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE PatternSynonyms            #-}
@@ -39,9 +38,7 @@ module Data.Poly.Internal.Sparse
   , eval'
   , subst'
   , deriv'
-#if MIN_VERSION_semirings(0,5,0)
   , integral'
-#endif
   ) where
 
 import Prelude hiding (quot)
@@ -50,6 +47,7 @@ import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.Bits
+import Data.Euclidean (Field, quot)
 import Data.List (intersperse)
 import Data.Ord
 import Data.Semiring (Semiring(..), Ring())
@@ -60,13 +58,6 @@ import qualified Data.Vector.Generic.Mutable as MG
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Algorithms.Tim as Tim
 import GHC.Exts
-#if !MIN_VERSION_semirings(0,4,0)
-import Data.Semigroup
-import Numeric.Natural
-#endif
-#if MIN_VERSION_semirings(0,5,0)
-import Data.Euclidean (Field, quot)
-#endif
 
 -- | Polynomials of one variable with coefficients from @a@,
 -- backed by a 'G.Vector' @v@ (boxed, unboxed, storable, etc.).
@@ -215,13 +206,11 @@ instance (Eq a, Semiring a, G.Vector v (Word, a)) => Semiring (Poly v a) where
   {-# INLINE plus #-}
   {-# INLINE times #-}
 
-#if MIN_VERSION_semirings(0,4,0)
   fromNatural n = if n' == zero then zero else Poly $ G.singleton (0, n')
     where
       n' :: a
       n' = fromNatural n
   {-# INLINE fromNatural #-}
-#endif
 
 instance (Eq a, Ring a, G.Vector v (Word, a)) => Ring (Poly v a) where
   negate (Poly xs) = Poly $ G.map (fmap Semiring.negate) xs
@@ -528,17 +517,6 @@ deriv' (Poly xs) = Poly $ derivPoly
   xs
 {-# INLINE deriv' #-}
 
-#if !MIN_VERSION_semirings(0,4,0)
-fromNatural :: Semiring a => Natural -> a
-fromNatural 0 = zero
-fromNatural n = getAdd' (stimes n (Add' one))
-
-newtype Add' a = Add' { getAdd' :: a }
-
-instance Semiring a => Semigroup (Add' a) where
-  Add' a <> Add' b = Add' (a `plus` b)
-#endif
-
 derivPoly
   :: G.Vector v (Word, a)
   => (a -> Bool)
@@ -575,13 +553,11 @@ integral (Poly xs)
   $ G.map (\(p, c) -> (p + 1, c / (fromIntegral p + 1))) xs
 {-# INLINE integral #-}
 
-#if MIN_VERSION_semirings(0,5,0)
 integral' :: (Eq a, Field a, G.Vector v (Word, a)) => Poly v a -> Poly v a
 integral' (Poly xs)
   = Poly
   $ G.map (\(p, c) -> (p + 1, c `quot` Semiring.fromIntegral (p + 1))) xs
 {-# INLINE integral' #-}
-#endif
 
 -- | Create an identity polynomial.
 pattern X :: (Eq a, Num a, G.Vector v (Word, a), Eq (v (Word, a))) => Poly v a

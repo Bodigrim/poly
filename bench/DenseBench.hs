@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE TypeApplications           #-}
@@ -9,15 +8,13 @@ module DenseBench
 
 import Prelude hiding (quotRem, gcd)
 import Gauge.Main
-import Data.Poly
-import qualified Data.Vector.Unboxed as U
-#if MIN_VERSION_semirings(0,5,2)
 import Data.Euclidean (Euclidean(..), GcdDomain(..), Field)
+import Data.Poly
 import qualified Data.Poly.Semiring as S (toPoly)
 import Data.Semiring (Semiring(..), Ring, Mod2(..))
 import qualified Data.Semiring as S (fromIntegral)
 import qualified Data.Vector as V
-#endif
+import qualified Data.Vector.Unboxed as U
 
 benchSuite :: Benchmark
 benchSuite = bgroup "dense" $ concat
@@ -26,12 +23,10 @@ benchSuite = bgroup "dense" $ concat
   , map benchEval     [100, 1000, 10000]
   , map benchDeriv    [100, 1000, 10000]
   , map benchIntegral [100, 1000, 10000]
-#if MIN_VERSION_semirings(0,5,2)
   , map benchQuotRem    [10, 100]
   , map benchGcd        [10, 100]
   , map benchGcdFracRat [10, 20, 40]
   , map benchGcdFracM   [10, 100, 1000]
-#endif
   ]
 
 benchAdd :: Int -> Benchmark
@@ -49,8 +44,6 @@ benchDeriv k = bench ("deriv/" ++ show k) $ nf doDeriv k
 benchIntegral :: Int -> Benchmark
 benchIntegral k = bench ("integral/" ++ show k) $ nf doIntegral k
 
-#if MIN_VERSION_semirings(0,5,2)
-
 benchQuotRem :: Int -> Benchmark
 benchQuotRem k = bench ("quotRem/" ++ show k) $ nf doQuotRem k
 
@@ -62,8 +55,6 @@ benchGcdFracRat k = bench ("gcdFrac/Rational/" ++ show k) $ nf (doGcdFrac @Ratio
 
 benchGcdFracM :: Int -> Benchmark
 benchGcdFracM k = bench ("gcdFrac/Mod2/" ++ show k) $ nf (getMod2 . doGcdFrac @Mod2) k
-
-#endif
 
 doBinOp :: (forall a. Num a => a -> a -> a) -> Int -> Int
 doBinOp op n = U.sum zs
@@ -89,8 +80,6 @@ doIntegral n = U.sum zs
   where
     xs = toPoly $ U.generate n ((* 2) . fromIntegral)
     zs = unPoly $ integral xs
-
-#if MIN_VERSION_semirings(0,5,2)
 
 gen1 :: Ring a => Int -> a
 gen1 k = S.fromIntegral (truncate (pi * fromIntegral k :: Double) `mod` (k + 1))
@@ -118,5 +107,3 @@ doGcdFrac n = V.foldl' plus zero gs
     xs = PolyOverField $ S.toPoly $ V.generate n gen1
     ys = PolyOverField $ S.toPoly $ V.generate n gen2
     gs = unPoly $ unPolyOverField $ xs `gcd` ys
-
-#endif

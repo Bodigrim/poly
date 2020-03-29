@@ -7,7 +7,6 @@
 -- Dense polynomials and a 'Num'-based interface.
 --
 
-{-# LANGUAGE CPP             #-}
 {-# LANGUAGE PatternSynonyms #-}
 
 module Data.Poly
@@ -25,18 +24,14 @@ module Data.Poly
   , subst
   , deriv
   , integral
-#if MIN_VERSION_semirings(0,4,2)
   -- * Polynomials over 'Field'
   , PolyOverField(..)
   , PolyOverFractional
   , pattern PolyOverFractional
   , unPolyOverFractional
-#endif
   ) where
 
 import Data.Poly.Internal.Dense
-#if MIN_VERSION_semirings(0,4,2)
 import Data.Poly.Internal.Dense.Field ()
 import Data.Poly.Internal.Dense.GcdDomain ()
 import Data.Poly.Internal.PolyOverField
-#endif
