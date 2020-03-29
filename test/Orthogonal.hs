@@ -6,7 +6,7 @@ module Orthogonal
 
 import Test.Tasty
 
-import Data.List
+import Data.List (foldl', tails)
 import Data.Poly (VPoly, deriv, eval, integral)
 import Data.Poly.Orthogonal
 import Test.Tasty.QuickCheck

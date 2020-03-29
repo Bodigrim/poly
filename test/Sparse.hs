@@ -14,7 +14,7 @@ import Prelude hiding (gcd, quotRem, rem)
 import Data.Euclidean (Euclidean(..), GcdDomain(..))
 import Data.Function
 import Data.Int
-import Data.List
+import Data.List (groupBy, sortOn)
 import Data.Poly.Sparse
 import qualified Data.Poly.Sparse.Semiring as S
 import Data.Proxy
