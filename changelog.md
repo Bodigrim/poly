@@ -2,6 +2,7 @@
 
 * Implement orthogonal polynomials.
 * Decomission extended GCD, use `Data.Euclidean.gcdExt`.
+* Decomission `PolyOverFractional`, use `PolyOverField`.
 
 # 0.3.3.0
 

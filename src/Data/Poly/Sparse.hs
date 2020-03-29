@@ -15,7 +15,6 @@ module Data.Poly.Sparse
   , UPoly
   , unPoly
   , leading
-  -- * Num interface
   , toPoly
   , monomial
   , scale

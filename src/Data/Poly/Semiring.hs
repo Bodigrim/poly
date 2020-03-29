@@ -15,7 +15,6 @@ module Data.Poly.Semiring
   , UPoly
   , unPoly
   , leading
-  -- * Semiring interface
   , toPoly
   , monomial
   , scale
@@ -24,11 +23,7 @@ module Data.Poly.Semiring
   , subst
   , deriv
   , integral
-  -- * Polynomials over 'Field'
   , PolyOverField(..)
-  , PolyOverFractional
-  , pattern PolyOverFractional
-  , unPolyOverFractional
   ) where
 
 import Data.Euclidean (Field)

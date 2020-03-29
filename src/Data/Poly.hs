@@ -15,7 +15,6 @@ module Data.Poly
   , UPoly
   , unPoly
   , leading
-  -- * Num interface
   , toPoly
   , monomial
   , scale
@@ -24,11 +23,7 @@ module Data.Poly
   , subst
   , deriv
   , integral
-  -- * Polynomials over 'Field'
   , PolyOverField(..)
-  , PolyOverFractional
-  , pattern PolyOverFractional
-  , unPolyOverFractional
   ) where
 
 import Data.Poly.Internal.Dense

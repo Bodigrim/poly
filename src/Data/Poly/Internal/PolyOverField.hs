@@ -14,9 +14,6 @@
 
 module Data.Poly.Internal.PolyOverField
   ( PolyOverField(..)
-  , PolyOverFractional
-  , pattern PolyOverFractional
-  , unPolyOverFractional
   ) where
 
 import Prelude hiding (quotRem, quot, rem, gcd, lcm, (^))
@@ -32,19 +29,6 @@ import qualified Data.Poly.Internal.Dense.Field as Dense (fieldGcd)
 -- providing a faster 'GcdDomain' instance.
 newtype PolyOverField poly = PolyOverField { unPolyOverField :: poly }
   deriving (Eq, NFData, Num, Ord, Ring, Semiring, Show)
-
--- |
-type PolyOverFractional = PolyOverField
-{-# DEPRECATED PolyOverFractional "Use 'PolyOverField'" #-}
-
--- |
-pattern PolyOverFractional :: poly -> PolyOverField poly
-pattern PolyOverFractional poly = PolyOverField poly
-
--- |
-unPolyOverFractional :: PolyOverField poly -> poly
-unPolyOverFractional = unPolyOverField
-{-# DEPRECATED unPolyOverFractional "Use 'unPolyOverField'" #-}
 
 instance (Eq a, Eq (v a), Field a, G.Vector v a) => GcdDomain (PolyOverField (Dense.Poly v a)) where
   gcd (PolyOverField x) (PolyOverField y) = PolyOverField (Dense.fieldGcd x y)

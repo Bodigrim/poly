@@ -16,7 +16,6 @@ module Data.Poly.Sparse.Semiring
   , UPoly
   , unPoly
   , leading
-  -- * Semiring interface
   , toPoly
   , monomial
   , scale
