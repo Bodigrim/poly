@@ -8,6 +8,7 @@
 
 module Sparse
   ( testSuite
+  , ShortPoly(..)
   ) where
 
 import Prelude hiding (gcd, quotRem, rem)

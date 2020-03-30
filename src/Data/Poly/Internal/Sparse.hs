@@ -37,6 +37,7 @@ module Data.Poly.Internal.Sparse
   , pattern X'
   , eval'
   , subst'
+  , substitute'
   , deriv'
   , integral'
   ) where
