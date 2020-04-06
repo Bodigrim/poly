@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -16,6 +17,7 @@ import Data.Euclidean (Euclidean(..), GcdDomain(..))
 import Data.Function
 import Data.Int
 import Data.List (groupBy, sortOn)
+import Data.Mod
 import Data.Poly.Sparse
 import qualified Data.Poly.Sparse.Semiring as S
 import Data.Proxy
@@ -82,12 +84,15 @@ gcdDomainTests :: [TestTree]
 gcdDomainTests =
   [ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Integer)))
   , tenTimesLess
+  $ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector (Mod 3))))
+  , tenTimesLess
   $ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
   ]
 
 euclideanTests :: [TestTree]
 euclideanTests =
-  [ myEuclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
+  [ myEuclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector (Mod 3))))
+  , myEuclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
   ]
 
 isListTests :: [TestTree]

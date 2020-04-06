@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -13,6 +14,7 @@ module Dense
 import Prelude hiding (gcd, quotRem, rem)
 import Data.Euclidean (Euclidean(..), GcdDomain(..))
 import Data.Int
+import Data.Mod
 import Data.Poly
 import qualified Data.Poly.Semiring as S
 import Data.Proxy
@@ -80,12 +82,14 @@ numTests =
 gcdDomainTests :: [TestTree]
 gcdDomainTests =
   [ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Integer)))
+  , myGcdDomainLaws (Proxy :: Proxy (PolyOverField (Poly V.Vector (Mod 3))))
   , myGcdDomainLaws (Proxy :: Proxy (PolyOverField (Poly V.Vector Rational)))
   ]
 
 euclideanTests :: [TestTree]
 euclideanTests =
-  [ myEuclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
+  [ myEuclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector (Mod 3))))
+  , myEuclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
   ]
 
 isListTests :: [TestTree]

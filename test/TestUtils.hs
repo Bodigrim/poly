@@ -1,5 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module TestUtils
   ( tenTimesLess
   , mySemiringLaws
@@ -12,12 +14,18 @@ module TestUtils
   ) where
 
 import Data.Euclidean
+import Data.Mod
 import Data.Proxy
-import Data.Semiring
+import Data.Semiring (Semiring, Ring)
 import GHC.Exts
+import GHC.TypeNats (KnownNat)
 import Test.QuickCheck.Classes
 import Test.Tasty
 import Test.Tasty.QuickCheck
+
+instance KnownNat m => Arbitrary (Mod m) where
+  arbitrary = oneof [arbitraryBoundedEnum, fromInteger <$> arbitrary]
+  shrink = map fromInteger . shrink . toInteger . unMod
 
 tenTimesLess :: TestTree -> TestTree
 tenTimesLess = adjustOption $
