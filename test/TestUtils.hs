@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP              #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
@@ -18,10 +19,15 @@ import Data.Mod
 import Data.Proxy
 import Data.Semiring (Semiring, Ring)
 import GHC.Exts
-import GHC.TypeNats (KnownNat)
 import Test.QuickCheck.Classes
 import Test.Tasty
 import Test.Tasty.QuickCheck
+
+#if MIN_VERSION_base(4,10,0)
+import GHC.TypeNats (KnownNat)
+#else
+import GHC.TypeLits (KnownNat)
+#endif
 
 instance KnownNat m => Arbitrary (Mod m) where
   arbitrary = oneof [arbitraryBoundedEnum, fromInteger <$> arbitrary]
