@@ -8,14 +8,14 @@ license: BSD3
 license-file: LICENSE
 author: Andrew Lelechenko
 maintainer: andrew.lelechenko@gmail.com
-copyright: 2019 Andrew Lelechenko
+copyright: 2019-2020 Andrew Lelechenko
 category: Math, Numerical
 build-type: Simple
-extra-source-files: README.md
 cabal-version: >=1.10
 tested-with: GHC ==8.0.2 GHC ==8.2.2 GHC ==8.4.4 GHC ==8.6.5 GHC ==8.8.3 GHC ==8.10.1
 extra-source-files:
   changelog.md
+  README.md
 
 source-repository head
   type: git
