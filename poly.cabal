@@ -30,6 +30,7 @@ library
     Data.Poly.Semiring
     Data.Poly.Sparse
     Data.Poly.Sparse.Laurent
+    Data.Poly.Sparse.Multi
     Data.Poly.Sparse.Semiring
   other-modules:
     Data.Poly.Internal.Dense
@@ -42,10 +43,12 @@ library
   build-depends:
     base >= 4.9 && < 5,
     deepseq >= 1.1 && < 1.5,
+    finite-typelits >= 0.1,
     primitive >= 0.6,
     semirings >= 0.5.2,
     vector >= 0.12.0.2,
-    vector-algorithms >= 0.8.0.3
+    vector-algorithms >= 0.8.0.3,
+    vector-sized >= 1.1
   default-language: Haskell2010
   ghc-options: -Wall -Wcompat
 
@@ -79,6 +82,7 @@ benchmark poly-gauge
     base >=4.9 && <5,
     deepseq >= 1.1 && < 1.5,
     gauge >= 0.1,
+    mod,
     poly,
     semirings >= 0.2,
     vector >= 0.12.0.2

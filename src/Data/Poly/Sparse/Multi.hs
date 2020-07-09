@@ -1,0 +1,235 @@
+-- |
+-- Module:      Data.Poly.Sparse.Multi
+-- Copyright:   (c) 2020 Andrew Lelechenko
+-- Licence:     BSD3
+-- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
+--
+
+{-# LANGUAGE CPP                        #-}
+{-# LANGUAGE DataKinds                  #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE PatternSynonyms            #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE ViewPatterns               #-}
+
+module Data.Poly.Sparse.Multi
+  ( MultiPoly(..)
+  , VMultiPoly
+  , UMultiPoly
+  , toMultiPoly
+  , monomial
+  , scale
+  , pattern X
+  , pattern Y
+  , pattern Z
+  , eval
+  , subst
+  , deriv
+  , integral
+  ) where
+
+import Prelude hiding (quot)
+import Control.DeepSeq
+import Data.Euclidean (Field, quot)
+import Data.Finite
+import Data.Kind
+import Data.List (intersperse)
+import Data.Semiring (Semiring(..), Ring())
+import qualified Data.Semiring as Semiring
+import qualified Data.Vector.Generic as G
+import qualified Data.Vector.Generic.Sized as SG
+import qualified Data.Vector.Unboxed.Sized as SU
+import qualified Data.Vector.Sized as SV
+import GHC.Exts (IsList(..))
+
+#if MIN_VERSION_base(4,10,0)
+import GHC.TypeNats
+#else
+import GHC.TypeLits
+#endif
+
+import Data.Poly.Internal.Sparse (normalize, plusPoly, minusPoly, convolution, scaleInternal, derivPoly)
+
+newtype MultiPoly (v :: Type -> Type) (n :: Nat) (a :: Type) = MultiPoly
+  { unMultiPoly :: v (SU.Vector n Word, a)
+  }
+
+deriving instance Eq     (v (SU.Vector n Word, a)) => Eq     (MultiPoly v n a)
+deriving instance Ord    (v (SU.Vector n Word, a)) => Ord    (MultiPoly v n a)
+deriving instance NFData (v (SU.Vector n Word, a)) => NFData (MultiPoly v n a)
+
+instance (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a)) => IsList (MultiPoly v n a) where
+  type Item (MultiPoly v n a) = (SU.Vector n Word, a)
+  fromList = toMultiPoly . G.fromList
+  fromListN = (toMultiPoly .) . G.fromListN
+  toList = G.toList . unMultiPoly
+
+instance (Show a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Show (MultiPoly v n a) where
+  showsPrec d (MultiPoly xs)
+    | G.null xs
+      = showString "0"
+    | otherwise
+      = showParen (d > 0)
+      $ foldl (.) id
+      $ intersperse (showString " + ")
+      $ G.foldl (\acc (i, c) -> showCoeff i c : acc) [] xs
+    where
+      showCoeff 0 c = showsPrec 7 c
+      showCoeff i c = showsPrec 7 c . showString " * X^" . showsPrec 7 i
+
+-- | Polynomials backed by boxed vectors.
+type VMultiPoly n = MultiPoly (SV.Vector n)
+
+-- | Polynomials backed by unboxed vectors.
+type UMultiPoly n = MultiPoly (SU.Vector n)
+
+toMultiPoly
+  :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a))
+  => v (SU.Vector n Word, a)
+  -> MultiPoly v n a
+toMultiPoly = MultiPoly . normalize (/= zero) plus
+
+-- | Note that 'abs' = 'id' and 'signum' = 'const' 1.
+instance (Eq a, Num a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Num (MultiPoly v n a) where
+  MultiPoly xs + MultiPoly ys = MultiPoly $ plusPoly (/= 0) (+) xs ys
+  MultiPoly xs - MultiPoly ys = MultiPoly $ minusPoly (/= 0) negate (-) xs ys
+  negate (MultiPoly xs) = MultiPoly $ G.map (fmap negate) xs
+  abs = id
+  signum = const 1
+  fromInteger n = case fromInteger n of
+    0 -> MultiPoly G.empty
+    m -> MultiPoly $ G.singleton (0, m)
+  MultiPoly xs * MultiPoly ys = MultiPoly $ convolution (/= 0) (+) (*) xs ys
+  {-# INLINE (+) #-}
+  {-# INLINE (-) #-}
+  {-# INLINE negate #-}
+  {-# INLINE fromInteger #-}
+  {-# INLINE (*) #-}
+
+instance (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Semiring (MultiPoly v n a) where
+  zero = MultiPoly G.empty
+  one
+    | (one :: a) == zero = zero
+    | otherwise = MultiPoly $ G.singleton (0, one)
+  plus (MultiPoly xs) (MultiPoly ys) = MultiPoly $ plusPoly (/= zero) plus xs ys
+  times (MultiPoly xs) (MultiPoly ys) = MultiPoly $ convolution (/= zero) plus times xs ys
+  {-# INLINE zero #-}
+  {-# INLINE one #-}
+  {-# INLINE plus #-}
+  {-# INLINE times #-}
+
+  fromNatural n = if n' == zero then zero else MultiPoly $ G.singleton (0, n')
+    where
+      n' :: a
+      n' = fromNatural n
+  {-# INLINE fromNatural #-}
+
+instance (Eq a, Ring a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Ring (MultiPoly v n a) where
+  negate (MultiPoly xs) = MultiPoly $ G.map (fmap Semiring.negate) xs
+
+scale
+  :: (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
+  => SU.Vector n Word
+  -> a
+  -> MultiPoly v n a
+  -> MultiPoly v n a
+scale yp yc = MultiPoly . scaleInternal (/= zero) times yp yc . unMultiPoly
+
+monomial
+  :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a))
+  => SU.Vector n Word
+  -> a
+  -> MultiPoly v n a
+monomial p c
+  | c == zero = MultiPoly G.empty
+  | otherwise = MultiPoly $ G.singleton (p, c)
+
+eval
+  :: (Semiring a, G.Vector v (SU.Vector n Word, a), G.Vector u a)
+  => MultiPoly v n a
+  -> SG.Vector u n a
+  -> a
+eval = substitute times
+{-# INLINE eval #-}
+
+subst
+  :: (Eq a, Semiring a, KnownNat m, G.Vector v (SU.Vector n Word, a), G.Vector w (SU.Vector m Word, a), G.Vector u (MultiPoly w m a))
+  => MultiPoly v n a
+  -> SG.Vector u n (MultiPoly w m a)
+  -> MultiPoly w m a
+subst = substitute (scale 0)
+{-# INLINE subst #-}
+
+substitute
+  :: forall v u n a b.
+     (G.Vector v (SU.Vector n Word, a), G.Vector u b, Semiring b)
+  => (a -> b -> b)
+  -> MultiPoly v n a
+  -> SG.Vector u n b
+  -> b
+substitute f (MultiPoly cs) xs = G.foldl' go zero cs
+  where
+    go :: b -> (SU.Vector n Word, a) -> b
+    go acc (ps, c) = acc `plus` f c (doMonom ps)
+
+    doMonom :: SU.Vector n Word -> b
+    doMonom = SU.ifoldl' (\acc i p -> acc `times` ((xs `SG.index` i) Semiring.^ p)) one
+{-# INLINE substitute #-}
+
+deriv
+  :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a), KnownNat n)
+  => Finite n
+  -> MultiPoly v n a
+  -> MultiPoly v n a
+deriv i (MultiPoly xs) = MultiPoly $ derivPoly
+  (/= zero)
+  -- Does it spoil grevlex ordering?
+  (\ps -> ps SU.// [(i, ps `SU.index` i - 1)])
+  (\ps c -> fromNatural (fromIntegral (ps `SU.index` i)) `times` c)
+  xs
+
+integral
+  :: (Eq a, Field a, G.Vector v (SU.Vector n Word, a), KnownNat n)
+  => Finite n
+  -> MultiPoly v n a
+  -> MultiPoly v n a
+integral i (MultiPoly xs)
+  = MultiPoly
+  $ G.map (\(ps, c) -> let p = ps `SU.index` i in
+    -- Does it spoil grevlex ordering?
+    (ps SU.// [(i, p + 1)], c `quot` Semiring.fromIntegral (p + 1))) xs
+
+pattern X
+  :: (Eq a, Semiring a, KnownNat n, 1 <= n, G.Vector v (SU.Vector n Word, a), Eq (v (SU.Vector n Word, a)))
+  => MultiPoly v n a
+pattern X <- ((==) (var 0) -> True)
+  where X = var 0
+
+pattern Y
+  :: (Eq a, Semiring a, KnownNat n, 2 <= n, G.Vector v (SU.Vector n Word, a), Eq (v (SU.Vector n Word, a)))
+  => MultiPoly v n a
+pattern Y <- ((==) (var 1) -> True)
+  where Y = var 1
+
+pattern Z
+  :: (Eq a, Semiring a, KnownNat n, 3 <= n, G.Vector v (SU.Vector n Word, a), Eq (v (SU.Vector n Word, a)))
+  => MultiPoly v n a
+pattern Z <- ((==) (var 2) -> True)
+  where Z = var 2
+
+var
+  :: forall v n a.
+     (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a), Eq (v (SU.Vector n Word, a)))
+  => Finite n
+  -> MultiPoly v n a
+var i
+  | (one :: a) == zero = MultiPoly G.empty
+  | otherwise          = MultiPoly $ G.singleton
+    (SU.generate (\j -> if i == j then 1 else 0), one)
+{-# INLINE var #-}
