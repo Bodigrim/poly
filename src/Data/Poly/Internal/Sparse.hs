@@ -40,6 +40,13 @@ module Data.Poly.Internal.Sparse
   , substitute'
   , deriv'
   , integral'
+  -- * Internals
+  , normalize
+  , plusPoly
+  , minusPoly
+  , convolution
+  , scaleInternal
+  , derivPoly
   ) where
 
 import Prelude hiding (quot)
@@ -138,11 +145,11 @@ leading (Poly v)
   | otherwise = Just (G.last v)
 
 normalize
-  :: G.Vector v (Word, a)
+  :: (G.Vector v (t, a), Ord t)
   => (a -> Bool)
   -> (a -> a -> a)
-  -> v (Word, a)
-  -> v (Word, a)
+  -> v (t, a)
+  -> v (t, a)
 normalize p add vs
   | G.null vs = vs
   | otherwise = runST $ do
@@ -151,10 +158,10 @@ normalize p add vs
     G.unsafeFreeze $ MG.unsafeSlice 0 l' ws
 
 normalizeM
-  :: (PrimMonad m, G.Vector v (Word, a))
+  :: (PrimMonad m, G.Vector v (t, a), Ord t)
   => (a -> Bool)
   -> (a -> a -> a)
-  -> G.Mutable v (PrimState m) (Word, a)
+  -> G.Mutable v (PrimState m) (t, a)
   -> m Int
 normalizeM p add ws = do
     let l = MG.length ws
@@ -217,12 +224,12 @@ instance (Eq a, Ring a, G.Vector v (Word, a)) => Ring (Poly v a) where
   negate (Poly xs) = Poly $ G.map (fmap Semiring.negate) xs
 
 plusPoly
-  :: G.Vector v (Word, a)
+  :: (G.Vector v (t, a), Ord t)
   => (a -> Bool)
   -> (a -> a -> a)
-  -> v (Word, a)
-  -> v (Word, a)
-  -> v (Word, a)
+  -> v (t, a)
+  -> v (t, a)
+  -> v (t, a)
 plusPoly p add xs ys = runST $ do
   zs <- MG.unsafeNew (G.length xs + G.length ys)
   lenZs <- plusPolyM p add xs ys zs
@@ -230,12 +237,12 @@ plusPoly p add xs ys = runST $ do
 {-# INLINABLE plusPoly #-}
 
 plusPolyM
-  :: (PrimMonad m, G.Vector v (Word, a))
+  :: (PrimMonad m, G.Vector v (t, a), Ord t)
   => (a -> Bool)
   -> (a -> a -> a)
-  -> v (Word, a)
-  -> v (Word, a)
-  -> G.Mutable v (PrimState m) (Word, a)
+  -> v (t, a)
+  -> v (t, a)
+  -> G.Mutable v (PrimState m) (t, a)
   -> m Int
 plusPolyM p add xs ys zs = go 0 0 0
   where
@@ -273,13 +280,13 @@ plusPolyM p add xs ys zs = go 0 0 0
 {-# INLINABLE plusPolyM #-}
 
 minusPoly
-  :: G.Vector v (Word, a)
+  :: (G.Vector v (t, a), Ord t)
   => (a -> Bool)
   -> (a -> a)
   -> (a -> a -> a)
-  -> v (Word, a)
-  -> v (Word, a)
-  -> v (Word, a)
+  -> v (t, a)
+  -> v (t, a)
+  -> v (t, a)
 minusPoly p neg sub xs ys = runST $ do
   zs <- MG.unsafeNew (lenXs + lenYs)
   let go ix iy iz
@@ -318,12 +325,12 @@ minusPoly p neg sub xs ys = runST $ do
 {-# INLINABLE minusPoly #-}
 
 scaleM
-  :: (PrimMonad m, G.Vector v (Word, a))
+  :: (PrimMonad m, G.Vector v (t, a), Num t)
   => (a -> Bool)
   -> (a -> a -> a)
-  -> v (Word, a)
-  -> (Word, a)
-  -> G.Mutable v (PrimState m) (Word, a)
+  -> v (t, a)
+  -> (t, a)
+  -> G.Mutable v (PrimState m) (t, a)
   -> m Int
 scaleM p mul xs (yp, yc) zs = go 0 0
   where
@@ -342,17 +349,17 @@ scaleM p mul xs (yp, yc) zs = go 0 0
 {-# INLINABLE scaleM #-}
 
 scaleInternal
-  :: G.Vector v (Word, a)
+  :: (G.Vector v (t, a), Num t)
   => (a -> Bool)
   -> (a -> a -> a)
-  -> Word
+  -> t
   -> a
-  -> Poly v a
-  -> Poly v a
-scaleInternal p mul yp yc (Poly xs) = runST $ do
+  -> v (t, a)
+  -> v (t, a)
+scaleInternal p mul yp yc xs = runST $ do
   zs <- MG.unsafeNew (G.length xs)
   len <- scaleM p (flip mul) xs (yp, yc) zs
-  fmap Poly $ G.unsafeFreeze $ MG.unsafeSlice 0 len zs
+  G.unsafeFreeze $ MG.unsafeSlice 0 len zs
 {-# INLINABLE scaleInternal #-}
 
 -- | Multiply a polynomial by a monomial, expressed as a power and a coefficient.
@@ -360,27 +367,27 @@ scaleInternal p mul yp yc (Poly xs) = runST $ do
 -- >>> scale 2 3 (X^2 + 1) :: UPoly Int
 -- 3 * X^4 + 3 * X^2
 scale :: (Eq a, Num a, G.Vector v (Word, a)) => Word -> a -> Poly v a -> Poly v a
-scale = scaleInternal (/= 0) (*)
+scale yp yc = Poly . scaleInternal (/= 0) (*) yp yc . unPoly
 
 scale' :: (Eq a, Semiring a, G.Vector v (Word, a)) => Word -> a -> Poly v a -> Poly v a
-scale' = scaleInternal (/= zero) times
+scale' yp yc = Poly . scaleInternal (/= zero) times yp yc . unPoly
 
 convolution
-  :: forall v a.
-     G.Vector v (Word, a)
+  :: forall v t a.
+     (G.Vector v (t, a), Ord t, Num t)
   => (a -> Bool)
   -> (a -> a -> a)
   -> (a -> a -> a)
-  -> v (Word, a)
-  -> v (Word, a)
-  -> v (Word, a)
+  -> v (t, a)
+  -> v (t, a)
+  -> v (t, a)
 convolution p add mult xs ys
   | G.length xs >= G.length ys
   = go mult xs ys
   | otherwise
   = go (flip mult) ys xs
   where
-    go :: (a -> a -> a) -> v (Word, a) -> v (Word, a) -> v (Word, a)
+    go :: (a -> a -> a) -> v (t, a) -> v (t, a) -> v (t, a)
     go mul long short = runST $ do
       let lenLong   = G.length long
           lenShort  = G.length short
@@ -403,9 +410,9 @@ convolution p add mult xs ys
     gogo
       :: PrimMonad m
       => U.Vector (Int, Int)
-      -> v (Word, a)
-      -> G.Mutable v (PrimState m) (Word, a)
-      -> m (v (Word, a))
+      -> v (t, a)
+      -> G.Mutable v (PrimState m) (t, a)
+      -> m (v (t, a))
     gogo slices buffer bufferNew
       | G.length slices == 0
       = pure G.empty
@@ -507,6 +514,7 @@ substitute' f (Poly cs) x = fst3 $ G.foldl' go (Strict3 zero 0 one) cs
 deriv :: (Eq a, Num a, G.Vector v (Word, a)) => Poly v a -> Poly v a
 deriv (Poly xs) = Poly $ derivPoly
   (/= 0)
+  pred
   (\p c -> fromIntegral p * c)
   xs
 {-# INLINE deriv #-}
@@ -514,17 +522,19 @@ deriv (Poly xs) = Poly $ derivPoly
 deriv' :: (Eq a, Semiring a, G.Vector v (Word, a)) => Poly v a -> Poly v a
 deriv' (Poly xs) = Poly $ derivPoly
   (/= zero)
+  pred
   (\p c -> fromNatural (fromIntegral p) `times` c)
   xs
 {-# INLINE deriv' #-}
 
 derivPoly
-  :: G.Vector v (Word, a)
+  :: (G.Vector v (t, a), Ord t, Num t)
   => (a -> Bool)
-  -> (Word -> a -> a)
-  -> v (Word, a)
-  -> v (Word, a)
-derivPoly p mul xs
+  -> (t -> t)
+  -> (t -> a -> a)
+  -> v (t, a)
+  -> v (t, a)
+derivPoly p dec mul xs
   | G.null xs = G.empty
   | otherwise = runST $ do
     let lenXs = G.length xs
@@ -534,8 +544,8 @@ derivPoly p mul xs
           | (xp, xc) <- G.unsafeIndex xs ix
           = do
             let zc = xp `mul` xc
-            if xp > 0 && p zc then do
-              MG.unsafeWrite zs iz (xp - 1, zc)
+            if p zc then do
+              MG.unsafeWrite zs iz (dec xp, zc)
               go (ix + 1) (iz + 1)
             else
               go (ix + 1) iz
