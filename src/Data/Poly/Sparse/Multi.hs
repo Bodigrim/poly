@@ -10,6 +10,7 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE PatternSynonyms            #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE StandaloneDeriving         #-}
@@ -79,10 +80,24 @@ instance (Show a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Show (MultiPo
       = showParen (d > 0)
       $ foldl (.) id
       $ intersperse (showString " + ")
-      $ G.foldl (\acc (i, c) -> showCoeff i c : acc) [] xs
+      $ G.foldl (\acc (is, c) -> showCoeff is c : acc) [] xs
     where
-      showCoeff 0 c = showsPrec 7 c
-      showCoeff i c = showsPrec 7 c . showString " * X^" . showsPrec 7 i
+      showCoeff is c
+        = showsPrec 7 c . (foldl (.) id
+        $ map ((showString " * " .) . uncurry showPower)
+        $ filter ((/= 0) . fst)
+        $ zip (SU.toList is) (finites :: [Finite n]))
+
+      showPower :: Word -> Finite n -> String -> String
+      showPower 1 n = showString (showVar n)
+      showPower i n = showString (showVar n) . showString "^" . showsPrec 7 i
+
+      showVar :: Finite n -> String
+      showVar = \case
+        0 -> "X"
+        1 -> "Y"
+        2 -> "Z"
+        k -> "X" ++ show k
 
 -- | Polynomials backed by boxed vectors.
 type VMultiPoly n = MultiPoly V.Vector n
