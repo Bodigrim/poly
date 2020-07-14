@@ -4,6 +4,7 @@ import Test.Tasty
 
 import qualified Dense as Dense
 import qualified DenseLaurent as DenseLaurent
+import qualified Multi as Multi
 import qualified Orthogonal as Orthogonal
 import qualified Sparse as Sparse
 import qualified SparseLaurent as SparseLaurent
@@ -14,5 +15,6 @@ main = defaultMain $ testGroup "All"
     , DenseLaurent.testSuite
     , Sparse.testSuite
     , SparseLaurent.testSuite
+    , Multi.testSuite
     , Orthogonal.testSuite
     ]
