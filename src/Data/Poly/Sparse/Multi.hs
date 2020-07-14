@@ -43,9 +43,10 @@ import Data.List (intersperse)
 import Data.Semiring (Semiring(..), Ring())
 import qualified Data.Semiring as Semiring
 import qualified Data.Vector.Generic as G
+import qualified Data.Vector.Unboxed as U
+import qualified Data.Vector as V
 import qualified Data.Vector.Generic.Sized as SG
 import qualified Data.Vector.Unboxed.Sized as SU
-import qualified Data.Vector.Sized as SV
 import GHC.Exts (IsList(..))
 
 #if MIN_VERSION_base(4,10,0)
@@ -84,10 +85,10 @@ instance (Show a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Show (MultiPo
       showCoeff i c = showsPrec 7 c . showString " * X^" . showsPrec 7 i
 
 -- | Polynomials backed by boxed vectors.
-type VMultiPoly n = MultiPoly (SV.Vector n)
+type VMultiPoly n = MultiPoly V.Vector n
 
 -- | Polynomials backed by unboxed vectors.
-type UMultiPoly n = MultiPoly (SU.Vector n)
+type UMultiPoly n = MultiPoly U.Vector n
 
 toMultiPoly
   :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a))

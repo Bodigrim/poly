@@ -64,45 +64,45 @@ lawsTests = testGroup "Laws"
 
 semiringTests :: [TestTree]
 semiringTests =
-  [ mySemiringLaws (Proxy :: Proxy (MultiPoly V.Vector 3 ()))
-  , mySemiringLaws (Proxy :: Proxy (MultiPoly V.Vector 3 Int8))
-  , mySemiringLaws (Proxy :: Proxy (MultiPoly V.Vector 3 Integer))
+  [ mySemiringLaws (Proxy :: Proxy (VMultiPoly 3 ()))
+  , mySemiringLaws (Proxy :: Proxy (VMultiPoly 3 Int8))
+  , mySemiringLaws (Proxy :: Proxy (VMultiPoly 3 Integer))
   , tenTimesLess
-  $ mySemiringLaws (Proxy :: Proxy (MultiPoly V.Vector 3 (Quaternion Int)))
+  $ mySemiringLaws (Proxy :: Proxy (VMultiPoly 3 (Quaternion Int)))
   ]
 
 ringTests :: [TestTree]
 ringTests =
-  [ myRingLaws (Proxy :: Proxy (MultiPoly V.Vector 3 ()))
-  , myRingLaws (Proxy :: Proxy (MultiPoly V.Vector 3 Int8))
-  , myRingLaws (Proxy :: Proxy (MultiPoly V.Vector 3 Integer))
-  , myRingLaws (Proxy :: Proxy (MultiPoly V.Vector 3 (Quaternion Int)))
+  [ myRingLaws (Proxy :: Proxy (VMultiPoly 3 ()))
+  , myRingLaws (Proxy :: Proxy (VMultiPoly 3 Int8))
+  , myRingLaws (Proxy :: Proxy (VMultiPoly 3 Integer))
+  , myRingLaws (Proxy :: Proxy (VMultiPoly 3 (Quaternion Int)))
   ]
 
 numTests :: [TestTree]
 numTests =
-  [ myNumLaws (Proxy :: Proxy (MultiPoly V.Vector 3 Int8))
-  , myNumLaws (Proxy :: Proxy (MultiPoly V.Vector 3 Integer))
+  [ myNumLaws (Proxy :: Proxy (VMultiPoly 3 Int8))
+  , myNumLaws (Proxy :: Proxy (VMultiPoly 3 Integer))
   , tenTimesLess
-  $ myNumLaws (Proxy :: Proxy (MultiPoly V.Vector 3 (Quaternion Int)))
+  $ myNumLaws (Proxy :: Proxy (VMultiPoly 3 (Quaternion Int)))
   ]
 
 isListTests :: [TestTree]
 isListTests =
-  [ myIsListLaws (Proxy :: Proxy (MultiPoly V.Vector 3 ()))
-  , myIsListLaws (Proxy :: Proxy (MultiPoly V.Vector 3 Int8))
-  , myIsListLaws (Proxy :: Proxy (MultiPoly V.Vector 3 Integer))
+  [ myIsListLaws (Proxy :: Proxy (VMultiPoly 3 ()))
+  , myIsListLaws (Proxy :: Proxy (VMultiPoly 3 Int8))
+  , myIsListLaws (Proxy :: Proxy (VMultiPoly 3 Integer))
   , tenTimesLess
-  $ myIsListLaws (Proxy :: Proxy (MultiPoly V.Vector 3 (Quaternion Int)))
+  $ myIsListLaws (Proxy :: Proxy (VMultiPoly 3 (Quaternion Int)))
   ]
 
 showTests :: [TestTree]
 showTests =
-  [ myShowLaws (Proxy :: Proxy (MultiPoly V.Vector 3 ()))
-  , myShowLaws (Proxy :: Proxy (MultiPoly V.Vector 3 Int8))
-  , myShowLaws (Proxy :: Proxy (MultiPoly V.Vector 3 Integer))
+  [ myShowLaws (Proxy :: Proxy (VMultiPoly 3 ()))
+  , myShowLaws (Proxy :: Proxy (VMultiPoly 3 Int8))
+  , myShowLaws (Proxy :: Proxy (VMultiPoly 3 Integer))
   , tenTimesLess
-  $ myShowLaws (Proxy :: Proxy (MultiPoly V.Vector 3 (Quaternion Int)))
+  $ myShowLaws (Proxy :: Proxy (VMultiPoly 3 (Quaternion Int)))
   ]
 
 arithmeticTests :: TestTree
@@ -160,7 +160,7 @@ otherTestGroup _ =
     \(ps :: SU.Vector 3 Word) (c :: a) -> monomial ps c === toMultiPoly (V.fromList (monomialRef ps c))
   , tenTimesLess $
     testProperty "scale matches multiplication by monomial" $
-    \ps c (xs :: MultiPoly V.Vector 3 a) -> scale ps c xs === monomial ps c * xs
+    \ps c (xs :: VMultiPoly 3 a) -> scale ps c xs === monomial ps c * xs
   ]
 
 monomialRef :: Num a => t -> a -> [(t, a)]
@@ -168,9 +168,9 @@ monomialRef p c = [(p, c)]
 
 evalTests :: TestTree
 evalTests = testGroup "eval" $ concat
-  [ evalTestGroup  (Proxy :: Proxy (MultiPoly V.Vector 3 Int8))
-  , evalTestGroup  (Proxy :: Proxy (MultiPoly V.Vector 3 Integer))
-  , substTestGroup (Proxy :: Proxy (MultiPoly V.Vector 3 Int8))
+  [ evalTestGroup  (Proxy :: Proxy (VMultiPoly 3 Int8))
+  , evalTestGroup  (Proxy :: Proxy (VMultiPoly 3 Integer))
+  , substTestGroup (Proxy :: Proxy (VMultiPoly 3 Int8))
   ]
 
 evalTestGroup
@@ -210,20 +210,20 @@ substTestGroup _ =
 derivTests :: TestTree
 derivTests = testGroup "deriv"
   [ testProperty "deriv . integral = id" $
-    \k (p :: MultiPoly V.Vector 3 Rational) ->
+    \k (p :: VMultiPoly 3 Rational) ->
       deriv k (integral k p) === p
   , testProperty "deriv c = 0" $
     \k c ->
-      deriv k (monomial 0 c :: MultiPoly V.Vector 3 Int) === 0
+      deriv k (monomial 0 c :: VMultiPoly 3 Int) === 0
   , testProperty "deriv cX = c" $
     \c ->
-      deriv 0 (monomial 0 c * X :: MultiPoly V.Vector 3 Int) === monomial 0 c
+      deriv 0 (monomial 0 c * X :: VMultiPoly 3 Int) === monomial 0 c
   , testProperty "deriv (p + q) = deriv p + deriv q" $
     \k p q ->
-      deriv k (p + q) === (deriv k p + deriv k q :: MultiPoly V.Vector 3 Int)
+      deriv k (p + q) === (deriv k p + deriv k q :: VMultiPoly 3 Int)
   , testProperty "deriv (p * q) = p * deriv q + q * deriv p" $
     \k p q ->
-      deriv k (p * q) === (p * deriv k q + q * deriv k p :: MultiPoly V.Vector 3 Int)
+      deriv k (p * q) === (p * deriv k q + q * deriv k p :: VMultiPoly 3 Int)
   -- , testProperty "deriv (subst p q) = deriv q * subst (deriv p) q" $
   --   \(p :: Poly V.Vector Int) (q :: Poly U.Vector Int) k ->
   --     deriv k (subst p q) === deriv k q * subst (deriv k p) q
