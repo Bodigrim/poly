@@ -9,15 +9,21 @@
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE PatternSynonyms            #-}
+{-# LANGUAGE PolyKinds                  #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
 {-# LANGUAGE UndecidableInstances       #-}
 {-# LANGUAGE ViewPatterns               #-}
+
+#if __GLASGOW_HASKELL__ >= 806
+{-# LANGUAGE QuantifiedConstraints      #-}
+#endif
 
 module Data.Poly.Sparse.Multi
   ( MultiPoly(..)
@@ -35,20 +41,24 @@ module Data.Poly.Sparse.Multi
   , integral
   ) where
 
-import Prelude hiding (quot)
+import Prelude hiding (quot, gcd)
+import Control.Arrow
 import Control.DeepSeq
-import Data.Euclidean (Field, quot)
+import Data.Euclidean (GcdDomain(..), Field, quot)
 import Data.Finite
 import Data.Kind
 import Data.List (intersperse)
+import Data.Proxy
 import Data.Semiring (Semiring(..), Ring())
 import qualified Data.Semiring as Semiring
+import Data.Type.Equality
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic.Sized as SG
 import qualified Data.Vector.Unboxed.Sized as SU
 import GHC.Exts (IsList(..))
+import Unsafe.Coerce
 
 #if MIN_VERSION_base(4,10,0)
 import GHC.TypeNats
@@ -56,7 +66,8 @@ import GHC.TypeNats
 import GHC.TypeLits
 #endif
 
-import Data.Poly.Internal.Sparse (normalize, plusPoly, minusPoly, convolution, scaleInternal, derivPoly)
+import Data.Poly.Internal.Sparse (Poly(..), VPoly, toPoly', normalize, plusPoly, minusPoly, convolution, scaleInternal, derivPoly)
+import Data.Poly.Internal.Sparse.GcdDomain ()
 
 newtype MultiPoly (v :: Type -> Type) (n :: Nat) (a :: Type) = MultiPoly
   { unMultiPoly :: v (SU.Vector n Word, a)
@@ -249,3 +260,59 @@ var i
   | otherwise          = MultiPoly $ G.singleton
     (SU.generate (\j -> if i == j then 1 else 0), one)
 {-# INLINE var #-}
+
+-------------------------------------------------------------------------------
+-- GcdDomain
+
+data IsZeroOrSucc n where
+  IsZero :: n :~: 0 -> IsZeroOrSucc n
+  IsSucc :: KnownNat m => n :~: 1 + m -> IsZeroOrSucc n
+
+isZeroOrSucc :: forall n. KnownNat n => IsZeroOrSucc n
+isZeroOrSucc = case natVal (Proxy :: Proxy n) of
+  0 -> IsZero (unsafeCoerce Refl)
+  n -> case someNatVal (n - 1) of
+    SomeNat (_ :: Proxy m) -> IsSucc (unsafeCoerce Refl :: n :~: 1 + m)
+
+trivial :: (Semiring a, G.Vector v (SU.Vector 0 Word, a)) => MultiPoly v 0 a -> a
+trivial (MultiPoly xs)
+  | G.null xs = zero
+  | otherwise = snd (G.head xs)
+
+untrivial :: (Eq a, Semiring a, G.Vector v (SU.Vector 0 Word, a)) => a -> MultiPoly v 0 a
+untrivial x
+  | x == zero = MultiPoly G.empty
+  | otherwise = MultiPoly $ G.singleton (SU.empty, x)
+
+groupOn :: (G.Vector v a, Eq b) => (a -> b) -> v a -> [v a]
+groupOn f = go
+  where
+    go xs
+      | G.null xs = []
+      | otherwise = case mk of
+        Nothing -> [xs]
+        Just k  -> G.unsafeTake (k + 1) xs : go (G.unsafeDrop (k + 1) xs)
+        where
+          fy = f (G.unsafeHead xs)
+          mk = G.findIndex (not . (== fy) . f) (G.unsafeTail xs)
+
+separate :: (KnownNat m, n ~ (1 + m), Eq a, Semiring a, Eq (v (SU.Vector m Word, a)), G.Vector v (SU.Vector n Word, a), G.Vector v (SU.Vector m Word, a)) => MultiPoly v n a -> VPoly (MultiPoly v m a)
+separate (MultiPoly xs) = toPoly' $ G.fromList $ map (\vs -> (SU.head (fst (G.unsafeHead vs)), MultiPoly $ G.map (first SU.tail) vs)) $ groupOn (SU.head . fst) xs
+
+unseparate :: (n ~ (1 + m), G.Vector v (SU.Vector n Word, a), G.Vector v (SU.Vector m Word, a)) => VPoly (MultiPoly v m a) -> MultiPoly v n a
+unseparate (Poly xs) = MultiPoly $ G.concat $ G.toList $ G.map (\(v, MultiPoly vs) -> G.map (first (SU.cons v)) vs) xs
+
+#if __GLASGOW_HASKELL__ >= 806
+instance (Eq a, Ring a, GcdDomain a, KnownNat n, forall m. KnownNat m => G.Vector v (SU.Vector m Word, a), forall m. KnownNat m => Eq (v (SU.Vector m Word, a))) => GcdDomain (MultiPoly v n a) where
+#else
+instance (Eq a, Ring a, GcdDomain a, KnownNat n) => GcdDomain (VMultiPoly n a) where
+#endif
+  divide xs ys = case isZeroOrSucc :: IsZeroOrSucc n of
+    IsZero Refl -> untrivial  <$> trivial  xs `divide` trivial  ys
+    IsSucc Refl -> unseparate <$> separate xs `divide` separate ys
+  gcd xs ys
+    | G.null (unMultiPoly xs) = ys
+    | G.null (unMultiPoly ys) = xs
+    | otherwise = case isZeroOrSucc :: IsZeroOrSucc n of
+      IsZero Refl -> untrivial  $ trivial  xs `gcd` trivial  ys
+      IsSucc Refl -> unseparate $ separate xs `gcd` separate ys
