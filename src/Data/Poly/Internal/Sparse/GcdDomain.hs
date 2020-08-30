@@ -47,12 +47,25 @@ instance (Eq a, Ring a, GcdDomain a, Eq (v (Word, a)), G.Vector v (Word, a)) => 
   gcd xs ys
     | G.null (unPoly xs) = ys
     | G.null (unPoly ys) = xs
-    | otherwise = maybe err (times xy) (divide zs (monomial' 0 (cont zs)))
+    | G.length (unPoly xs) == 1 = gcdSingleton (G.unsafeHead (unPoly xs)) ys
+    | G.length (unPoly ys) == 1 = gcdSingleton (G.unsafeHead (unPoly ys)) xs
+    | otherwise = maybe err (times xy) (divide zs (monomial' 0 (content zs)))
       where
         err = error "gcd: violated internal invariant"
         zs = gcdHelper xs ys
-        cont ts = G.foldl' (\acc (_, t) -> gcd acc t) zero (unPoly ts)
-        xy = monomial' 0 (gcd (cont xs) (cont ys))
+        xy = monomial' 0 (gcd (content xs) (content ys))
+
+content :: (Eq a, GcdDomain a, G.Vector v (Word, a)) => Poly v a -> a
+content (Poly ts) = G.foldl' (\acc (_, t) -> gcd acc t) zero ts
+
+gcdSingleton
+  :: (Eq a, GcdDomain a, G.Vector v (Word, a))
+  => (Word, a)
+  -> Poly v a
+  -> Poly v a
+gcdSingleton (p, c) pcs = monomial'
+  (min p (fst (G.unsafeHead (unPoly pcs))))
+  (gcd c (content pcs))
 
 gcdHelper
   :: (Eq a, Ring a, GcdDomain a, G.Vector v (Word, a))

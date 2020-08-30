@@ -313,6 +313,12 @@ instance (Eq a, Ring a, GcdDomain a, KnownNat n) => GcdDomain (VMultiPoly n a) w
   gcd xs ys
     | G.null (unMultiPoly xs) = ys
     | G.null (unMultiPoly ys) = xs
+    | G.length (unMultiPoly xs) == 1 = gcdSingleton (G.unsafeHead (unMultiPoly xs)) ys
+    | G.length (unMultiPoly ys) == 1 = gcdSingleton (G.unsafeHead (unMultiPoly ys)) xs
     | otherwise = case isZeroOrSucc :: IsZeroOrSucc n of
       IsZero Refl -> untrivial  $ trivial  xs `gcd` trivial  ys
       IsSucc Refl -> unseparate $ separate xs `gcd` separate ys
+
+gcdSingleton :: (Eq a, GcdDomain a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => (SU.Vector n Word, a) -> MultiPoly v n a -> MultiPoly v n a
+gcdSingleton pc (MultiPoly pcs) = uncurry monomial $
+  G.foldl' (\(accP, accC) (p, c) -> (SU.zipWith min accP p, gcd accC c)) pc pcs

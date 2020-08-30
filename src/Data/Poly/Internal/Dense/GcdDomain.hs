@@ -39,6 +39,8 @@ instance (Eq a, Ring a, GcdDomain a, Eq (v a), G.Vector v a) => GcdDomain (Poly 
   gcd (Poly xs) (Poly ys)
     | G.null xs = Poly ys
     | G.null ys = Poly xs
+    | G.length xs == 1 = Poly $ G.singleton $ G.foldl' gcd (G.unsafeHead xs) ys
+    | G.length ys == 1 = Poly $ G.singleton $ G.foldl' gcd (G.unsafeHead ys) xs
     | otherwise = toPoly' $ gcdNonEmpty xs ys
   {-# INLINE gcd #-}
 
