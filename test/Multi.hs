@@ -13,10 +13,13 @@ module Multi
   ) where
 
 import Prelude hiding (gcd, quotRem, rem)
+import Control.Arrow
+import Data.Euclidean (GcdDomain)
 import Data.Finite
 import Data.Function
 import Data.Int
 import Data.List (groupBy, sortOn)
+import Data.Mod
 import Data.Poly.Sparse.Multi
 import Data.Proxy
 import Data.Semiring (Semiring)
@@ -30,9 +33,9 @@ import Test.Tasty
 import Test.Tasty.QuickCheck hiding (scale, numTests)
 
 #if MIN_VERSION_base(4,10,0)
-import GHC.TypeNats
+import GHC.TypeNats (KnownNat)
 #else
-import GHC.TypeLits
+import GHC.TypeLits (KnownNat)
 #endif
 
 import Quaternion
@@ -49,6 +52,13 @@ instance (Eq a, Semiring a, Arbitrary a, G.Vector v (SU.Vector 3 Word, a)) => Ar
   arbitrary = toMultiPoly . G.fromList <$> arbitrary
   shrink = fmap (toMultiPoly . G.fromList) . shrink . G.toList . unMultiPoly
 
+newtype ShortMultiPoly a = ShortMultiPoly { unShortMultiPoly :: a }
+  deriving (Eq, Show, Semiring, GcdDomain)
+
+instance (Eq a, Semiring a, Arbitrary a, G.Vector v (SU.Vector 3 Word, a)) => Arbitrary (ShortMultiPoly (MultiPoly v 3 a)) where
+  arbitrary = ShortMultiPoly . toMultiPoly . G.fromList . (\xs -> take (length xs `mod` 5) (map (first (SU.map (`mod` 3))) xs)) <$> arbitrary
+  shrink = fmap (ShortMultiPoly . toMultiPoly . G.fromList) . shrink . G.toList . unMultiPoly . unShortMultiPoly
+
 testSuite :: TestTree
 testSuite = testGroup "Multi"
     [ arithmeticTests
@@ -60,7 +70,7 @@ testSuite = testGroup "Multi"
 
 lawsTests :: TestTree
 lawsTests = testGroup "Laws"
-  $ semiringTests ++ ringTests ++ numTests ++ isListTests ++ showTests
+  $ semiringTests ++ ringTests ++ numTests ++ gcdDomainTests ++ isListTests ++ showTests
 
 semiringTests :: [TestTree]
 semiringTests =
@@ -85,6 +95,15 @@ numTests =
   , myNumLaws (Proxy :: Proxy (VMultiPoly 3 Integer))
   , tenTimesLess
   $ myNumLaws (Proxy :: Proxy (VMultiPoly 3 (Quaternion Int)))
+  ]
+
+gcdDomainTests :: [TestTree]
+gcdDomainTests =
+  [ myGcdDomainLaws (Proxy :: Proxy (ShortMultiPoly (VMultiPoly 3 Integer)))
+  , tenTimesLess
+  $ myGcdDomainLaws (Proxy :: Proxy (ShortMultiPoly (VMultiPoly 3 (Mod 3))))
+  , tenTimesLess
+  $ myGcdDomainLaws (Proxy :: Proxy (ShortMultiPoly (VMultiPoly 3 Rational)))
   ]
 
 isListTests :: [TestTree]
