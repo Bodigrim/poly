@@ -8,6 +8,7 @@
 --
 
 {-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE MultiWayIf                 #-}
 {-# LANGUAGE PatternSynonyms            #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
@@ -23,6 +24,7 @@ import Control.Monad
 import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.Euclidean
+import Data.Maybe
 import Data.Semiring (Semiring(..), Ring(), isZero, minus)
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as MG
@@ -87,37 +89,59 @@ gcdM xs ys
       lenYs = MG.length ys
   xLast <- MG.unsafeRead xs (lenXs - 1)
   yLast <- MG.unsafeRead ys (lenYs - 1)
-  let z = xLast `lcm` yLast
-      zx = case z `divide` xLast of
-        Nothing -> error "gcdM: highest coefficient is 0"
-        Just t  -> t
-      zy = case z `divide` yLast of
-        Nothing -> error "gcdM: highest coefficient is 0"
-        Just t  -> t
+  let z  = xLast `lcm` yLast
+      zx = z `divide'` xLast
+      zy = z `divide'` yLast
 
-  if lenXs <= lenYs then do
-    forM_ [0 .. lenXs - 1] $ \i -> do
-      x <- MG.unsafeRead xs i
-      MG.unsafeModify
-        ys
-        (\y -> (y `times` zy) `minus` x `times` zx)
-        (i + lenYs - lenXs)
-    forM_ [0 .. lenYs - lenXs - 1] $
-      MG.unsafeModify ys (`times` zy)
-    ys' <- dropWhileEndM isZero ys
-    gcdM xs ys'
-  else do
-    forM_ [0 .. lenYs - 1] $ \i -> do
-      y <- MG.unsafeRead ys i
-      MG.unsafeModify
-        xs
-        (\x -> (x `times` zx) `minus` y `times` zy)
-        (i + lenXs - lenYs)
-    forM_ [0 .. lenXs - lenYs - 1] $
-      MG.unsafeModify xs (`times` zx)
-    xs' <- dropWhileEndM isZero xs
-    gcdM xs' ys
+  if
+    | lenYs <= lenXs
+    , Just xy <- xLast `divide` yLast -> do
+      forM_ [0 .. lenYs - 1] $ \i -> do
+        y <- MG.unsafeRead ys i
+        when (y /= zero) $
+          MG.unsafeModify
+            xs
+            (\x -> x `minus` y `times` xy)
+            (i + lenXs - lenYs)
+      xs' <- dropWhileEndM isZero xs
+      gcdM xs' ys
+    | lenXs <= lenYs
+    , Just yx <- yLast `divide` xLast -> do
+      forM_ [0 .. lenXs - 1] $ \i -> do
+        x <- MG.unsafeRead xs i
+        when (x /= zero) $
+          MG.unsafeModify
+            ys
+            (\y -> y `minus` x `times` yx)
+            (i + lenYs - lenXs)
+      ys' <- dropWhileEndM isZero ys
+      gcdM xs ys'
+    | lenYs <= lenXs -> do
+      forM_ [0 .. lenYs - 1] $ \i -> do
+        y <- MG.unsafeRead ys i
+        MG.unsafeModify
+          xs
+          (\x -> x `times` zx `minus` y `times` zy)
+          (i + lenXs - lenYs)
+      forM_ [0 .. lenXs - lenYs - 1] $
+        MG.unsafeModify xs (`times` zx)
+      xs' <- dropWhileEndM isZero xs
+      gcdM xs' ys
+    | otherwise -> do
+      forM_ [0 .. lenXs - 1] $ \i -> do
+        x <- MG.unsafeRead xs i
+        MG.unsafeModify
+          ys
+          (\y -> y `times` zy `minus` x `times` zx)
+          (i + lenYs - lenXs)
+      forM_ [0 .. lenYs - lenXs - 1] $
+        MG.unsafeModify ys (`times` zy)
+      ys' <- dropWhileEndM isZero ys
+      gcdM xs ys'
 {-# INLINABLE gcdM #-}
+
+divide' :: GcdDomain a => a -> a -> a
+divide' = (fromMaybe (error "gcd: violated internal invariant") .) . divide
 
 isZeroM
   :: (Eq a, Semiring a, PrimMonad m, G.Vector v a)

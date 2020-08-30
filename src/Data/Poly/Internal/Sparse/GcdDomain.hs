@@ -72,16 +72,24 @@ gcdHelper
   => Poly v a
   -> Poly v a
   -> Poly v a
-gcdHelper xs ys = case leading xs of
-  Nothing -> ys
-  Just (xp, xc) -> case leading ys of
-    Nothing -> xs
-    Just (yp, yc) -> case xp `compare` yp of
-      LT -> gcdHelper xs (ys `times` monomial' 0 gy `minus` xs `times` monomial' (yp - xp) gx)
-      EQ -> gcdHelper xs (ys `times` monomial' 0 gy `minus` xs `times` monomial' 0 gx)
-      GT -> gcdHelper (xs `times` monomial' 0 gx `minus` ys `times` monomial' (xp - yp) gy) ys
-      where
-        g = lcm xc yc
-        gx = fromMaybe err $ divide g xc
-        gy = fromMaybe err $ divide g yc
-        err = error "gcd: violated internal invariant"
+gcdHelper xs ys = case (leading xs, leading ys) of
+  (Nothing, _) -> ys
+  (_, Nothing) -> xs
+  (Just (xp, xc), Just (yp, yc))
+    | yp <= xp
+    , Just xy <- xc `divide` yc
+    -> gcdHelper ys (xs `minus` ys `times` monomial' (xp - yp) xy)
+    | xp <= yp
+    , Just yx <- yc `divide` xc
+    -> gcdHelper xs (ys `minus` xs `times` monomial' (yp - xp) yx)
+    | yp <= xp
+    -> gcdHelper ys (xs `times` monomial' 0 gx `minus` ys `times` monomial' (xp - yp) gy)
+    | otherwise
+    -> gcdHelper xs (ys `times` monomial' 0 gy `minus` xs `times` monomial' (yp - xp) gx)
+    where
+      g = lcm xc yc
+      gx = divide' g xc
+      gy = divide' g yc
+
+divide' :: GcdDomain a => a -> a -> a
+divide' = (fromMaybe (error "gcd: violated internal invariant") .) . divide
