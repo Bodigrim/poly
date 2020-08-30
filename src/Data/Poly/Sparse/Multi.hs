@@ -60,14 +60,19 @@ import qualified Data.Vector.Unboxed.Sized as SU
 import GHC.Exts (IsList(..))
 import Unsafe.Coerce
 
-#if MIN_VERSION_base(4,10,0)
-import GHC.TypeNats
-#else
-import GHC.TypeLits
-#endif
-
 import Data.Poly.Internal.Sparse (Poly(..), VPoly, toPoly', normalize, plusPoly, minusPoly, convolution, scaleInternal, derivPoly)
 import Data.Poly.Internal.Sparse.GcdDomain ()
+
+#if MIN_VERSION_base(4,10,0)
+import GHC.TypeNats (Nat, KnownNat, type (+), type (<=), SomeNat(..), natVal, someNatVal)
+#else
+import GHC.TypeLits (Nat, KnownNat, type (+), type (<=), SomeNat(..), natVal)
+import qualified GHC.TypeLits as TL
+import Data.Maybe
+
+someNatVal :: Integer -> SomeNat
+someNatVal = fromJust . TL.someNatVal
+#endif
 
 newtype MultiPoly (v :: Type -> Type) (n :: Nat) (a :: Type) = MultiPoly
   { unMultiPoly :: v (SU.Vector n Word, a)
