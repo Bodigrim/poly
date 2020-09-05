@@ -56,7 +56,7 @@ newtype ShortMultiPoly a = ShortMultiPoly { unShortMultiPoly :: a }
   deriving (Eq, Show, Semiring, GcdDomain)
 
 instance (Eq a, Semiring a, Arbitrary a, G.Vector v (SU.Vector 3 Word, a)) => Arbitrary (ShortMultiPoly (MultiPoly v 3 a)) where
-  arbitrary = ShortMultiPoly . toMultiPoly . G.fromList . (\xs -> take (length xs `mod` 5) (map (first (SU.map (`mod` 3))) xs)) <$> arbitrary
+  arbitrary = ShortMultiPoly . toMultiPoly . G.fromList . (\xs -> take (length xs `mod` 4) (map (first (SU.map (`mod` 3))) xs)) <$> arbitrary
   shrink = fmap (ShortMultiPoly . toMultiPoly . G.fromList) . shrink . G.toList . unMultiPoly . unShortMultiPoly
 
 testSuite :: TestTree
