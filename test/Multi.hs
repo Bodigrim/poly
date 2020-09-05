@@ -46,7 +46,7 @@ instance KnownNat n => Arbitrary (Finite n) where
 
 instance (Arbitrary a, G.Vector v a) => Arbitrary (SG.Vector v 3 a) where
   arbitrary = SG.fromTuple <$> arbitrary
-  shrink vs = fmap SG.fromTuple $ shrink (SG.index vs 0, SG.index vs 1, SG.index vs 2)
+  shrink vs = SG.fromTuple <$> shrink (SG.index vs 0, SG.index vs 1, SG.index vs 2)
 
 instance (Eq a, Semiring a, Arbitrary a, G.Vector v (SU.Vector 3 Word, a)) => Arbitrary (MultiPoly v 3 a) where
   arbitrary = toMultiPoly . G.fromList <$> arbitrary

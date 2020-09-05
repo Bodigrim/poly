@@ -9,7 +9,6 @@
 
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE PatternSynonyms            #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE StandaloneDeriving         #-}
@@ -79,12 +78,12 @@ instance (Eq a, Semiring a, G.Vector v (Word, a)) => IsList (Laurent v a) where
   fromList xs = toLaurent minPow (fromList ys)
     where
       minPow = minimum $ maxBound : map fst xs
-      ys = map (first (fromIntegral . (subtract minPow))) xs
+      ys = map (first (fromIntegral . subtract minPow)) xs
 
   fromListN n xs = toLaurent minPow (fromListN n ys)
     where
       minPow = minimum $ maxBound : map fst xs
-      ys = map (first (fromIntegral . (subtract minPow))) xs
+      ys = map (first (fromIntegral . subtract minPow)) xs
 
   toList (Laurent off poly) =
     map (first ((+ off) . fromIntegral)) $ G.toList $ unPoly poly

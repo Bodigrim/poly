@@ -1,2 +1,2 @@
-- ignore: {name: Reduce duplication, within: Data.Poly.Internal.Dense.plusPoly}
-- ignore: {name: Reduce duplication, within: Data.Poly.Internal.Dense.karatsuba}
+- ignore: {name: "Reduce duplication"}
+- ignore: {name: "Use ++"}

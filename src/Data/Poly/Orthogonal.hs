@@ -35,7 +35,7 @@ import Data.Vector.Generic (Vector, fromListN)
 -- >>> take 3 legendre :: [Data.Poly.VPoly Double]
 -- [1.0,1.0 * X + 0.0,1.5 * X^2 + 0.0 * X + (-0.5)]
 legendre :: (Eq a, Field a, Vector v a) => [Poly v a]
-legendre = map (flip subst' (toPoly [1 `quot` 2, 1 `quot` 2])) legendreShifted
+legendre = map (`subst'` toPoly [1 `quot` 2, 1 `quot` 2]) legendreShifted
   where
     subst' :: (Eq a, Semiring a, Vector v a) => Poly v a -> Poly v a -> Poly v a
     subst' = subst

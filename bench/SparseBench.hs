@@ -12,11 +12,12 @@ import qualified Data.Vector.Unboxed as U
 
 benchSuite :: Benchmark
 benchSuite = bgroup "sparse" $ concat
-  [ map benchAdd      $ zip3 tabs vecs2 vecs3
-  , map benchMul      $ take 2 $ zip3 tabs vecs2 vecs3
-  , map benchEval     $ zip tabs vecs2
-  , map benchDeriv    $ zip tabs vecs2
-  , map benchIntegral $ zip tabs vecs2'
+  [ zipWith3 benchAdd tabs vecs2 vecs3
+  , take 2
+  $ zipWith3 benchMul tabs vecs2 vecs3
+  , zipWith benchEval tabs vecs2
+  , zipWith benchDeriv tabs vecs2
+  , zipWith benchIntegral tabs vecs2'
   ]
 
 tabs :: [Int]
@@ -34,20 +35,20 @@ vecs3 :: [UPoly Int]
 vecs3 = flip map tabs $
   \n -> toPoly $ U.generate n (\i -> (fromIntegral i ^ 3, i * 3))
 
-benchAdd :: (Int, UPoly Int, UPoly Int) -> Benchmark
-benchAdd (k, xs, ys) = bench ("add/" ++ show k) $ nf (doBinOp (+) xs) ys
+benchAdd :: Int -> UPoly Int -> UPoly Int -> Benchmark
+benchAdd k xs ys = bench ("add/" ++ show k) $ nf (doBinOp (+) xs) ys
 
-benchMul :: (Int, UPoly Int, UPoly Int) -> Benchmark
-benchMul (k, xs, ys) = bench ("mul/" ++ show k) $ nf (doBinOp (*) xs) ys
+benchMul :: Int -> UPoly Int -> UPoly Int -> Benchmark
+benchMul k xs ys = bench ("mul/" ++ show k) $ nf (doBinOp (*) xs) ys
 
-benchEval :: (Int, UPoly Int) -> Benchmark
-benchEval (k, xs) = bench ("eval/" ++ show k) $ nf doEval xs
+benchEval :: Int -> UPoly Int -> Benchmark
+benchEval k xs = bench ("eval/" ++ show k) $ nf doEval xs
 
-benchDeriv :: (Int, UPoly Int) -> Benchmark
-benchDeriv (k, xs) = bench ("deriv/" ++ show k) $ nf doDeriv xs
+benchDeriv :: Int -> UPoly Int -> Benchmark
+benchDeriv k xs = bench ("deriv/" ++ show k) $ nf doDeriv xs
 
-benchIntegral :: (Int, UPoly Double) -> Benchmark
-benchIntegral (k, xs) = bench ("integral/" ++ show k) $ nf doIntegral xs
+benchIntegral :: Int -> UPoly Double -> Benchmark
+benchIntegral k xs = bench ("integral/" ++ show k) $ nf doIntegral xs
 
 doBinOp :: (forall a. Num a => a -> a -> a) -> UPoly Int -> UPoly Int -> Int
 doBinOp op xs ys = U.foldl' (\acc (_, x) -> acc + x) 0 zs

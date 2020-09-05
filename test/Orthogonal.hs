@@ -130,7 +130,7 @@ prop_legendre_orth = once $ foldl' (.&&.) (property True) $
   [ integral11 (x * y) === 0 | (x : xs) <- tails polys, y <- xs ]
   where
     polys :: [VPoly Rational]
-    polys = take limit $ legendre
+    polys = take limit legendre
 
 hermiteProbRef :: [VPoly Integer]
 hermiteProbRef = iterate (\he -> [0, 1] * he - deriv he) 1

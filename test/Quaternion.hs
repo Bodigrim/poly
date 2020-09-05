@@ -18,16 +18,14 @@ module Quaternion
   ) where
 
 import Prelude hiding (negate)
-import Control.Monad
 import Data.Semiring (Semiring(..), Ring(..), minus)
 import GHC.Generics
 import Test.Tasty.QuickCheck hiding (scale)
 
-import Data.Vector.Unboxed (Vector)
+import Data.Vector.Unboxed (Vector, Unbox)
 import qualified Data.Vector.Generic as G
 import Data.Vector.Unboxed.Mutable (MVector)
 import qualified Data.Vector.Generic.Mutable as M
-import Data.Vector.Unboxed (Unbox)
 
 data Quaternion a = Quaternion !a !a !a !a
   deriving (Eq, Ord, Show, Generic)
@@ -81,16 +79,16 @@ instance (Unbox a) => M.MVector MVector (Quaternion a) where
   basicLength (MV_Quaternion v) = M.basicLength v
   basicUnsafeSlice i n (MV_Quaternion v) = MV_Quaternion $ M.basicUnsafeSlice i n v
   basicOverlaps (MV_Quaternion v1) (MV_Quaternion v2) = M.basicOverlaps v1 v2
-  basicUnsafeNew n = MV_Quaternion `liftM` M.basicUnsafeNew n
+  basicUnsafeNew n = MV_Quaternion `fmap` M.basicUnsafeNew n
   basicInitialize (MV_Quaternion v) = M.basicInitialize v
-  basicUnsafeReplicate n (Quaternion a b c d) = MV_Quaternion `liftM` M.basicUnsafeReplicate n (a, b, c, d)
-  basicUnsafeRead (MV_Quaternion v) i = (\(a, b, c, d) -> Quaternion a b c d) `liftM` M.basicUnsafeRead v i
+  basicUnsafeReplicate n (Quaternion a b c d) = MV_Quaternion `fmap` M.basicUnsafeReplicate n (a, b, c, d)
+  basicUnsafeRead (MV_Quaternion v) i = (\(a, b, c, d) -> Quaternion a b c d) `fmap` M.basicUnsafeRead v i
   basicUnsafeWrite (MV_Quaternion v) i (Quaternion a b c d) = M.basicUnsafeWrite v i (a, b, c, d)
   basicClear (MV_Quaternion v) = M.basicClear v
   basicSet (MV_Quaternion v) (Quaternion a b c d) = M.basicSet v (a, b, c, d)
   basicUnsafeCopy (MV_Quaternion v1) (MV_Quaternion v2) = M.basicUnsafeCopy v1 v2
   basicUnsafeMove (MV_Quaternion v1) (MV_Quaternion v2) = M.basicUnsafeMove v1 v2
-  basicUnsafeGrow (MV_Quaternion v) n = MV_Quaternion `liftM` M.basicUnsafeGrow v n
+  basicUnsafeGrow (MV_Quaternion v) n = MV_Quaternion `fmap` M.basicUnsafeGrow v n
 
 instance (Unbox a) => G.Vector Vector (Quaternion a) where
   {-# INLINE basicUnsafeFreeze #-}
@@ -99,12 +97,12 @@ instance (Unbox a) => G.Vector Vector (Quaternion a) where
   {-# INLINE basicUnsafeSlice #-}
   {-# INLINE basicUnsafeIndexM #-}
   {-# INLINE elemseq #-}
-  basicUnsafeFreeze (MV_Quaternion v) = V_Quaternion `liftM` G.basicUnsafeFreeze v
-  basicUnsafeThaw (V_Quaternion v) = MV_Quaternion `liftM` G.basicUnsafeThaw v
+  basicUnsafeFreeze (MV_Quaternion v) = V_Quaternion `fmap` G.basicUnsafeFreeze v
+  basicUnsafeThaw (V_Quaternion v) = MV_Quaternion `fmap` G.basicUnsafeThaw v
   basicLength (V_Quaternion v) = G.basicLength v
   basicUnsafeSlice i n (V_Quaternion v) = V_Quaternion $ G.basicUnsafeSlice i n v
   basicUnsafeIndexM (V_Quaternion v) i
-                = (\(a, b, c, d) -> Quaternion a b c d) `liftM` G.basicUnsafeIndexM v i
+                = (\(a, b, c, d) -> Quaternion a b c d) `fmap` G.basicUnsafeIndexM v i
   basicUnsafeCopy (MV_Quaternion mv) (V_Quaternion v)
                 = G.basicUnsafeCopy mv v
   elemseq _ (Quaternion a b c d) z = G.elemseq (undefined :: Vector a) a

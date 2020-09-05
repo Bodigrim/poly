@@ -9,7 +9,6 @@
 
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE MultiWayIf                 #-}
-{-# LANGUAGE PatternSynonyms            #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
 
@@ -182,7 +181,7 @@ quotient xs ys
               Nothing -> pure Nothing
               Just q -> do
                 MG.unsafeWrite qs i q
-                forM_ [0 .. lenYs - 1] $ \k -> do
+                forM_ [0 .. lenYs - 1] $ \k ->
                   MG.unsafeModify
                     rs
                     (\c -> c `minus` q `times` G.unsafeIndex ys k)

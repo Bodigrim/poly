@@ -118,8 +118,8 @@ instance (Show a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Show (MultiPo
       $ G.foldl (\acc (is, c) -> showCoeff is c : acc) [] xs
     where
       showCoeff is c
-        = showsPrec 7 c . (foldl (.) id
-        $ map ((showString " * " .) . uncurry showPower)
+        = showsPrec 7 c . foldl (.) id
+        ( map ((showString " * " .) . uncurry showPower)
         $ filter ((/= 0) . fst)
         $ zip (SU.toList is) (finites :: [Finite n]))
 
@@ -361,7 +361,7 @@ groupOn f = go
         Just k  -> G.unsafeTake (k + 1) xs : go (G.unsafeDrop (k + 1) xs)
         where
           fy = f (G.unsafeHead xs)
-          mk = G.findIndex (not . (== fy) . f) (G.unsafeTail xs)
+          mk = G.findIndex ((/= fy) . f) (G.unsafeTail xs)
 
 separate :: (KnownNat m, n ~ (1 + m), Eq a, Semiring a, Eq (v (SU.Vector m Word, a)), G.Vector v (SU.Vector n Word, a), G.Vector v (SU.Vector m Word, a)) => MultiPoly v n a -> VPoly (MultiPoly v m a)
 separate (MultiPoly xs) = toPoly' $ G.fromList $ map (\vs -> (SU.head (fst (G.unsafeHead vs)), MultiPoly $ G.map (first SU.tail) vs)) $ groupOn (SU.head . fst) xs

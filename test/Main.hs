@@ -2,12 +2,12 @@ module Main where
 
 import Test.Tasty
 
-import qualified Dense as Dense
-import qualified DenseLaurent as DenseLaurent
-import qualified Multi as Multi
-import qualified Orthogonal as Orthogonal
-import qualified Sparse as Sparse
-import qualified SparseLaurent as SparseLaurent
+import qualified Dense
+import qualified DenseLaurent
+import qualified Multi
+import qualified Orthogonal
+import qualified Sparse
+import qualified SparseLaurent
 
 main :: IO ()
 main = defaultMain $ testGroup "All"

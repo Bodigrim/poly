@@ -10,7 +10,6 @@
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE PatternSynonyms            #-}
 
 module Data.Poly.Internal.PolyOverField
   ( PolyOverField(..)
