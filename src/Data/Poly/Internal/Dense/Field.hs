@@ -15,9 +15,7 @@
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Data.Poly.Internal.Dense.Field
-  ( fieldGcd
-  ) where
+module Data.Poly.Internal.Dense.Field () where
 
 import Prelude hiding (quotRem, quot, rem, gcd, recip)
 import Control.Exception
@@ -116,26 +114,3 @@ remainderM xs ys
     lenYs = MG.length ys
     lenQs = lenXs - lenYs + 1
 {-# INLINABLE remainderM #-}
-
-fieldGcd
-  :: (Eq a, Field a, G.Vector v a)
-  => Poly v a
-  -> Poly v a
-  -> Poly v a
-fieldGcd (Poly xs) (Poly ys) = toPoly' $ runST $ do
-  xs' <- G.thaw xs
-  ys' <- G.thaw ys
-  gcdM xs' ys'
-{-# INLINE fieldGcd #-}
-
-gcdM
-  :: (PrimMonad m, Eq a, Field a, G.Vector v a)
-  => G.Mutable v (PrimState m) a
-  -> G.Mutable v (PrimState m) a
-  -> m (v a)
-gcdM xs ys = do
-  ys' <- dropWhileEndM (== zero) ys
-  if MG.null ys' then G.unsafeFreeze xs else do
-    remainderM xs ys'
-    gcdM ys' xs
-{-# INLINE gcdM #-}
