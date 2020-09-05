@@ -30,10 +30,6 @@ instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (Laurent v a
   arbitrary = toLaurent <$> ((`rem` 10) <$> arbitrary) <*> arbitrary
   shrink = fmap (uncurry toLaurent) . shrink . unLaurent
 
-instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (LaurentOverField (Laurent v a)) where
-  arbitrary = (LaurentOverField .) . toLaurent <$> ((`rem` 10) <$> arbitrary) <*> (Data.Poly.unPolyOverField <$> arbitrary)
-  shrink = fmap (LaurentOverField . uncurry toLaurent . fmap Data.Poly.unPolyOverField) . shrink . fmap Data.Poly.PolyOverField . unLaurent . unLaurentOverField
-
 newtype ShortLaurent a = ShortLaurent { unShortLaurent :: a }
   deriving (Eq, Show, Semiring, GcdDomain)
 
@@ -79,7 +75,7 @@ numTests =
 gcdDomainTests :: [TestTree]
 gcdDomainTests =
   [ myGcdDomainLaws (Proxy :: Proxy (ShortLaurent (Laurent V.Vector Integer)))
-  , myGcdDomainLaws (Proxy :: Proxy (LaurentOverField (Laurent V.Vector Rational)))
+  , myGcdDomainLaws (Proxy :: Proxy (ShortLaurent (Laurent V.Vector Rational)))
   ]
 
 showTests :: [TestTree]

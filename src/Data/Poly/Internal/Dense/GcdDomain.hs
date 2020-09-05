@@ -31,9 +31,6 @@ import qualified Data.Vector.Generic.Mutable as MG
 
 import Data.Poly.Internal.Dense
 
--- | Consider using 'Data.Poly.Semiring.PolyOverField' wrapper,
--- which provides a much faster implementation of
--- 'Data.Euclidean.gcd' for polynomials over 'Field'.
 instance (Eq a, Ring a, GcdDomain a, Eq (v a), G.Vector v a) => GcdDomain (Poly v a) where
   divide (Poly xs) (Poly ys) =
     toPoly' <$> quotient xs ys

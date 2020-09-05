@@ -32,10 +32,6 @@ instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (Poly v a) w
   arbitrary = S.toPoly . G.fromList <$> arbitrary
   shrink = fmap (S.toPoly . G.fromList) . shrink . G.toList . unPoly
 
-instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (PolyOverField (Poly v a)) where
-  arbitrary = PolyOverField . S.toPoly . G.fromList . (\xs -> take (length xs `mod` 10) xs) <$> arbitrary
-  shrink = fmap (PolyOverField . S.toPoly . G.fromList) . shrink . G.toList . unPoly . unPolyOverField
-
 newtype ShortPoly a = ShortPoly { unShortPoly :: a }
   deriving (Eq, Show, Semiring, GcdDomain, Euclidean)
 
@@ -82,8 +78,8 @@ numTests =
 gcdDomainTests :: [TestTree]
 gcdDomainTests =
   [ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Integer)))
-  , myGcdDomainLaws (Proxy :: Proxy (PolyOverField (Poly V.Vector (Mod 3))))
-  , myGcdDomainLaws (Proxy :: Proxy (PolyOverField (Poly V.Vector Rational)))
+  , myGcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector (Mod 3))))
+  , myGcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
   ]
 
 euclideanTests :: [TestTree]

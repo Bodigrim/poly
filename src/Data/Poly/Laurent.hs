@@ -45,7 +45,6 @@ import Data.Poly.Internal.Dense (Poly(..))
 import qualified Data.Poly.Internal.Dense as Dense
 import Data.Poly.Internal.Dense.Field ()
 import Data.Poly.Internal.Dense.GcdDomain ()
-import Data.Poly.Internal.PolyOverField
 
 -- | <https://en.wikipedia.org/wiki/Laurent_polynomial Laurent polynomials>
 -- of one variable with coefficients from @a@,
@@ -258,9 +257,6 @@ var
 X^-n = monomial (negate n) one
 _^-_ = error "(^-) can be applied only to X"
 
--- | Consider using 'LaurentOverField' wrapper,
--- which provides a much faster implementation of
--- 'Data.Euclidean.gcd' for polynomials over 'Field'.
 instance (Eq a, Ring a, GcdDomain a, Eq (v a), G.Vector v a) => GcdDomain (Laurent v a) where
   divide (Laurent off1 poly1) (Laurent off2 poly2) =
     toLaurent (off1 - off2) <$> divide poly1 poly2
@@ -270,15 +266,7 @@ instance (Eq a, Ring a, GcdDomain a, Eq (v a), G.Vector v a) => GcdDomain (Laure
     toLaurent 0 (gcd poly1 poly2)
   {-# INLINE gcd #-}
 
--- | Wrapper for Laurent polynomials over 'Field',
--- providing a faster 'GcdDomain' instance.
+-- | Wrapper for Laurent polynomials.
 newtype LaurentOverField laurent = LaurentOverField { unLaurentOverField :: laurent }
-  deriving (Eq, NFData, Num, Ord, Ring, Semiring, Show)
-
-instance (Eq a, Eq (v a), Field a, G.Vector v a) => GcdDomain (LaurentOverField (Laurent v a)) where
-  divide (LaurentOverField (Laurent off1 poly1)) (LaurentOverField (Laurent off2 poly2)) =
-    LaurentOverField . toLaurent (off1 - off2) . unPolyOverField <$> divide (PolyOverField poly1) (PolyOverField poly2)
-
-  gcd (LaurentOverField (Laurent _ poly1)) (LaurentOverField (Laurent _ poly2)) =
-    LaurentOverField (toLaurent 0 (unPolyOverField (gcd (PolyOverField poly1) (PolyOverField poly2))))
-  {-# INLINE gcd #-}
+  deriving (Eq, NFData, Num, Ord, Ring, Semiring, GcdDomain,Show)
+{-# DEPRECATED LaurentOverField "Does not provide performance benefits anymore" #-}

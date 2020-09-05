@@ -8,7 +8,7 @@ module DenseBench
 
 import Prelude hiding (quotRem, gcd)
 import Gauge.Main
-import Data.Euclidean (Euclidean(..), GcdDomain(..), Field)
+import Data.Euclidean (Euclidean(..), GcdDomain(..))
 import Data.Poly
 import qualified Data.Poly.Semiring as S (toPoly)
 import Data.Semiring (Semiring(..), Ring, Mod2(..))
@@ -23,10 +23,10 @@ benchSuite = bgroup "dense" $ concat
   , map benchEval     [100, 1000, 10000]
   , map benchDeriv    [100, 1000, 10000]
   , map benchIntegral [100, 1000, 10000]
-  , map benchQuotRem    [10, 100]
-  , map benchGcd        [10, 100]
-  , map benchGcdFracRat [10, 20, 40]
-  , map benchGcdFracM   [10, 100, 1000]
+  , map benchQuotRem  [10, 100]
+  , map benchGcd      [10, 100]
+  , map benchGcdRat   [10, 20, 40]
+  , map benchGcdM     [10, 100, 1000]
   ]
 
 benchAdd :: Int -> Benchmark
@@ -48,13 +48,13 @@ benchQuotRem :: Int -> Benchmark
 benchQuotRem k = bench ("quotRem/" ++ show k) $ nf doQuotRem k
 
 benchGcd :: Int -> Benchmark
-benchGcd k = bench ("gcd/" ++ show k) $ nf doGcd k
+benchGcd k = bench ("gcd/Integer/" ++ show k) $ nf (doGcd @Integer) k
 
-benchGcdFracRat :: Int -> Benchmark
-benchGcdFracRat k = bench ("gcdFrac/Rational/" ++ show k) $ nf (doGcdFrac @Rational) k
+benchGcdRat :: Int -> Benchmark
+benchGcdRat k = bench ("gcd/Rational/" ++ show k) $ nf (doGcd @Rational) k
 
-benchGcdFracM :: Int -> Benchmark
-benchGcdFracM k = bench ("gcdFrac/Mod2/" ++ show k) $ nf (getMod2 . doGcdFrac @Mod2) k
+benchGcdM :: Int -> Benchmark
+benchGcdM k = bench ("gcd/Mod2/" ++ show k) $ nf (getMod2 . doGcd @Mod2) k
 
 doBinOp :: (forall a. Num a => a -> a -> a) -> Int -> Int
 doBinOp op n = U.sum zs
@@ -94,16 +94,9 @@ doQuotRem n = U.sum (unPoly qs) + U.sum (unPoly rs)
     ys = toPoly $ U.generate n       gen2
     (qs, rs) = xs `quotRem` ys
 
-doGcd :: Int -> Integer
-doGcd n = V.sum gs
+doGcd :: (Eq a, Ring a, GcdDomain a) => Int -> a
+doGcd n = V.foldl' plus zero gs
   where
-    xs = toPoly $ V.generate n gen1
-    ys = toPoly $ V.generate n gen2
+    xs = S.toPoly $ V.generate n gen1
+    ys = S.toPoly $ V.generate n gen2
     gs = unPoly $ xs `gcd` ys
-
-doGcdFrac :: (Eq a, Field a) => Int -> a
-doGcdFrac n = V.foldl' plus zero gs
-  where
-    xs = PolyOverField $ S.toPoly $ V.generate n gen1
-    ys = PolyOverField $ S.toPoly $ V.generate n gen2
-    gs = unPoly $ unPolyOverField $ xs `gcd` ys
