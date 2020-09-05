@@ -42,7 +42,7 @@ module Data.Poly.Internal.Dense
   , integral'
   ) where
 
-import Prelude hiding (quotRem, quot, rem, gcd, lcm, (^))
+import Prelude hiding (quotRem, quot, rem, gcd, lcm)
 import Control.DeepSeq (NFData)
 import Control.Monad
 import Control.Monad.Primitive

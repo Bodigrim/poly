@@ -57,6 +57,7 @@ import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic.Sized as SG
 import qualified Data.Vector.Unboxed.Sized as SU
+import qualified Data.Vector.Sized as SV
 import GHC.Exts (IsList(..))
 import Unsafe.Coerce
 
@@ -74,8 +75,26 @@ someNatVal :: Integer -> SomeNat
 someNatVal = fromJust . TL.someNatVal
 #endif
 
+-- | Polynomials of @n@ variables with coefficients from @a@,
+-- backed by a 'G.Vector' @v@ (boxed, unboxed, storable, etc.).
+--
+-- Use patterns 'X', 'Y' and 'Z' for construction:
+--
+-- >>> :set -XDataKinds
+-- >>> (X + 1) + (Y - 1) + Z :: VMultiPoly 3 Integer
+-- 1 * X + 1 * Y + 1 * Z
+-- >>> (X + 1) * (Y - 1) :: UMultiPoly 2 Int
+-- 1 * X * Y + (-1) * X + 1 * Y + (-1)
+--
+-- Polynomials are stored normalized, without
+-- zero coefficients, so 0 * 'X' + 1 equals to 1.
+--
+-- 'Ord' instance does not make much sense mathematically,
+-- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
+--
 newtype MultiPoly (v :: Type -> Type) (n :: Nat) (a :: Type) = MultiPoly
   { unMultiPoly :: v (SU.Vector n Word, a)
+  -- ^ Convert 'MultiPoly' to a vector of (powers, coefficient) pairs.
   }
 
 deriving instance Eq     (v (SU.Vector n Word, a)) => Eq     (MultiPoly v n a)
@@ -121,6 +140,14 @@ type VMultiPoly n = MultiPoly V.Vector n
 -- | Polynomials backed by unboxed vectors.
 type UMultiPoly n = MultiPoly U.Vector n
 
+-- | Make 'MultiPoly' from a list of (powers, coefficient) pairs.
+--
+-- >>> :set -XOverloadedLists -XDataKinds
+-- >>> import Data.Vector.Generic.Sized (fromTuple)
+-- >>> toMultiPoly [(fromTuple (0,0),1),(fromTuple (0,1),2),(fromTuple (1,0),3)] :: VMultiPoly 2 Integer
+-- 3 * X + 2 * Y + 1
+-- >>> toMultiPoly [(fromTuple (0,0),0),(fromTuple (0,1),0),(fromTuple (1,0),0)] :: UMultiPoly 2 Int
+-- 0
 toMultiPoly
   :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a))
   => v (SU.Vector n Word, a)
@@ -165,6 +192,12 @@ instance (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Sem
 instance (Eq a, Ring a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Ring (MultiPoly v n a) where
   negate (MultiPoly xs) = MultiPoly $ G.map (fmap Semiring.negate) xs
 
+-- | Multiply a polynomial by a monomial, expressed as powers and a coefficient.
+--
+-- >>> :set -XDataKinds
+-- >>> import Data.Vector.Generic.Sized (fromTuple)
+-- >>> scale (fromTuple (1, 1)) 3 (X + Y) :: UMultiPoly 2 Int
+-- 3 * X^2 * Y + 3 * X * Y^2
 scale
   :: (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
   => SU.Vector n Word
@@ -173,6 +206,7 @@ scale
   -> MultiPoly v n a
 scale yp yc = MultiPoly . scaleInternal (/= zero) times yp yc . unMultiPoly
 
+-- | Create a monomial from powers and a coefficient.
 monomial
   :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a))
   => SU.Vector n Word
@@ -182,6 +216,12 @@ monomial p c
   | c == zero = MultiPoly G.empty
   | otherwise = MultiPoly $ G.singleton (p, c)
 
+-- | Evaluate at a given point.
+--
+-- >>> :set -XDataKinds
+-- >>> import Data.Vector.Generic.Sized (fromTuple)
+-- >>> eval (X^2 + Y^2 :: UMultiPoly 2 Int) (fromTuple (3, 4) :: Data.Vector.Sized.Vector 2 Int)
+-- 25
 eval
   :: (Semiring a, G.Vector v (SU.Vector n Word, a), G.Vector u a)
   => MultiPoly v n a
@@ -190,10 +230,16 @@ eval
 eval = substitute times
 {-# INLINE eval #-}
 
+-- | Substitute another polynomials instead of variables.
+--
+-- >>> :set -XDataKinds
+-- >>> import Data.Vector.Generic.Sized (fromTuple)
+-- >>> subst (X^2 + Y^2 + Z^2 :: UMultiPoly 3 Int) (fromTuple (X + 1, Y + 1, X + Y :: UMultiPoly 2 Int))
+-- 2 * X^2 + 2 * X * Y + 2 * X + 2 * Y^2 + 2 * Y + 2
 subst
-  :: (Eq a, Semiring a, KnownNat m, G.Vector v (SU.Vector n Word, a), G.Vector w (SU.Vector m Word, a), G.Vector u (MultiPoly w m a))
+  :: (Eq a, Semiring a, KnownNat m, G.Vector v (SU.Vector n Word, a), G.Vector w (SU.Vector m Word, a))
   => MultiPoly v n a
-  -> SG.Vector u n (MultiPoly w m a)
+  -> SV.Vector n (MultiPoly w m a)
   -> MultiPoly w m a
 subst = substitute (scale 0)
 {-# INLINE subst #-}
@@ -214,6 +260,13 @@ substitute f (MultiPoly cs) xs = G.foldl' go zero cs
     doMonom = SU.ifoldl' (\acc i p -> acc `times` ((xs `SG.index` i) Semiring.^ p)) one
 {-# INLINE substitute #-}
 
+-- | Take a derivative with respect to the i-th variable.
+--
+-- >>> :set -XDataKinds
+-- >>> deriv 0 (X^3 + 3 * Y) :: UMultiPoly 2 Int
+-- 3 * X^2
+-- >>> deriv 1 (X^3 + 3 * Y) :: UMultiPoly 2 Int
+-- 3
 deriv
   :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a), KnownNat n)
   => Finite n
@@ -221,11 +274,18 @@ deriv
   -> MultiPoly v n a
 deriv i (MultiPoly xs) = MultiPoly $ derivPoly
   (/= zero)
-  -- Does it spoil grevlex ordering?
   (\ps -> ps SU.// [(i, ps `SU.index` i - 1)])
   (\ps c -> fromNatural (fromIntegral (ps `SU.index` i)) `times` c)
   xs
 
+-- | Compute an indefinite integral of a polynomial by the i-th variable,
+-- setting constant term to zero.
+--
+-- >>> :set -XDataKinds
+-- >>> integral 0 (3 * X^2 + 2 * Y) :: UMultiPoly 2 Double
+-- 1.0 * X^3 + 2.0 * X * Y
+-- >>> integral 1 (3 * X^2 + 2 * Y) :: UMultiPoly 2 Double
+-- 3.0 * X^2 * Y + 1.0 * Y^2
 integral
   :: (Eq a, Field a, G.Vector v (SU.Vector n Word, a), KnownNat n)
   => Finite n
@@ -234,21 +294,23 @@ integral
 integral i (MultiPoly xs)
   = MultiPoly
   $ G.map (\(ps, c) -> let p = ps `SU.index` i in
-    -- Does it spoil grevlex ordering?
     (ps SU.// [(i, p + 1)], c `quot` Semiring.fromIntegral (p + 1))) xs
 
+-- | Create a polynomial equal to the first variable.
 pattern X
   :: (Eq a, Semiring a, KnownNat n, 1 <= n, G.Vector v (SU.Vector n Word, a), Eq (v (SU.Vector n Word, a)))
   => MultiPoly v n a
 pattern X <- ((==) (var 0) -> True)
   where X = var 0
 
+-- | Create a polynomial equal to the second variable.
 pattern Y
   :: (Eq a, Semiring a, KnownNat n, 2 <= n, G.Vector v (SU.Vector n Word, a), Eq (v (SU.Vector n Word, a)))
   => MultiPoly v n a
 pattern Y <- ((==) (var 1) -> True)
   where Y = var 1
 
+-- | Create a polynomial equal to the third variable.
 pattern Z
   :: (Eq a, Semiring a, KnownNat n, 3 <= n, G.Vector v (SU.Vector n Word, a), Eq (v (SU.Vector n Word, a)))
   => MultiPoly v n a

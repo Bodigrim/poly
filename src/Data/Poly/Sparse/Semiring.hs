@@ -36,12 +36,11 @@ import Data.Poly.Internal.Sparse.Field ()
 import Data.Poly.Internal.Sparse.GcdDomain ()
 
 -- | Make 'Poly' from a list of (power, coefficient) pairs.
--- (first element corresponds to a constant term).
 --
 -- >>> :set -XOverloadedLists
 -- >>> toPoly [(0,1),(1,2),(2,3)] :: VPoly Integer
 -- 3 * X^2 + 2 * X + 1
--- >>> S.toPoly [(0,0),(1,0),(2,0)] :: UPoly Int
+-- >>> toPoly [(0,0),(1,0),(2,0)] :: UPoly Int
 -- 0
 toPoly :: (Eq a, Semiring a, G.Vector v (Word, a)) => v (Word, a) -> Poly v a
 toPoly = Sparse.toPoly'

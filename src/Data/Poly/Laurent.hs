@@ -203,14 +203,14 @@ monomial p c
 -- | Multiply a polynomial by a monomial, expressed as a power and a coefficient.
 --
 -- >>> scale 2 3 (X^2 + 1) :: ULaurent Int
--- 3 * X^4 + 0 * X^3 + 3 * X^2 + 0 * X + 0
+-- 3 * X^4 + 0 * X^3 + 3 * X^2
 scale :: (Eq a, Semiring a, G.Vector v a) => Int -> a -> Laurent v a -> Laurent v a
 scale yp yc (Laurent off poly) = toLaurent (off + yp) (Dense.scale' 0 yc poly)
 
 -- | Evaluate at a given point.
 --
--- >>> eval (X^2 + 1 :: ULaurent Int) 3
--- 10
+-- >>> eval (X^2 + 1 :: ULaurent Double) 3
+-- 10.0
 eval :: (Field a, G.Vector v a) => Laurent v a -> a -> a
 eval (Laurent off poly) x = Dense.eval' poly x `times`
   (if off >= 0 then x Semiring.^ off else quot one x Semiring.^ (- off))
@@ -218,7 +218,8 @@ eval (Laurent off poly) x = Dense.eval' poly x `times`
 
 -- | Substitute another polynomial instead of 'Data.Poly.X'.
 --
--- >>> subst (X^2 + 1 :: UPoly Int) (X + 1 :: ULaurent Int)
+-- >>> import Data.Poly (UPoly)
+-- >>> subst (Data.Poly.X^2 + 1 :: UPoly Int) (X + 1 :: ULaurent Int)
 -- 1 * X^2 + 2 * X + 2
 subst :: (Eq a, Semiring a, G.Vector v a, G.Vector w a) => Poly v a -> Laurent w a -> Laurent w a
 subst = Dense.substitute' (scale 0)
@@ -248,7 +249,7 @@ var
 -- but is instrumental to express Laurent polynomials in mathematical fashion:
 --
 -- >>> X + 2 + 3 * X^-1 :: ULaurent Int
--- 1 * X + 2 + 3 * X^(-1)
+-- 1 * X + 2 + 3 * X^-1
 (^-)
   :: (Eq a, Semiring a, G.Vector v a, Eq (v a))
   => Laurent v a

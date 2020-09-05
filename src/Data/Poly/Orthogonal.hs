@@ -104,7 +104,7 @@ hermiteProb = xs
 -- | Physicists' <https://en.wikipedia.org/wiki/Hermite_polynomials Hermite polynomials>.
 --
 -- >>> take 3 hermitePhys :: [VPoly Double]
--- [1,2 * X + 0,4 * X^2 + 0 * X + (-2)]
+-- [1.0,2.0 * X + 0.0,4.0 * X^2 + 0.0 * X + (-2.0)]
 hermitePhys :: (Eq a, Ring a, Vector v a) => [Poly v a]
 hermitePhys = xs
   where

@@ -147,7 +147,7 @@ instance (Show a, G.Vector v (Word, a)) => Show (Laurent v a) where
       = showParen (d > 0)
       $ foldl (.) id
       $ intersperse (showString " + ")
-      $ G.ifoldl (\acc i c -> showCoeff (i + off) c : acc) []
+      $ G.foldl (\acc (i, c) -> showCoeff (fromIntegral i + off) c : acc) []
       $ unPoly poly
     where
       showCoeff 0 c = showsPrec 7 c
@@ -218,15 +218,15 @@ monomial p c
 
 -- | Multiply a polynomial by a monomial, expressed as a power and a coefficient.
 --
--- >>> scale 2 3 (X^2 + 1) :: ULaurent Int
--- 3 * X^4 + 3 * X^2
+-- >>> scale 2 3 (X^2 + 1) :: ULaurent Double
+-- 3.0 * X^4 + 3.0 * X^2
 scale :: (Eq a, Semiring a, G.Vector v (Word, a)) => Int -> a -> Laurent v a -> Laurent v a
 scale yp yc (Laurent off poly) = toLaurent (off + yp) (Sparse.scale' 0 yc poly)
 
 -- | Evaluate at a given point.
 --
--- >>> eval (X^2 + 1 :: ULaurent Int) 3
--- 10
+-- >>> eval (X^2 + 1 :: ULaurent Double) 3
+-- 10.0
 eval :: (Field a, G.Vector v (Word, a)) => Laurent v a -> a -> a
 eval (Laurent off poly) x = Sparse.eval' poly x `times`
   (if off >= 0 then x Semiring.^ off else quot one x Semiring.^ (- off))
@@ -234,7 +234,8 @@ eval (Laurent off poly) x = Sparse.eval' poly x `times`
 
 -- | Substitute another polynomial instead of 'Data.Poly.Sparse.X'.
 --
--- >>> subst (X^2 + 1 :: UPoly Int) (X + 1 :: ULaurent Int)
+-- >>> import Data.Poly.Sparse (UPoly)
+-- >>> subst (Data.Poly.Sparse.X^2 + 1 :: UPoly Int) (X + 1 :: ULaurent Int)
 -- 1 * X^2 + 2 * X + 2
 subst :: (Eq a, Semiring a, G.Vector v (Word, a), G.Vector w (Word, a)) => Poly v a -> Laurent w a -> Laurent w a
 subst = Sparse.substitute' (scale 0)
@@ -264,7 +265,7 @@ var
 -- but is instrumental to express Laurent polynomials in mathematical fashion:
 --
 -- >>> X + 2 + 3 * X^-1 :: ULaurent Int
--- 1 * X + 2 + 3 * X^(-1)
+-- 1 * X + 2 + 3 * X^-1
 (^-)
   :: (Eq a, Semiring a, G.Vector v (Word, a), Eq (v (Word, a)))
   => Laurent v a
