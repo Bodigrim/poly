@@ -75,6 +75,7 @@ gcdNonEmpty xs ys = runST $ do
         i
 
     G.unsafeFreeze zs'
+{-# INLINABLE gcdNonEmpty #-}
 
 gcdM
   :: (PrimMonad m, Eq a, Ring a, GcdDomain a, G.Vector v a)
