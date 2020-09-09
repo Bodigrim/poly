@@ -40,11 +40,12 @@ instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a)) => Arbitrary (Sho
 
 testSuite :: TestTree
 testSuite = testGroup "SparseLaurent"
-    [ otherTests
-    , lawsTests
-    , evalTests
-    , derivTests
-    ]
+  [ otherTests
+  , lawsTests
+  , evalTests
+  , derivTests
+  , patternTests
+  ]
 
 lawsTests :: TestTree
 lawsTests = testGroup "Laws"
@@ -174,4 +175,16 @@ derivTests = testGroup "deriv"
   -- , testProperty "deriv (subst p q) = deriv q * subst (deriv p) q" $
   --   \(p :: Laurent V.Vector Int) (q :: Laurent U.Vector Int) ->
   --     deriv (subst p q) === deriv q * subst (deriv p) q
+  ]
+
+patternTests :: TestTree
+patternTests = testGroup "pattern"
+  [ testProperty "X  :: ULaurent Int" $ once $
+    case (monomial 1 1 :: ULaurent Int) of X -> True; _ -> False
+  , testProperty "X  :: ULaurent Int" $ once $
+    (X :: ULaurent Int) === monomial 1 1
+  , testProperty "X :: ULaurent ()" $ once $
+    case (zero :: ULaurent ()) of X -> True; _ -> False
+  , testProperty "X :: ULaurent ()" $ once $
+    (X :: ULaurent ()) === zero
   ]

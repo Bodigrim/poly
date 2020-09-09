@@ -21,7 +21,7 @@ import Data.Mod
 import Data.Poly.Sparse
 import qualified Data.Poly.Sparse.Semiring as S
 import Data.Proxy
-import Data.Semiring (Semiring)
+import Data.Semiring (Semiring, zero)
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed as U
@@ -44,12 +44,13 @@ instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a)) => Arbitrary (Sho
 
 testSuite :: TestTree
 testSuite = testGroup "Sparse"
-    [ arithmeticTests
-    , otherTests
-    , lawsTests
-    , evalTests
-    , derivTests
-    ]
+  [ arithmeticTests
+  , otherTests
+  , lawsTests
+  , evalTests
+  , derivTests
+  , patternTests
+  ]
 
 lawsTests :: TestTree
 lawsTests = testGroup "Laws"
@@ -173,6 +174,9 @@ otherTestGroup _ =
   , tenTimesLess $
     testProperty "scale matches multiplication by monomial" $
     \p c (xs :: UPoly a) -> scale p c xs === monomial p c * xs
+  , tenTimesLess $
+    testProperty "scale' matches multiplication by monomial'" $
+    \p c (xs :: UPoly a) -> S.scale p c xs === S.monomial p c * xs
   ]
 
 monomialRef :: Num a => Word -> a -> [(Word, a)]
@@ -256,4 +260,20 @@ derivTests = testGroup "deriv"
   -- , testProperty "deriv (subst p q) = deriv q * subst (deriv p) q" $
   --   \(p :: Poly V.Vector Int) (q :: Poly U.Vector Int) ->
   --     deriv (subst p q) === deriv q * subst (deriv p) q
+  ]
+
+patternTests :: TestTree
+patternTests = testGroup "pattern"
+  [ testProperty "X  :: UPoly Int" $ once $
+    case (monomial 1 1 :: UPoly Int) of X -> True; _ -> False
+  , testProperty "X  :: UPoly Int" $ once $
+    (X :: UPoly Int) === monomial 1 1
+  , testProperty "X' :: UPoly Int" $ once $
+    case (S.monomial 1 1 :: UPoly Int) of S.X -> True; _ -> False
+  , testProperty "X' :: UPoly Int" $ once $
+    (S.X :: UPoly Int) === S.monomial 1 1
+  , testProperty "X' :: UPoly ()" $ once $
+    case (zero :: UPoly ()) of S.X -> True; _ -> False
+  , testProperty "X' :: UPoly ()" $ once $
+    (S.X :: UPoly ()) === zero
   ]

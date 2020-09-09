@@ -61,12 +61,12 @@ instance (Eq a, Semiring a, Arbitrary a, G.Vector v (SU.Vector 3 Word, a)) => Ar
 
 testSuite :: TestTree
 testSuite = testGroup "Multi"
-    [ arithmeticTests
-    , otherTests
-    , lawsTests
-    , evalTests
-    , derivTests
-    ]
+  [ arithmeticTests
+  , otherTests
+  , lawsTests
+  , evalTests
+  , derivTests
+  ]
 
 lawsTests :: TestTree
 lawsTests = testGroup "Laws"
