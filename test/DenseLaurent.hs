@@ -106,6 +106,9 @@ otherTestGroup _ =
   , tenTimesLess $
     testProperty "scale matches multiplication by monomial" $
     \p c (xs :: ULaurent a) -> scale p c xs === monomial p c * xs
+  , tenTimesLess $
+    testProperty "toLaurent . unLaurent" $
+    \(xs :: ULaurent a) -> uncurry toLaurent (unLaurent xs) === xs
   ]
 
 evalTests :: TestTree
@@ -177,4 +180,6 @@ patternTests = testGroup "pattern"
     case (zero :: ULaurent ()) of X -> True; _ -> False
   , testProperty "X :: ULaurent ()" $ once $
     (X :: ULaurent ()) === zero
+  , testProperty "X^-k" $
+    \k -> (X^-k :: ULaurent Int) === monomial (- k) 1
   ]

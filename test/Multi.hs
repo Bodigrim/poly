@@ -22,7 +22,7 @@ import Data.List (groupBy, sortOn)
 import Data.Mod
 import Data.Poly.Sparse.Multi
 import Data.Proxy
-import Data.Semiring (Semiring)
+import Data.Semiring (Semiring, zero)
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed as U
@@ -44,18 +44,18 @@ import TestUtils
 instance KnownNat n => Arbitrary (Finite n) where
   arbitrary = elements finites
 
-instance (Arbitrary a, G.Vector v a) => Arbitrary (SG.Vector v 3 a) where
-  arbitrary = SG.fromTuple <$> arbitrary
-  shrink vs = SG.fromTuple <$> shrink (SG.index vs 0, SG.index vs 1, SG.index vs 2)
+instance (Arbitrary a, KnownNat n, G.Vector v a) => Arbitrary (SG.Vector v n a) where
+  arbitrary = SG.replicateM arbitrary
+  shrink vs = [ vs SG.// [(i, x)] | i <- finites, x <- shrink (SG.index vs i) ]
 
-instance (Eq a, Semiring a, Arbitrary a, G.Vector v (SU.Vector 3 Word, a)) => Arbitrary (MultiPoly v 3 a) where
+instance (Eq a, Semiring a, Arbitrary a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Arbitrary (MultiPoly v n a) where
   arbitrary = toMultiPoly . G.fromList <$> arbitrary
   shrink = fmap (toMultiPoly . G.fromList) . shrink . G.toList . unMultiPoly
 
 newtype ShortMultiPoly a = ShortMultiPoly { unShortMultiPoly :: a }
   deriving (Eq, Show, Semiring, GcdDomain)
 
-instance (Eq a, Semiring a, Arbitrary a, G.Vector v (SU.Vector 3 Word, a)) => Arbitrary (ShortMultiPoly (MultiPoly v 3 a)) where
+instance (Eq a, Semiring a, Arbitrary a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Arbitrary (ShortMultiPoly (MultiPoly v n a)) where
   arbitrary = ShortMultiPoly . toMultiPoly . G.fromList . (\xs -> take (length xs `mod` 4) (map (first (SU.map (`mod` 3))) xs)) <$> arbitrary
   shrink = fmap (ShortMultiPoly . toMultiPoly . G.fromList) . shrink . G.toList . unMultiPoly . unShortMultiPoly
 
@@ -66,6 +66,7 @@ testSuite = testGroup "Multi"
   , lawsTests
   , evalTests
   , derivTests
+  , patternTests
   ]
 
 lawsTests :: TestTree
@@ -117,11 +118,11 @@ isListTests =
 
 showTests :: [TestTree]
 showTests =
-  [ myShowLaws (Proxy :: Proxy (VMultiPoly 3 ()))
-  , myShowLaws (Proxy :: Proxy (VMultiPoly 3 Int8))
-  , myShowLaws (Proxy :: Proxy (VMultiPoly 3 Integer))
+  [ myShowLaws (Proxy :: Proxy (VMultiPoly 4 ()))
+  , myShowLaws (Proxy :: Proxy (VMultiPoly 4 Int8))
+  , myShowLaws (Proxy :: Proxy (VMultiPoly 4 Integer))
   , tenTimesLess
-  $ myShowLaws (Proxy :: Proxy (VMultiPoly 3 (Quaternion Int)))
+  $ myShowLaws (Proxy :: Proxy (VMultiPoly 4 (Quaternion Int)))
   ]
 
 arithmeticTests :: TestTree
@@ -246,4 +247,34 @@ derivTests = testGroup "deriv"
   -- , testProperty "deriv (subst p q) = deriv q * subst (deriv p) q" $
   --   \(p :: Poly V.Vector Int) (q :: Poly U.Vector Int) k ->
   --     deriv k (subst p q) === deriv k q * subst (deriv k p) q
+  ]
+
+patternTests :: TestTree
+patternTests = testGroup "pattern"
+  [ testProperty "X  :: UMultiPoly Int" $ once $
+    case (monomial 1 1 :: UMultiPoly 1 Int) of X -> True; _ -> False
+  , testProperty "X  :: UMultiPoly Int" $ once $
+    (X :: UMultiPoly 1 Int) === monomial 1 1
+  , testProperty "X :: UMultiPoly ()" $ once $
+    case (zero :: UMultiPoly 1 ()) of X -> True; _ -> False
+  , testProperty "X :: UMultiPoly ()" $ once $
+    (X :: UMultiPoly 1 ()) === zero
+
+  , testProperty "Y  :: UMultiPoly Int" $ once $
+    case (monomial (SG.fromTuple (0, 1)) 1 :: UMultiPoly 2 Int) of Y -> True; _ -> False
+  , testProperty "Y  :: UMultiPoly Int" $ once $
+    (Y :: UMultiPoly 2 Int) === monomial (SG.fromTuple (0, 1)) 1
+  , testProperty "Y :: UMultiPoly ()" $ once $
+    case (zero :: UMultiPoly 2 ()) of Y -> True; _ -> False
+  , testProperty "Y :: UMultiPoly ()" $ once $
+    (Y :: UMultiPoly 2 ()) === zero
+
+  , testProperty "Z  :: UMultiPoly Int" $ once $
+    case (monomial (SG.fromTuple (0, 0, 1)) 1 :: UMultiPoly 3 Int) of Z -> True; _ -> False
+  , testProperty "Z  :: UMultiPoly Int" $ once $
+    (Z :: UMultiPoly 3 Int) === monomial (SG.fromTuple (0, 0, 1)) 1
+  , testProperty "Z :: UMultiPoly ()" $ once $
+    case (zero :: UMultiPoly 3 ()) of Z -> True; _ -> False
+  , testProperty "Z :: UMultiPoly ()" $ once $
+    (Z :: UMultiPoly 3 ()) === zero
   ]
