@@ -35,6 +35,7 @@ library
   other-modules:
     Data.Poly.Internal.Dense
     Data.Poly.Internal.Dense.Field
+    Data.Poly.Internal.Dense.DFT
     Data.Poly.Internal.Dense.GcdDomain
     Data.Poly.Internal.PolyOverField
     Data.Poly.Internal.Sparse
@@ -58,6 +59,7 @@ test-suite poly-tests
   other-modules:
     Dense
     DenseLaurent
+    DFT
     Multi
     Orthogonal
     Quaternion

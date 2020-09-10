@@ -24,15 +24,21 @@ module Data.Poly.Semiring
   , deriv
   , integral
   , PolyOverField(..)
+  -- * Discrete Fourier transform
+  , dft
+  , inverseDft
+  , dftMult
   ) where
 
+import Data.Bits
 import Data.Euclidean (Field)
-import Data.Semiring (Semiring)
+import Data.Semiring (Semiring(..))
 import qualified Data.Vector.Generic as G
 
 import Data.Poly.Internal.Dense (Poly(..), VPoly, UPoly, leading)
 import qualified Data.Poly.Internal.Dense as Dense
 import Data.Poly.Internal.Dense.Field ()
+import Data.Poly.Internal.Dense.DFT
 import Data.Poly.Internal.Dense.GcdDomain ()
 import Data.Poly.Internal.PolyOverField
 
@@ -90,3 +96,27 @@ deriv = Dense.deriv'
 -- 1.0 * X^3 + 0.0 * X^2 + 3.0 * X + 0.0
 integral :: (Eq a, Field a, G.Vector v a) => Poly v a -> Poly v a
 integral = Dense.integral'
+
+-- | Multiplication of polynomials using
+-- <https://en.wikipedia.org/wiki/Fast_Fourier_transform discrete Fourier transform>.
+-- It could be faster than '(*)' for large polynomials
+-- if multiplication of coefficients is particularly expensive.
+dftMult
+  :: (Eq a, Field a, G.Vector v a)
+  => (Int -> a) -- ^ mapping from \( N = 2^n \) to a primitive root \( \sqrt[N]{1} \)
+  -> Poly v a
+  -> Poly v a
+  -> Poly v a
+dftMult getPrimRoot (Poly xs) (Poly ys) =
+  toPoly $ inverseDft primRoot $ G.zipWith times (dft primRoot xs') (dft primRoot ys')
+  where
+    nextPowerOf2 0 = 1
+    nextPowerOf2 1 = 1
+    nextPowerOf2 x = 1 `unsafeShiftL` (finiteBitSize x - countLeadingZeros (x - 1))
+
+    padTo l vs = G.generate l (\k -> if k < G.length vs then vs G.! k else zero)
+
+    zl = nextPowerOf2 (G.length xs + G.length ys)
+    xs' = padTo zl xs
+    ys' = padTo zl ys
+    primRoot = getPrimRoot zl
