@@ -10,7 +10,9 @@ module SparseLaurent
   ( testSuite
   ) where
 
-import Prelude hiding (gcd, quotRem, rem)
+import Prelude hiding (gcd, quotRem, quot, rem)
+import Control.Exception
+import Data.Either
 import Data.Euclidean (Euclidean(..), GcdDomain(..), Field)
 import Data.Int
 import qualified Data.Poly.Sparse
@@ -41,6 +43,7 @@ instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a)) => Arbitrary (Sho
 testSuite :: TestTree
 testSuite = testGroup "SparseLaurent"
   [ otherTests
+  , divideByZeroTests
   , lawsTests
   , evalTests
   , derivTests
@@ -125,6 +128,13 @@ otherTestGroup _ =
     \(xs :: ULaurent a) -> uncurry toLaurent (unLaurent xs) === xs
   ]
 
+divideByZeroTests :: TestTree
+divideByZeroTests = testGroup "divideByZero"
+  [ testProperty "divide"  $ testProp divide
+  ]
+  where
+    testProp f xs = ioProperty ((== Left DivideByZero) <$> try (evaluate (xs `f` (0 :: VLaurent Rational))))
+
 evalTests :: TestTree
 evalTests = testGroup "eval" $ concat
   [ evalTestGroup  (Proxy :: Proxy (Laurent V.Vector Rational))
@@ -192,4 +202,8 @@ patternTests = testGroup "pattern"
     (X :: ULaurent ()) === zero
   , testProperty "X^-k" $
     \k -> (X^-k :: ULaurent Int) === monomial (- k) 1
+  , testProperty "^-" $
+    \(p :: ULaurent Int) k -> case p of
+      X -> property True
+      _ -> ioProperty (isLeft <$> (try (evaluate (p^-k)) :: IO (Either PatternMatchFail (ULaurent Int))))
   ]

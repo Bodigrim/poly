@@ -45,9 +45,8 @@ instance (Eq a, Ring a, GcdDomain a, Eq (v (Word, a)), G.Vector v (Word, a)) => 
     | G.null (unPoly ys) = xs
     | G.length (unPoly xs) == 1 = gcdSingleton (G.unsafeHead (unPoly xs)) ys
     | G.length (unPoly ys) == 1 = gcdSingleton (G.unsafeHead (unPoly ys)) xs
-    | otherwise = maybe err (times xy) (divide zs (monomial' 0 (content zs)))
+    | otherwise = times xy (divide' zs (monomial' 0 (content zs)))
       where
-        err = error "gcd: violated internal invariant"
         zs = gcdHelper xs ys
         xy = monomial' 0 (gcd (content xs) (content ys))
 

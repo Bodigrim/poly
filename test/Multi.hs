@@ -14,7 +14,8 @@ module Multi
 
 import Prelude hiding (gcd, quotRem, rem)
 import Control.Arrow
-import Data.Euclidean (GcdDomain)
+import Control.Exception
+import Data.Euclidean (GcdDomain(..))
 import Data.Finite
 import Data.Function
 import Data.Int
@@ -22,7 +23,7 @@ import Data.List (groupBy, sortOn)
 import Data.Mod
 import Data.Poly.Sparse.Multi
 import Data.Proxy
-import Data.Semiring (Semiring, zero)
+import Data.Semiring (Semiring(..))
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed as U
@@ -63,6 +64,7 @@ testSuite :: TestTree
 testSuite = testGroup "Multi"
   [ arithmeticTests
   , otherTests
+  , divideByZeroTests
   , lawsTests
   , evalTests
   , derivTests
@@ -185,6 +187,13 @@ otherTestGroup _ =
 
 monomialRef :: Num a => t -> a -> [(t, a)]
 monomialRef p c = [(p, c)]
+
+divideByZeroTests :: TestTree
+divideByZeroTests = testGroup "divideByZero"
+  [ testProperty "divide"  $ testProp divide
+  ]
+  where
+    testProp f xs = ioProperty ((== Left DivideByZero) <$> try (evaluate (xs `f` (0 :: VMultiPoly 3 Rational))))
 
 evalTests :: TestTree
 evalTests = testGroup "eval" $ concat

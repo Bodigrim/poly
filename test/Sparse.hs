@@ -12,7 +12,8 @@ module Sparse
   , ShortPoly(..)
   ) where
 
-import Prelude hiding (gcd, quotRem, rem)
+import Prelude hiding (gcd, quotRem, quot, rem)
+import Control.Exception
 import Data.Euclidean (Euclidean(..), GcdDomain(..))
 import Data.Function
 import Data.Int
@@ -21,7 +22,7 @@ import Data.Mod
 import Data.Poly.Sparse
 import qualified Data.Poly.Sparse.Semiring as S
 import Data.Proxy
-import Data.Semiring (Semiring, zero)
+import Data.Semiring (Semiring(..))
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed as U
@@ -46,6 +47,7 @@ testSuite :: TestTree
 testSuite = testGroup "Sparse"
   [ arithmeticTests
   , otherTests
+  , divideByZeroTests
   , lawsTests
   , evalTests
   , derivTests
@@ -181,6 +183,17 @@ otherTestGroup _ =
 
 monomialRef :: Num a => Word -> a -> [(Word, a)]
 monomialRef p c = [(p, c)]
+
+divideByZeroTests :: TestTree
+divideByZeroTests = testGroup "divideByZero"
+  [ testProperty "quotRem" $ testProp ((uncurry (+) .) . quotRem)
+  , testProperty "quot"    $ testProp quot
+  , testProperty "rem"     $ testProp rem
+  , testProperty "divide"  $ testProp divide
+  , testProperty "degree"  $ once $ degree (0 :: VPoly Rational) === 0
+  ]
+  where
+    testProp f xs = ioProperty ((== Left DivideByZero) <$> try (evaluate (xs `f` (0 :: VPoly Rational))))
 
 evalTests :: TestTree
 evalTests = testGroup "eval" $ concat

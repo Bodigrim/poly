@@ -35,6 +35,7 @@ module Data.Poly.Sparse.Laurent
 import Prelude hiding (quotRem, quot, rem, gcd)
 import Control.Arrow (first)
 import Control.DeepSeq (NFData(..))
+import Control.Exception
 import Data.Euclidean (GcdDomain(..), Euclidean(..), Field)
 import Data.List (intersperse)
 import Data.Ord
@@ -271,7 +272,7 @@ var
   -> Int
   -> Laurent v a
 X^-n = monomial (negate n) one
-_^-_ = error "(^-) can be applied only to X"
+_^-_ = throw $ PatternMatchFail "(^-) can be applied only to X"
 
 instance (Eq a, Ring a, GcdDomain a, Eq (v (Word, a)), G.Vector v (Word, a)) => GcdDomain (Laurent v a) where
   divide (Laurent off1 poly1) (Laurent off2 poly2) =

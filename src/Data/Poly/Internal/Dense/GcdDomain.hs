@@ -63,12 +63,8 @@ gcdNonEmpty xs ys = runST $ do
     a <- MG.unsafeRead zs' (lenZs - 1)
     z <- go a (lenZs - 1)
 
-    let err = error "gcdNonEmpty: violated internal invariant"
     forM_ [0 .. lenZs - 1] $ \i ->
-      MG.unsafeModify
-        zs'
-        (\c -> maybe err (`times` xy) (c `divide` z))
-        i
+      MG.unsafeModify zs'((`times` xy) . (`divide'` z)) i
 
     G.unsafeFreeze zs'
 {-# INLINABLE gcdNonEmpty #-}

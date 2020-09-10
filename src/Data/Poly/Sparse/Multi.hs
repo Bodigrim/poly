@@ -44,6 +44,7 @@ module Data.Poly.Sparse.Multi
 import Prelude hiding (quot, gcd)
 import Control.Arrow
 import Control.DeepSeq
+import Control.Exception
 import Data.Euclidean (GcdDomain(..), Field, quot)
 import Data.Finite
 import Data.Kind
@@ -331,25 +332,13 @@ var i
 -------------------------------------------------------------------------------
 -- GcdDomain
 
-data IsZeroOrSucc n where
-  IsZero :: n :~: 0 -> IsZeroOrSucc n
-  IsSucc :: KnownNat m => n :~: 1 + m -> IsZeroOrSucc n
+data IsSucc n where
+  IsSucc :: KnownNat m => n :~: 1 + m -> IsSucc n
 
-isZeroOrSucc :: forall n. KnownNat n => IsZeroOrSucc n
-isZeroOrSucc = case natVal (Proxy :: Proxy n) of
-  0 -> IsZero (unsafeCoerce Refl)
-  n -> case someNatVal (n - 1) of
-    SomeNat (_ :: Proxy m) -> IsSucc (unsafeCoerce Refl :: n :~: 1 + m)
-
-trivial :: (Semiring a, G.Vector v (SU.Vector 0 Word, a)) => MultiPoly v 0 a -> a
-trivial (MultiPoly xs)
-  | G.null xs = zero
-  | otherwise = snd (G.head xs)
-
-untrivial :: (Eq a, Semiring a, G.Vector v (SU.Vector 0 Word, a)) => a -> MultiPoly v 0 a
-untrivial x
-  | x == zero = MultiPoly G.empty
-  | otherwise = MultiPoly $ G.singleton (SU.empty, x)
+-- | This is unsafe when n ~ 0.
+isSucc :: forall n. KnownNat n => IsSucc n
+isSucc = case someNatVal (natVal (Proxy :: Proxy n) - 1) of
+  SomeNat (_ :: Proxy m) -> IsSucc (unsafeCoerce Refl :: n :~: 1 + m)
 
 groupOn :: (G.Vector v a, Eq b) => (a -> b) -> v a -> [v a]
 groupOn f = go
@@ -363,29 +352,68 @@ groupOn f = go
           fy = f (G.unsafeHead xs)
           mk = G.findIndex ((/= fy) . f) (G.unsafeTail xs)
 
-separate :: (KnownNat m, n ~ (1 + m), Eq a, Semiring a, Eq (v (SU.Vector m Word, a)), G.Vector v (SU.Vector n Word, a), G.Vector v (SU.Vector m Word, a)) => MultiPoly v n a -> VPoly (MultiPoly v m a)
-separate (MultiPoly xs) = toPoly' $ G.fromList $ map (\vs -> (SU.head (fst (G.unsafeHead vs)), MultiPoly $ G.map (first SU.tail) vs)) $ groupOn (SU.head . fst) xs
+separate
+  :: (KnownNat m, Eq a, Semiring a, Eq (v (SU.Vector m Word, a)), G.Vector v (SU.Vector (1 + m) Word, a), G.Vector v (SU.Vector m Word, a))
+  => MultiPoly v (1 + m) a
+  -> VPoly (MultiPoly v m a)
+separate
+  = toPoly'
+  . G.fromList
+  . map (\vs -> (SU.head (fst (G.unsafeHead vs)), MultiPoly $ G.map (first SU.tail) vs))
+  . groupOn (SU.head . fst)
+  . unMultiPoly
 
-unseparate :: (n ~ (1 + m), G.Vector v (SU.Vector n Word, a), G.Vector v (SU.Vector m Word, a)) => VPoly (MultiPoly v m a) -> MultiPoly v n a
-unseparate (Poly xs) = MultiPoly $ G.concat $ G.toList $ G.map (\(v, MultiPoly vs) -> G.map (first (SU.cons v)) vs) xs
+unseparate
+  :: (G.Vector v (SU.Vector (1 + m) Word, a), G.Vector v (SU.Vector m Word, a))
+  => VPoly (MultiPoly v m a)
+  -> MultiPoly v (1 + m) a
+unseparate
+  = MultiPoly
+  . G.concat
+  . G.toList
+  . G.map (\(v, MultiPoly vs) -> G.map (first (SU.cons v)) vs)
+  . unPoly
 
 #if __GLASGOW_HASKELL__ >= 806
 instance (Eq a, Ring a, GcdDomain a, KnownNat n, forall m. KnownNat m => G.Vector v (SU.Vector m Word, a), forall m. KnownNat m => Eq (v (SU.Vector m Word, a))) => GcdDomain (MultiPoly v n a) where
 #else
 instance (Eq a, Ring a, GcdDomain a, KnownNat n) => GcdDomain (VMultiPoly n a) where
 #endif
-  divide xs ys = case isZeroOrSucc :: IsZeroOrSucc n of
-    IsZero Refl -> untrivial  <$> trivial  xs `divide` trivial  ys
-    IsSucc Refl -> unseparate <$> separate xs `divide` separate ys
+  divide xs ys
+    | G.null (unMultiPoly ys) = throw DivideByZero
+    | G.length (unMultiPoly ys) == 1 = divideSingleton xs (G.unsafeHead (unMultiPoly ys))
+    -- Polynomials of zero variables are necessarily constants,
+    -- so they have been dealt with above.
+    | otherwise = case isSucc :: IsSucc n of
+      IsSucc Refl -> unseparate <$> separate xs `divide` separate ys
   gcd xs ys
     | G.null (unMultiPoly xs) = ys
     | G.null (unMultiPoly ys) = xs
     | G.length (unMultiPoly xs) == 1 = gcdSingleton (G.unsafeHead (unMultiPoly xs)) ys
     | G.length (unMultiPoly ys) == 1 = gcdSingleton (G.unsafeHead (unMultiPoly ys)) xs
-    | otherwise = case isZeroOrSucc :: IsZeroOrSucc n of
-      IsZero Refl -> untrivial  $ trivial  xs `gcd` trivial  ys
+    -- Polynomials of zero variables are necessarily constants,
+    -- so they have been dealt with above.
+    | otherwise = case isSucc :: IsSucc n of
       IsSucc Refl -> unseparate $ separate xs `gcd` separate ys
 
-gcdSingleton :: (Eq a, GcdDomain a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => (SU.Vector n Word, a) -> MultiPoly v n a -> MultiPoly v n a
+divideSingleton
+  :: (Eq a, GcdDomain a, KnownNat n, G.Vector v (SU.Vector n Word, a))
+  => MultiPoly v n a
+  -> (SU.Vector n Word, a)
+  -> Maybe (MultiPoly v n a)
+divideSingleton (MultiPoly pcs) (p, c) = MultiPoly <$> G.mapM divideMonomial pcs
+  where
+    divideMonomial (p', c')
+      | SU.and (SU.zipWith (>=) p' p)
+      , Just c'' <- c' `divide` c
+      = Just (SU.zipWith (-) p' p, c'')
+      | otherwise
+      = Nothing
+
+gcdSingleton
+  :: (Eq a, GcdDomain a, KnownNat n, G.Vector v (SU.Vector n Word, a))
+  => (SU.Vector n Word, a)
+  -> MultiPoly v n a
+  -> MultiPoly v n a
 gcdSingleton pc (MultiPoly pcs) = uncurry monomial $
   G.foldl' (\(accP, accC) (p, c) -> (SU.zipWith min accP p, gcd accC c)) pc pcs
