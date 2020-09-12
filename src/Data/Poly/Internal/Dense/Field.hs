@@ -30,8 +30,11 @@ import qualified Data.Vector.Generic.Mutable as MG
 import Data.Poly.Internal.Dense
 import Data.Poly.Internal.Dense.GcdDomain ()
 
+-- | Note that 'degree' 0 = 0.
 instance (Eq a, Eq (v a), Field a, G.Vector v a) => Euclidean (Poly v a) where
-  degree (Poly xs) = fromIntegral (G.length xs)
+  degree (Poly xs)
+    | G.null xs = 0
+    | otherwise = fromIntegral (G.length xs - 1)
 
   quotRem (Poly xs) (Poly ys) = (toPoly' qs, toPoly' rs)
     where
