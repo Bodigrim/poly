@@ -24,6 +24,7 @@ module Data.Poly.Sparse.Semiring
   , subst
   , deriv
   , integral
+  -- * Conversions
   , denseToSparse
   , sparseToDense
   ) where

@@ -40,6 +40,11 @@ module Data.Poly.Sparse.Multi
   , subst
   , deriv
   , integral
+  -- * Conversions
+  , polyToMultiPoly
+  , multiPolyToPoly
+  , segregate
+  , unsegregate
   ) where
 
 import Prelude hiding (quot, gcd)
@@ -367,22 +372,44 @@ groupOn f = go
           fy = f (G.unsafeHead xs)
           mk = G.findIndex ((/= fy) . f) (G.unsafeTail xs)
 
-separate
+-- | Convert a sparse univariate polynomial
+-- to a multivariate polynomial of one variable.
+polyToMultiPoly
+  :: (G.Vector v (Word, a), G.Vector v (SU.Vector 1 Word, a))
+  => Poly v a
+  -> MultiPoly v 1 a
+polyToMultiPoly = MultiPoly . G.map (first SU.singleton) . unPoly
+
+-- | Convert a multivariate polynomial of one variable
+-- to a sparse univariate polynomial.
+multiPolyToPoly
+  :: (G.Vector v (Word, a), G.Vector v (SU.Vector 1 Word, a))
+  => MultiPoly v 1 a
+  -> Poly v a
+multiPolyToPoly = Poly . G.map (first SU.head) . unMultiPoly
+
+-- | Interpret a multivariate polynomial over 1+/m/ variables
+-- as a univariate polynomial, whose coefficients are
+-- multivariate polynomials over the last /m/ variables.
+segregate
   :: (G.Vector v (SU.Vector (1 + m) Word, a), G.Vector v (SU.Vector m Word, a))
   => MultiPoly v (1 + m) a
   -> VPoly (MultiPoly v m a)
-separate
+segregate
   = Poly
   . G.fromList
   . map (\vs -> (SU.head (fst (G.unsafeHead vs)), MultiPoly $ G.map (first SU.tail) vs))
   . groupOn (SU.head . fst)
   . unMultiPoly
 
-unseparate
+-- | Interpret an univariate polynomials, whose coefficients are
+-- multivariate polynomials over the first /m/ variables,
+-- as a multivatiate polynomial over 1+/m/ variables.
+unsegregate
   :: (G.Vector v (SU.Vector (1 + m) Word, a), G.Vector v (SU.Vector m Word, a))
   => VPoly (MultiPoly v m a)
   -> MultiPoly v (1 + m) a
-unseparate
+unsegregate
   = MultiPoly
   . G.concat
   . G.toList
@@ -400,7 +427,7 @@ instance (Eq a, Ring a, GcdDomain a, KnownNat n) => GcdDomain (VMultiPoly n a) w
     -- Polynomials of zero variables are necessarily constants,
     -- so they have been dealt with above.
     | otherwise = case isSucc :: IsSucc n of
-      IsSucc Refl -> unseparate <$> separate xs `divide` separate ys
+      IsSucc Refl -> unsegregate <$> segregate xs `divide` segregate ys
   gcd xs ys
     | G.null (unMultiPoly xs) = ys
     | G.null (unMultiPoly ys) = xs
@@ -409,7 +436,7 @@ instance (Eq a, Ring a, GcdDomain a, KnownNat n) => GcdDomain (VMultiPoly n a) w
     -- Polynomials of zero variables are necessarily constants,
     -- so they have been dealt with above.
     | otherwise = case isSucc :: IsSucc n of
-      IsSucc Refl -> unseparate $ separate xs `gcd` separate ys
+      IsSucc Refl -> unsegregate $ segregate xs `gcd` segregate ys
 
 divideSingleton
   :: (GcdDomain a, G.Vector v (SU.Vector n Word, a))

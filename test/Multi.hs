@@ -40,6 +40,7 @@ import GHC.TypeLits (KnownNat)
 #endif
 
 import Quaternion
+import Sparse ()
 import TestUtils
 
 instance KnownNat n => Arbitrary (Finite n) where
@@ -69,6 +70,7 @@ testSuite = testGroup "Multi"
   , evalTests
   , derivTests
   , patternTests
+  , conversionTests
   ]
 
 lawsTests :: TestTree
@@ -286,4 +288,16 @@ patternTests = testGroup "pattern"
     case (zero :: UMultiPoly 3 ()) of Z -> True; _ -> False
   , testProperty "Z :: UMultiPoly ()" $ once $
     (Z :: UMultiPoly 3 ()) === zero
+  ]
+
+conversionTests :: TestTree
+conversionTests = testGroup "conversions"
+  [ testProperty "unsegregate . segregate = id" $
+    \(xs :: UMultiPoly 3 Int8) -> xs === unsegregate (segregate xs)
+  , testProperty "segregate . unsegregate = id" $
+    \xs -> xs === segregate (unsegregate xs :: UMultiPoly 3 Int8)
+  , testProperty "multiPolyToPoly . polyToMultiPoly" $
+    \xs -> xs === multiPolyToPoly (polyToMultiPoly xs :: UMultiPoly 1 Int8)
+  , testProperty "polyToMultiPoly . multiPolyToPoly" $
+    \(xs :: UMultiPoly 1 Int8) -> xs === polyToMultiPoly (multiPolyToPoly xs)
   ]

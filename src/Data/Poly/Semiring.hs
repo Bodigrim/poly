@@ -25,6 +25,7 @@ module Data.Poly.Semiring
   , deriv
   , integral
   , PolyOverField(..)
+  -- * Conversions
   , denseToSparse
   , sparseToDense
   -- * Discrete Fourier transform

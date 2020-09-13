@@ -24,6 +24,7 @@ module Data.Poly
   , deriv
   , integral
   , PolyOverField(..)
+  -- * Conversions
   , denseToSparse
   , sparseToDense
   ) where

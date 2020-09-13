@@ -23,6 +23,7 @@ module Data.Poly.Sparse
   , subst
   , deriv
   , integral
+  -- * Conversions
   , denseToSparse
   , sparseToDense
   ) where
