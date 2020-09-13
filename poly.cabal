@@ -33,6 +33,7 @@ library
     Data.Poly.Sparse.Multi
     Data.Poly.Sparse.Semiring
   other-modules:
+    Data.Poly.Internal.Convert
     Data.Poly.Internal.Dense
     Data.Poly.Internal.Dense.Field
     Data.Poly.Internal.Dense.DFT

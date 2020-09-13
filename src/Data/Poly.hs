@@ -24,8 +24,11 @@ module Data.Poly
   , deriv
   , integral
   , PolyOverField(..)
+  , denseToSparse
+  , sparseToDense
   ) where
 
+import Data.Poly.Internal.Convert
 import Data.Poly.Internal.Dense
 import Data.Poly.Internal.Dense.Field ()
 import Data.Poly.Internal.Dense.GcdDomain ()

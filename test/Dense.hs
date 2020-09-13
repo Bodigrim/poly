@@ -49,6 +49,7 @@ testSuite = testGroup "Dense"
   , evalTests
   , derivTests
   , patternTests
+  , conversionTests
   ]
 
 lawsTests :: TestTree
@@ -277,4 +278,12 @@ patternTests = testGroup "pattern"
     case (zero :: UPoly ()) of S.X -> True; _ -> False
   , testProperty "X' :: UPoly ()" $ once $
     (S.X :: UPoly ()) === zero
+  ]
+
+conversionTests :: TestTree
+conversionTests = testGroup "conversions"
+  [ testProperty "sparseToDense . denseToSparse = id" $
+    \(xs :: UPoly Int8) -> xs === sparseToDense (denseToSparse xs)
+  , testProperty "sparseToDense' . denseToSparse' = id" $
+    \(xs :: UPoly Int8) -> xs === S.sparseToDense (S.denseToSparse xs)
   ]

@@ -24,12 +24,16 @@ module Data.Poly.Sparse.Semiring
   , subst
   , deriv
   , integral
+  , denseToSparse
+  , sparseToDense
   ) where
 
 import Data.Euclidean (Field)
-import Data.Semiring (Semiring)
+import Data.Semiring (Semiring(..))
 import qualified Data.Vector.Generic as G
 
+import qualified Data.Poly.Internal.Convert as Convert
+import qualified Data.Poly.Internal.Dense as Dense
 import Data.Poly.Internal.Sparse (Poly(..), VPoly, UPoly, leading)
 import qualified Data.Poly.Internal.Sparse as Sparse
 import Data.Poly.Internal.Sparse.Field ()
@@ -88,3 +92,19 @@ deriv = Sparse.deriv'
 -- 1.0 * X^3 + 3.0 * X
 integral :: (Eq a, Field a, G.Vector v (Word, a)) => Poly v a -> Poly v a
 integral = Sparse.integral'
+
+-- | Convert from dense to sparse polynomials.
+--
+-- >>> :set -XFlexibleContexts
+-- >>> denseToSparse (1 `plus` Data.Poly.X^2) :: Data.Poly.Sparse.UPoly Int
+-- 1 * X^2 + 1
+denseToSparse :: (Eq a, Semiring a, G.Vector v a, G.Vector v (Word, a)) => Dense.Poly v a -> Sparse.Poly v a
+denseToSparse = Convert.denseToSparse'
+
+-- | Convert from sparse to dense polynomials.
+--
+-- >>> :set -XFlexibleContexts
+-- >>> sparseToDense (1 `plus` Data.Poly.Sparse.X^2) :: Data.Poly.UPoly Int
+-- 1 * X^2 + 0 * X + 1
+sparseToDense :: (Semiring a, G.Vector v a, G.Vector v (Word, a)) => Sparse.Poly v a -> Dense.Poly v a
+sparseToDense = Convert.sparseToDense'

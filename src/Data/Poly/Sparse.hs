@@ -23,8 +23,11 @@ module Data.Poly.Sparse
   , subst
   , deriv
   , integral
+  , denseToSparse
+  , sparseToDense
   ) where
 
+import Data.Poly.Internal.Convert
 import Data.Poly.Internal.Sparse
 import Data.Poly.Internal.Sparse.Field ()
 import Data.Poly.Internal.Sparse.GcdDomain ()

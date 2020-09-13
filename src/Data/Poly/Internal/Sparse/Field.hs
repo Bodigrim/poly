@@ -32,7 +32,7 @@ import Data.Poly.Internal.Sparse.GcdDomain ()
 instance (Eq a, Eq (v (Word, a)), Field a, G.Vector v (Word, a)) => Euclidean (Poly v a) where
   degree (Poly xs)
     | G.null xs = 0
-    | otherwise = fromIntegral (fst (G.last xs))
+    | otherwise = fromIntegral (fst (G.unsafeLast xs))
 
   quotRem = quotientRemainder
 
