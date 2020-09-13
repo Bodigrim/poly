@@ -26,9 +26,10 @@
 #endif
 
 module Data.Poly.Sparse.Multi
-  ( MultiPoly(..)
+  ( MultiPoly
   , VMultiPoly
   , UMultiPoly
+  , unMultiPoly
   , toMultiPoly
   , monomial
   , scale
