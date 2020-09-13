@@ -526,7 +526,7 @@ deriv' (Poly xs) = Poly $ derivPoly
 {-# INLINE deriv' #-}
 
 derivPoly
-  :: (G.Vector v (t, a), Ord t, Num t)
+  :: (G.Vector v (t, a))
   => (a -> Bool)
   -> (t -> t)
   -> (t -> a -> a)
@@ -556,36 +556,48 @@ derivPoly p dec mul xs
 --
 -- >>> integral (3 * X^2 + 3) :: UPoly Double
 -- 1.0 * X^3 + 3.0 * X
-integral :: (Eq a, Fractional a, G.Vector v (Word, a)) => Poly v a -> Poly v a
+integral :: (Fractional a, G.Vector v (Word, a)) => Poly v a -> Poly v a
 integral (Poly xs)
   = Poly
   $ G.map (\(p, c) -> (p + 1, c / (fromIntegral p + 1))) xs
 {-# INLINE integral #-}
 
-integral' :: (Eq a, Field a, G.Vector v (Word, a)) => Poly v a -> Poly v a
+integral' :: (Field a, G.Vector v (Word, a)) => Poly v a -> Poly v a
 integral' (Poly xs)
   = Poly
   $ G.map (\(p, c) -> (p + 1, c `quot` Semiring.fromIntegral (p + 1))) xs
 {-# INLINE integral' #-}
 
 -- | Create an identity polynomial.
-pattern X :: (Eq a, Num a, G.Vector v (Word, a), Eq (v (Word, a))) => Poly v a
-pattern X <- ((==) var -> True)
+pattern X :: (Eq a, Num a, G.Vector v (Word, a)) => Poly v a
+pattern X <- (isVar -> True)
   where X = var
 
-var :: forall a v. (Eq a, Num a, G.Vector v (Word, a), Eq (v (Word, a))) => Poly v a
+var :: forall a v. (Eq a, Num a, G.Vector v (Word, a)) => Poly v a
 var
   | (1 :: a) == 0 = Poly G.empty
   | otherwise     = Poly $ G.singleton (1, 1)
 {-# INLINE var #-}
 
+isVar :: forall v a. (Eq a, Num a, G.Vector v (Word, a)) => Poly v a -> Bool
+isVar (Poly xs)
+  | (1 :: a) == 0 = G.null xs
+  | otherwise     = G.length xs == 1 && G.unsafeHead xs == (1, 1)
+{-# INLINE isVar #-}
+
 -- | Create an identity polynomial.
-pattern X' :: (Eq a, Semiring a, G.Vector v (Word, a), Eq (v (Word, a))) => Poly v a
-pattern X' <- ((==) var' -> True)
+pattern X' :: (Eq a, Semiring a, G.Vector v (Word, a)) => Poly v a
+pattern X' <- (isVar' -> True)
   where X' = var'
 
-var' :: forall a v. (Eq a, Semiring a, G.Vector v (Word, a), Eq (v (Word, a))) => Poly v a
+var' :: forall a v. (Eq a, Semiring a, G.Vector v (Word, a)) => Poly v a
 var'
   | (one :: a) == zero = Poly G.empty
   | otherwise          = Poly $ G.singleton (1, one)
 {-# INLINE var' #-}
+
+isVar' :: forall v a. (Eq a, Semiring a, G.Vector v (Word, a)) => Poly v a -> Bool
+isVar' (Poly xs)
+  | (one :: a) == zero = G.null xs
+  | otherwise          = G.length xs == 1 && G.unsafeHead xs == (1, one)
+{-# INLINE isVar' #-}

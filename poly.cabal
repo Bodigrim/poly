@@ -54,7 +54,7 @@ library
     vector-algorithms >= 0.8.0.3,
     vector-sized >= 1.1
   default-language: Haskell2010
-  ghc-options: -Wall -Wcompat
+  ghc-options: -Wall -Wcompat -Wredundant-constraints
 
 test-suite poly-tests
   type: exitcode-stdio-1.0

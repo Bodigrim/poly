@@ -31,7 +31,7 @@ import Data.Poly.Internal.Dense
 import Data.Poly.Internal.Dense.GcdDomain ()
 
 -- | Note that 'degree' 0 = 0.
-instance (Eq a, Eq (v a), Field a, G.Vector v a) => Euclidean (Poly v a) where
+instance (Eq a, Field a, G.Vector v a) => Euclidean (Poly v a) where
   degree (Poly xs)
     | G.null xs = 0
     | otherwise = fromIntegral (G.length xs - 1)

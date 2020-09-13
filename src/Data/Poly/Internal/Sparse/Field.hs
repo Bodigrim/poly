@@ -29,7 +29,7 @@ import Data.Poly.Internal.Sparse
 import Data.Poly.Internal.Sparse.GcdDomain ()
 
 -- | Note that 'degree' 0 = 0.
-instance (Eq a, Eq (v (Word, a)), Field a, G.Vector v (Word, a)) => Euclidean (Poly v a) where
+instance (Eq a, Field a, G.Vector v (Word, a)) => Euclidean (Poly v a) where
   degree (Poly xs)
     | G.null xs = 0
     | otherwise = fromIntegral (fst (G.unsafeLast xs))

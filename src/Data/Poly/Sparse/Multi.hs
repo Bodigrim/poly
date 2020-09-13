@@ -62,7 +62,7 @@ import qualified Data.Vector.Sized as SV
 import GHC.Exts (IsList(..))
 import Unsafe.Coerce
 
-import Data.Poly.Internal.Sparse (Poly(..), VPoly, toPoly', normalize, plusPoly, minusPoly, convolution, scaleInternal, derivPoly)
+import Data.Poly.Internal.Sparse (Poly(..), VPoly, normalize, plusPoly, minusPoly, convolution, scaleInternal, derivPoly)
 import Data.Poly.Internal.Sparse.GcdDomain ()
 
 #if MIN_VERSION_base(4,10,0)
@@ -261,7 +261,7 @@ substitute f (MultiPoly cs) xs = G.foldl' go zero cs
     doMonom = SU.ifoldl' (\acc i p -> acc `times` ((xs `SG.index` i) Semiring.^ p)) one
 {-# INLINE substitute #-}
 
--- | Take a derivative with respect to the i-th variable.
+-- | Take a derivative with respect to the /i/-th variable.
 --
 -- >>> :set -XDataKinds
 -- >>> deriv 0 (X^3 + 3 * Y) :: UMultiPoly 2 Int
@@ -269,7 +269,7 @@ substitute f (MultiPoly cs) xs = G.foldl' go zero cs
 -- >>> deriv 1 (X^3 + 3 * Y) :: UMultiPoly 2 Int
 -- 3
 deriv
-  :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a), KnownNat n)
+  :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a))
   => Finite n
   -> MultiPoly v n a
   -> MultiPoly v n a
@@ -279,7 +279,8 @@ deriv i (MultiPoly xs) = MultiPoly $ derivPoly
   (\ps c -> fromNatural (fromIntegral (ps `SU.index` i)) `times` c)
   xs
 
--- | Compute an indefinite integral of a polynomial by the i-th variable,
+-- | Compute an indefinite integral of a polynomial
+-- by the /i/-th variable,
 -- setting constant term to zero.
 --
 -- >>> :set -XDataKinds
@@ -288,7 +289,7 @@ deriv i (MultiPoly xs) = MultiPoly $ derivPoly
 -- >>> integral 1 (3 * X^2 + 2 * Y) :: UMultiPoly 2 Double
 -- 3.0 * X^2 * Y + 1.0 * Y^2
 integral
-  :: (Eq a, Field a, G.Vector v (SU.Vector n Word, a), KnownNat n)
+  :: (Field a, G.Vector v (SU.Vector n Word, a))
   => Finite n
   -> MultiPoly v n a
   -> MultiPoly v n a
@@ -299,28 +300,28 @@ integral i (MultiPoly xs)
 
 -- | Create a polynomial equal to the first variable.
 pattern X
-  :: (Eq a, Semiring a, KnownNat n, 1 <= n, G.Vector v (SU.Vector n Word, a), Eq (v (SU.Vector n Word, a)))
+  :: (Eq a, Semiring a, KnownNat n, 1 <= n, G.Vector v (SU.Vector n Word, a))
   => MultiPoly v n a
-pattern X <- ((==) (var 0) -> True)
+pattern X <- (isVar 0 -> True)
   where X = var 0
 
 -- | Create a polynomial equal to the second variable.
 pattern Y
-  :: (Eq a, Semiring a, KnownNat n, 2 <= n, G.Vector v (SU.Vector n Word, a), Eq (v (SU.Vector n Word, a)))
+  :: (Eq a, Semiring a, KnownNat n, 2 <= n, G.Vector v (SU.Vector n Word, a))
   => MultiPoly v n a
-pattern Y <- ((==) (var 1) -> True)
+pattern Y <- (isVar 1 -> True)
   where Y = var 1
 
 -- | Create a polynomial equal to the third variable.
 pattern Z
-  :: (Eq a, Semiring a, KnownNat n, 3 <= n, G.Vector v (SU.Vector n Word, a), Eq (v (SU.Vector n Word, a)))
+  :: (Eq a, Semiring a, KnownNat n, 3 <= n, G.Vector v (SU.Vector n Word, a))
   => MultiPoly v n a
-pattern Z <- ((==) (var 2) -> True)
+pattern Z <- (isVar 2 -> True)
   where Z = var 2
 
 var
   :: forall v n a.
-     (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a), Eq (v (SU.Vector n Word, a)))
+     (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
   => Finite n
   -> MultiPoly v n a
 var i
@@ -328,6 +329,19 @@ var i
   | otherwise          = MultiPoly $ G.singleton
     (SU.generate (\j -> if i == j then 1 else 0), one)
 {-# INLINE var #-}
+
+isVar
+  :: forall v n a.
+     (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
+  => Finite n
+  -> MultiPoly v n a
+  -> Bool
+isVar i (MultiPoly xs)
+  | (one :: a) == zero
+  = G.null xs
+  | otherwise
+  = G.length xs == 1 && G.unsafeHead xs == (SU.generate (\j -> if i == j then 1 else 0), one)
+{-# INLINE isVar #-}
 
 -------------------------------------------------------------------------------
 -- GcdDomain
@@ -353,11 +367,11 @@ groupOn f = go
           mk = G.findIndex ((/= fy) . f) (G.unsafeTail xs)
 
 separate
-  :: (KnownNat m, Eq a, Semiring a, Eq (v (SU.Vector m Word, a)), G.Vector v (SU.Vector (1 + m) Word, a), G.Vector v (SU.Vector m Word, a))
+  :: (G.Vector v (SU.Vector (1 + m) Word, a), G.Vector v (SU.Vector m Word, a))
   => MultiPoly v (1 + m) a
   -> VPoly (MultiPoly v m a)
 separate
-  = toPoly'
+  = Poly
   . G.fromList
   . map (\vs -> (SU.head (fst (G.unsafeHead vs)), MultiPoly $ G.map (first SU.tail) vs))
   . groupOn (SU.head . fst)
@@ -397,7 +411,7 @@ instance (Eq a, Ring a, GcdDomain a, KnownNat n) => GcdDomain (VMultiPoly n a) w
       IsSucc Refl -> unseparate $ separate xs `gcd` separate ys
 
 divideSingleton
-  :: (Eq a, GcdDomain a, KnownNat n, G.Vector v (SU.Vector n Word, a))
+  :: (GcdDomain a, G.Vector v (SU.Vector n Word, a))
   => MultiPoly v n a
   -> (SU.Vector n Word, a)
   -> Maybe (MultiPoly v n a)
@@ -411,7 +425,7 @@ divideSingleton (MultiPoly pcs) (p, c) = MultiPoly <$> G.mapM divideMonomial pcs
       = Nothing
 
 gcdSingleton
-  :: (Eq a, GcdDomain a, KnownNat n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, GcdDomain a, G.Vector v (SU.Vector n Word, a))
   => (SU.Vector n Word, a)
   -> MultiPoly v n a
   -> MultiPoly v n a

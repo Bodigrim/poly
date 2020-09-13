@@ -61,7 +61,7 @@ scale :: (Eq a, Semiring a, G.Vector v (Word, a)) => Word -> a -> Poly v a -> Po
 scale = Sparse.scale'
 
 -- | Create an identity polynomial.
-pattern X :: (Eq a, Semiring a, G.Vector v (Word, a), Eq (v (Word, a))) => Poly v a
+pattern X :: (Eq a, Semiring a, G.Vector v (Word, a)) => Poly v a
 pattern X = Sparse.X'
 
 -- | Evaluate at a given point.
@@ -90,7 +90,7 @@ deriv = Sparse.deriv'
 --
 -- >>> integral (3 * X^2 + 3) :: UPoly Double
 -- 1.0 * X^3 + 3.0 * X
-integral :: (Eq a, Field a, G.Vector v (Word, a)) => Poly v a -> Poly v a
+integral :: (Field a, G.Vector v (Word, a)) => Poly v a -> Poly v a
 integral = Sparse.integral'
 
 -- | Convert from dense to sparse polynomials.

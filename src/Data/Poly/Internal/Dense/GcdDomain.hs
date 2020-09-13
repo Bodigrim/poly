@@ -30,7 +30,7 @@ import qualified Data.Vector.Generic.Mutable as MG
 
 import Data.Poly.Internal.Dense
 
-instance (Eq a, Ring a, GcdDomain a, Eq (v a), G.Vector v a) => GcdDomain (Poly v a) where
+instance (Eq a, Ring a, GcdDomain a, G.Vector v a) => GcdDomain (Poly v a) where
   divide (Poly xs) (Poly ys) =
     toPoly' <$> quotient xs ys
 
@@ -41,6 +41,12 @@ instance (Eq a, Ring a, GcdDomain a, Eq (v a), G.Vector v a) => GcdDomain (Poly 
     | G.length ys == 1 = Poly $ G.singleton $ G.foldl' gcd (G.unsafeHead ys) xs
     | otherwise = toPoly' $ gcdNonEmpty xs ys
   {-# INLINE gcd #-}
+
+  lcm x@(Poly xs) y@(Poly ys)
+    | G.null xs || G.null ys = zero
+    | otherwise = (x `divide'` gcd x y) `times` y
+
+  coprime x y = isJust (one `divide` gcd x y)
 
 gcdNonEmpty
   :: (Eq a, Ring a, GcdDomain a, G.Vector v a)
@@ -149,7 +155,7 @@ isZeroM xs = go (MG.length xs)
 {-# INLINE isZeroM #-}
 
 quotient
-  :: (Eq a, Eq (v a), Ring a, GcdDomain a, G.Vector v a)
+  :: (Eq a, Ring a, GcdDomain a, G.Vector v a)
   => v a
   -> v a
   -> Maybe (v a)

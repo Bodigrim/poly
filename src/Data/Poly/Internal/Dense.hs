@@ -328,7 +328,7 @@ monomial' p c
 {-# INLINE monomial' #-}
 
 scaleInternal
-  :: (Eq a, G.Vector v a)
+  :: G.Vector v a
   => a
   -> (a -> a -> a)
   -> Word
@@ -453,23 +453,35 @@ integral' (Poly xs)
 {-# INLINABLE integral' #-}
 
 -- | Create an identity polynomial.
-pattern X :: (Eq a, Num a, G.Vector v a, Eq (v a)) => Poly v a
-pattern X <- ((==) var -> True)
+pattern X :: (Eq a, Num a, G.Vector v a) => Poly v a
+pattern X <- (isVar -> True)
   where X = var
 
-var :: forall a v. (Eq a, Num a, G.Vector v a, Eq (v a)) => Poly v a
+var :: forall a v. (Eq a, Num a, G.Vector v a) => Poly v a
 var
   | (1 :: a) == 0 = Poly G.empty
   | otherwise     = Poly $ G.fromList [0, 1]
 {-# INLINE var #-}
 
+isVar :: forall v a. (Eq a, Num a, G.Vector v a) => Poly v a -> Bool
+isVar (Poly xs)
+  | (1 :: a) == 0 = G.null xs
+  | otherwise     = G.length xs == 2 && xs G.! 0 == 0 && xs G.! 1 == 1
+{-# INLINE isVar #-}
+
 -- | Create an identity polynomial.
-pattern X' :: (Eq a, Semiring a, G.Vector v a, Eq (v a)) => Poly v a
-pattern X' <- ((==) var' -> True)
+pattern X' :: (Eq a, Semiring a, G.Vector v a) => Poly v a
+pattern X' <- (isVar' -> True)
   where X' = var'
 
-var' :: forall a v. (Eq a, Semiring a, G.Vector v a, Eq (v a)) => Poly v a
+var' :: forall a v. (Eq a, Semiring a, G.Vector v a) => Poly v a
 var'
   | (one :: a) == zero = Poly G.empty
   | otherwise          = Poly $ G.fromList [zero, one]
 {-# INLINE var' #-}
+
+isVar' :: forall v a. (Eq a, Semiring a, G.Vector v a) => Poly v a -> Bool
+isVar' (Poly xs)
+  | (one :: a) == zero = G.null xs
+  | otherwise          = G.length xs == 2 && xs G.! 0 == zero && xs G.! 1 == one
+{-# INLINE isVar' #-}

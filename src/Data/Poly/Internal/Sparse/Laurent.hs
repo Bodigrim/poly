@@ -32,7 +32,7 @@ module Data.Poly.Internal.Sparse.Laurent
   , deriv
   ) where
 
-import Prelude hiding (quotRem, quot, rem, gcd)
+import Prelude hiding (quotRem, quot, rem, gcd, lcm)
 import Control.Arrow (first)
 import Control.DeepSeq (NFData(..))
 import Control.Exception
@@ -104,7 +104,7 @@ unLaurent :: Laurent v a -> (Int, Poly v a)
 unLaurent (Laurent off poly) = (off, poly)
 
 -- | Construct 'Laurent' polynomial from an offset and a regular polynomial.
--- One can imagine it as 'Data.Poly.Sparse.scale'', but allowing negative offsets.
+-- One can imagine it as 'Data.Poly.Sparse.Semiring.scale', but allowing negative offsets.
 --
 -- >>> toLaurent 2 (2 * Data.Poly.Sparse.X + 1) :: ULaurent Int
 -- 2 * X^3 + 1 * X^2
@@ -251,15 +251,21 @@ deriv (Laurent off (Poly xs)) =
 {-# INLINE deriv #-}
 
 -- | Create an identity polynomial.
-pattern X :: (Eq a, Semiring a, G.Vector v (Word, a), Eq (v (Word, a))) => Laurent v a
-pattern X <- ((==) var -> True)
+pattern X :: (Eq a, Semiring a, G.Vector v (Word, a)) => Laurent v a
+pattern X <- (isVar -> True)
   where X = var
 
-var :: forall a v. (Eq a, Semiring a, G.Vector v (Word, a), Eq (v (Word, a))) => Laurent v a
+var :: forall a v. (Eq a, Semiring a, G.Vector v (Word, a)) => Laurent v a
 var
   | (one :: a) == zero = Laurent 0 zero
   | otherwise          = Laurent 1 one
 {-# INLINE var #-}
+
+isVar :: forall v a. (Eq a, Semiring a, G.Vector v (Word, a)) => Laurent v a -> Bool
+isVar (Laurent off (Poly xs))
+  | (one :: a) == zero = off == 0 && G.null xs
+  | otherwise          = off == 1 && G.length xs == 1 && G.unsafeHead xs == (0, one)
+{-# INLINE isVar #-}
 
 -- | This operator can be applied only to 'X',
 -- but is instrumental to express Laurent polynomials in mathematical fashion:
@@ -267,14 +273,14 @@ var
 -- >>> X + 2 + 3 * X^-1 :: ULaurent Int
 -- 1 * X + 2 + 3 * X^-1
 (^-)
-  :: (Eq a, Semiring a, G.Vector v (Word, a), Eq (v (Word, a)))
+  :: (Eq a, Semiring a, G.Vector v (Word, a))
   => Laurent v a
   -> Int
   -> Laurent v a
 X^-n = monomial (negate n) one
 _^-_ = throw $ PatternMatchFail "(^-) can be applied only to X"
 
-instance (Eq a, Ring a, GcdDomain a, Eq (v (Word, a)), G.Vector v (Word, a)) => GcdDomain (Laurent v a) where
+instance (Eq a, Ring a, GcdDomain a, G.Vector v (Word, a)) => GcdDomain (Laurent v a) where
   divide (Laurent off1 poly1) (Laurent off2 poly2) =
     toLaurent (off1 - off2) <$> divide poly1 poly2
   {-# INLINE divide #-}
@@ -282,3 +288,11 @@ instance (Eq a, Ring a, GcdDomain a, Eq (v (Word, a)), G.Vector v (Word, a)) => 
   gcd (Laurent _ poly1) (Laurent _ poly2) =
     toLaurent 0 (gcd poly1 poly2)
   {-# INLINE gcd #-}
+
+  lcm (Laurent _ poly1) (Laurent _ poly2) =
+    toLaurent 0 (lcm poly1 poly2)
+  {-# INLINE lcm #-}
+
+  coprime (Laurent _ poly1) (Laurent _ poly2) =
+    coprime poly1 poly2
+  {-# INLINE coprime #-}

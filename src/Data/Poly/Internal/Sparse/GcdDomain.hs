@@ -27,7 +27,7 @@ import qualified Data.Vector.Generic as G
 
 import Data.Poly.Internal.Sparse
 
-instance (Eq a, Ring a, GcdDomain a, Eq (v (Word, a)), G.Vector v (Word, a)) => GcdDomain (Poly v a) where
+instance (Eq a, Ring a, GcdDomain a, G.Vector v (Word, a)) => GcdDomain (Poly v a) where
   divide xs ys = case leading ys of
     Nothing -> throw DivideByZero
     Just (yp, yc) -> case leading xs of
@@ -50,7 +50,13 @@ instance (Eq a, Ring a, GcdDomain a, Eq (v (Word, a)), G.Vector v (Word, a)) => 
         zs = gcdHelper xs ys
         xy = monomial' 0 (gcd (content xs) (content ys))
 
-content :: (Eq a, GcdDomain a, G.Vector v (Word, a)) => Poly v a -> a
+  lcm x@(Poly xs) y@(Poly ys)
+    | G.null xs || G.null ys = zero
+    | otherwise = (x `divide'` gcd x y) `times` y
+
+  coprime x y = isJust (one `divide` gcd x y)
+
+content :: (GcdDomain a, G.Vector v (Word, a)) => Poly v a -> a
 content (Poly ts) = G.foldl' (\acc (_, t) -> gcd acc t) zero ts
 
 gcdSingleton

@@ -70,7 +70,7 @@ scale :: (Eq a, Semiring a, G.Vector v a) => Word -> a -> Poly v a -> Poly v a
 scale = Dense.scale'
 
 -- | Create an identity polynomial.
-pattern X :: (Eq a, Semiring a, G.Vector v a, Eq (v a)) => Poly v a
+pattern X :: (Eq a, Semiring a, G.Vector v a) => Poly v a
 pattern X = Dense.X'
 
 -- | Evaluate at a given point.
