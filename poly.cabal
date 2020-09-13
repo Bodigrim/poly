@@ -38,10 +38,12 @@ library
     Data.Poly.Internal.Dense.Field
     Data.Poly.Internal.Dense.DFT
     Data.Poly.Internal.Dense.GcdDomain
+    Data.Poly.Internal.Dense.Laurent
     Data.Poly.Internal.PolyOverField
     Data.Poly.Internal.Sparse
     Data.Poly.Internal.Sparse.Field
     Data.Poly.Internal.Sparse.GcdDomain
+    Data.Poly.Internal.Sparse.Laurent
   build-depends:
     base >= 4.9 && < 5,
     deepseq >= 1.1 && < 1.5,
