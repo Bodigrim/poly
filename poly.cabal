@@ -39,7 +39,6 @@ library
     Data.Poly.Internal.Dense.DFT
     Data.Poly.Internal.Dense.GcdDomain
     Data.Poly.Internal.Dense.Laurent
-    Data.Poly.Internal.PolyOverField
     Data.Poly.Internal.Sparse
     Data.Poly.Internal.Sparse.Field
     Data.Poly.Internal.Sparse.GcdDomain

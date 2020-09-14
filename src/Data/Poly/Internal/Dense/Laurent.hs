@@ -26,7 +26,6 @@ module Data.Poly.Internal.Dense.Laurent
   , eval
   , subst
   , deriv
-  , LaurentOverField(..)
   ) where
 
 import Prelude hiding (quotRem, quot, rem, gcd, lcm)
@@ -45,7 +44,6 @@ import Data.Poly.Internal.Dense (Poly(..))
 import qualified Data.Poly.Internal.Dense as Dense
 import Data.Poly.Internal.Dense.Field ()
 import Data.Poly.Internal.Dense.GcdDomain ()
-import Data.Poly.Internal.PolyOverField (LaurentOverField(..))
 
 -- | <https://en.wikipedia.org/wiki/Laurent_polynomial Laurent polynomials>
 -- of one variable with coefficients from @a@,

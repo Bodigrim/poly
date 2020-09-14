@@ -24,7 +24,6 @@ module Data.Poly.Semiring
   , subst
   , deriv
   , integral
-  , PolyOverField(..)
   -- * Conversions
   , denseToSparse
   , sparseToDense
@@ -45,7 +44,6 @@ import qualified Data.Poly.Internal.Dense as Dense
 import Data.Poly.Internal.Dense.Field ()
 import Data.Poly.Internal.Dense.DFT
 import Data.Poly.Internal.Dense.GcdDomain ()
-import Data.Poly.Internal.PolyOverField
 import qualified Data.Poly.Internal.Sparse as Sparse
 
 -- | Make 'Poly' from a vector of coefficients

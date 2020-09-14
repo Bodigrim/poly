@@ -23,7 +23,6 @@ module Data.Poly
   , subst
   , deriv
   , integral
-  , PolyOverField(..)
   -- * Conversions
   , denseToSparse
   , sparseToDense
@@ -33,4 +32,3 @@ import Data.Poly.Internal.Convert
 import Data.Poly.Internal.Dense
 import Data.Poly.Internal.Dense.Field ()
 import Data.Poly.Internal.Dense.GcdDomain ()
-import Data.Poly.Internal.PolyOverField

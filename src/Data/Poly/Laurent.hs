@@ -23,7 +23,6 @@ module Data.Poly.Laurent
   , eval
   , subst
   , deriv
-  , LaurentOverField(..)
   ) where
 
 import Data.Poly.Internal.Dense.Laurent
