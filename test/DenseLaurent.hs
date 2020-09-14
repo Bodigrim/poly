@@ -3,8 +3,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-
 module DenseLaurent
   ( testSuite
   ) where
@@ -12,7 +10,7 @@ module DenseLaurent
 import Prelude hiding (gcd, quotRem, quot, rem)
 import Control.Exception
 import Data.Either
-import Data.Euclidean (Euclidean(..), GcdDomain(..), Field)
+import Data.Euclidean (GcdDomain(..), Field)
 import Data.Int
 import qualified Data.Poly
 import Data.Poly.Laurent
@@ -24,20 +22,8 @@ import qualified Data.Vector.Unboxed as U
 import Test.Tasty
 import Test.Tasty.QuickCheck hiding (scale, numTests)
 
-import Dense (ShortPoly(..))
 import Quaternion
 import TestUtils
-
-instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (Laurent v a) where
-  arbitrary = toLaurent <$> ((`rem` 10) <$> arbitrary) <*> arbitrary
-  shrink = fmap (uncurry toLaurent) . shrink . unLaurent
-
-newtype ShortLaurent a = ShortLaurent { unShortLaurent :: a }
-  deriving (Eq, Show, Semiring, GcdDomain)
-
-instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (ShortLaurent (Laurent v a)) where
-  arbitrary = (ShortLaurent .) . toLaurent <$> ((`rem` 10) <$> arbitrary) <*> (unShortPoly <$> arbitrary)
-  shrink = fmap (ShortLaurent . uncurry toLaurent . fmap unShortPoly) . shrink . fmap ShortPoly . unLaurent . unShortLaurent
 
 testSuite :: TestTree
 testSuite = testGroup "DenseLaurent"
@@ -78,8 +64,8 @@ numTests =
 
 gcdDomainTests :: [TestTree]
 gcdDomainTests =
-  [ myGcdDomainLaws (Proxy :: Proxy (ShortLaurent (VLaurent Integer)))
-  , myGcdDomainLaws (Proxy :: Proxy (ShortLaurent (VLaurent Rational)))
+  [ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (VLaurent Integer)))
+  , myGcdDomainLaws (Proxy :: Proxy (ShortPoly (VLaurent Rational)))
   ]
 
 showTests :: [TestTree]

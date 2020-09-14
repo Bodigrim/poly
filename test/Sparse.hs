@@ -5,8 +5,6 @@
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE UndecidableInstances       #-}
 
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-
 module Sparse
   ( testSuite
   , ShortPoly(..)
@@ -26,22 +24,12 @@ import Data.Semiring (Semiring(..))
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed as U
+import qualified Data.Vector.Unboxed.Sized as SU
 import Test.Tasty
 import Test.Tasty.QuickCheck hiding (scale, numTests)
 
 import Quaternion
 import TestUtils
-
-instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a)) => Arbitrary (Poly v a) where
-  arbitrary = S.toPoly . G.fromList <$> arbitrary
-  shrink = fmap (S.toPoly . G.fromList) . shrink . G.toList . unPoly
-
-newtype ShortPoly a = ShortPoly { unShortPoly :: a }
-  deriving (Eq, Show, Semiring, GcdDomain, Euclidean)
-
-instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a)) => Arbitrary (ShortPoly (Poly v a)) where
-  arbitrary = ShortPoly . S.toPoly . G.fromList . (\xs -> take (length xs `mod` 5) xs) <$> arbitrary
-  shrink = fmap (ShortPoly . S.toPoly . G.fromList) . shrink . G.toList . unPoly . unShortPoly
 
 testSuite :: TestTree
 testSuite = testGroup "Sparse"
@@ -205,7 +193,7 @@ evalTests = testGroup "eval" $ concat
 
 evalTestGroup
   :: forall v a.
-     (Eq a, Num a, Semiring a, Arbitrary a, Show a, Eq (v (Word, a)), Show (v (Word, a)), G.Vector v (Word, a))
+     (Eq a, Num a, Semiring a, Arbitrary a, Show a, Eq (v (Word, a)), Show (v (Word, a)), G.Vector v (Word, a), G.Vector v (SU.Vector 1 Word, a))
   => Proxy (Poly v a)
   -> [TestTree]
 evalTestGroup _ =
@@ -236,7 +224,7 @@ evalTestGroup _ =
 
 substTestGroup
   :: forall v a.
-     (Eq a, Num a, Semiring a, Arbitrary a, Show a, Eq (v (Word, a)), Show (v (Word, a)), G.Vector v (Word, a))
+     (Eq a, Num a, Semiring a, Arbitrary a, Show a, Eq (v (SU.Vector 1 Word, a)), Show (v (SU.Vector 1 Word, a)), G.Vector v (Word, a), G.Vector v (SU.Vector 1 Word, a))
   => Proxy (Poly v a)
   -> [TestTree]
 substTestGroup _ =

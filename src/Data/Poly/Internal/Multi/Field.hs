@@ -1,13 +1,14 @@
 -- |
--- Module:      Data.Poly.Internal.Sparse.Field
+-- Module:      Data.Poly.Internal.Multi.Field
 -- Copyright:   (c) 2019 Andrew Lelechenko
 -- Licence:     BSD3
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
 --
--- GcdDomain for Field underlying
+-- Euclidean for Field underlying
 --
 
 {-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
@@ -16,28 +17,29 @@
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Data.Poly.Internal.Sparse.Field () where
+module Data.Poly.Internal.Multi.Field () where
 
 import Prelude hiding (quotRem, quot, rem, gcd)
 import Control.Arrow
 import Control.Exception
 import Data.Euclidean (Euclidean(..), Field)
-import Data.Semiring (minus, plus, times, zero)
+import Data.Semiring (Semiring(..), minus)
 import qualified Data.Vector.Generic as G
+import qualified Data.Vector.Unboxed.Sized as SU
 
-import Data.Poly.Internal.Sparse
-import Data.Poly.Internal.Sparse.GcdDomain ()
+import Data.Poly.Internal.Multi
+import Data.Poly.Internal.Multi.GcdDomain ()
 
 -- | Note that 'degree' 0 = 0.
-instance (Eq a, Field a, G.Vector v (Word, a)) => Euclidean (Poly v a) where
-  degree (Poly xs)
+instance (Eq a, Field a, G.Vector v (SU.Vector 1 Word, a)) => Euclidean (Poly v a) where
+  degree (MultiPoly xs)
     | G.null xs = 0
-    | otherwise = fromIntegral (fst (G.unsafeLast xs))
+    | otherwise = fromIntegral (SU.head (fst (G.unsafeLast xs)))
 
   quotRem = quotientRemainder
 
 quotientRemainder
-  :: (Eq a, Field a, G.Vector v (Word, a))
+  :: (Eq a, Field a, G.Vector v (SU.Vector 1 Word, a))
   => Poly v a
   -> Poly v a
   -> (Poly v a, Poly v a)
@@ -52,5 +54,5 @@ quotientRemainder ts ys = case leading ys of
           EQ -> (zs, xs')
           GT -> first (`plus` zs) $ go xs'
           where
-            zs = Poly $ G.singleton (xp `minus` yp, xc `quot` yc)
+            zs = MultiPoly $ G.singleton (SU.singleton (xp `minus` yp), xc `quot` yc)
             xs' = xs `minus` zs `times` ys

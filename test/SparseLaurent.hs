@@ -1,10 +1,9 @@
+{-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE UndecidableInstances       #-}
-
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module SparseLaurent
   ( testSuite
@@ -13,7 +12,7 @@ module SparseLaurent
 import Prelude hiding (gcd, quotRem, quot, rem)
 import Control.Exception
 import Data.Either
-import Data.Euclidean (Euclidean(..), GcdDomain(..), Field)
+import Data.Euclidean (GcdDomain(..), Field)
 import Data.Int
 import qualified Data.Poly.Sparse
 import Data.Poly.Sparse.Laurent
@@ -22,23 +21,12 @@ import Data.Semiring (Semiring(..))
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed as U
+import qualified Data.Vector.Unboxed.Sized as SU
 import Test.Tasty
 import Test.Tasty.QuickCheck hiding (scale, numTests)
 
 import Quaternion
-import Sparse (ShortPoly(..))
 import TestUtils
-
-instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a)) => Arbitrary (Laurent v a) where
-  arbitrary = toLaurent <$> ((`rem` 10) <$> arbitrary) <*> arbitrary
-  shrink = fmap (uncurry toLaurent) . shrink . unLaurent
-
-newtype ShortLaurent a = ShortLaurent { unShortLaurent :: a }
-  deriving (Eq, Show, Semiring, GcdDomain)
-
-instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a)) => Arbitrary (ShortLaurent (Laurent v a)) where
-  arbitrary = (ShortLaurent .) . toLaurent <$> ((`rem` 10) <$> arbitrary) <*> (unShortPoly <$> arbitrary)
-  shrink = fmap (ShortLaurent . uncurry toLaurent . fmap unShortPoly) . shrink . fmap ShortPoly . unLaurent . unShortLaurent
 
 testSuite :: TestTree
 testSuite = testGroup "SparseLaurent"
@@ -81,9 +69,9 @@ numTests =
 
 gcdDomainTests :: [TestTree]
 gcdDomainTests =
-  [ myGcdDomainLaws (Proxy :: Proxy (ShortLaurent (Laurent V.Vector Integer)))
+  [ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (Laurent V.Vector Integer)))
   , tenTimesLess
-  $ myGcdDomainLaws (Proxy :: Proxy (ShortLaurent (Laurent V.Vector Rational)))
+  $ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (Laurent V.Vector Rational)))
   ]
 
 isListTests :: [TestTree]
@@ -143,7 +131,7 @@ evalTests = testGroup "eval" $ concat
 
 evalTestGroup
   :: forall v a.
-     (Eq a, Field a, Arbitrary a, Show a, Eq (v (Word, a)), Show (v (Word, a)), G.Vector v (Word, a))
+     (Eq a, Field a, Arbitrary a, Show a, Eq (v (Word, a)), Show (v (Word, a)), G.Vector v (Word, a), G.Vector v (SU.Vector 1 Word, a))
   => Proxy (Laurent v a)
   -> [TestTree]
 evalTestGroup _ =
@@ -162,7 +150,7 @@ evalTestGroup _ =
 
 substTestGroup
   :: forall v a.
-     (Eq a, Num a, Semiring a, Arbitrary a, Show a, Eq (v (Word, a)), Show (v (Word, a)), G.Vector v (Word, a))
+     (Eq a, Num a, Semiring a, Arbitrary a, Show a, Eq (v (SU.Vector 1 Word, a)), Show (v (Word, a)), G.Vector v (Word, a), G.Vector v (SU.Vector 1 Word, a))
   => Proxy (Laurent v a)
   -> [TestTree]
 substTestGroup _ =

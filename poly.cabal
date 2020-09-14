@@ -26,23 +26,30 @@ library
   exposed-modules:
     Data.Poly
     Data.Poly.Laurent
-    Data.Poly.Orthogonal
     Data.Poly.Semiring
+    Data.Poly.Orthogonal
+
     Data.Poly.Sparse
     Data.Poly.Sparse.Laurent
-    Data.Poly.Sparse.Multi
     Data.Poly.Sparse.Semiring
+
+    Data.Poly.Multi
+    Data.Poly.Multi.Laurent
+    Data.Poly.Multi.Semiring
   other-modules:
     Data.Poly.Internal.Convert
+
     Data.Poly.Internal.Dense
     Data.Poly.Internal.Dense.Field
     Data.Poly.Internal.Dense.DFT
     Data.Poly.Internal.Dense.GcdDomain
     Data.Poly.Internal.Dense.Laurent
-    Data.Poly.Internal.Sparse
-    Data.Poly.Internal.Sparse.Field
-    Data.Poly.Internal.Sparse.GcdDomain
-    Data.Poly.Internal.Sparse.Laurent
+
+    Data.Poly.Internal.Multi
+    Data.Poly.Internal.Multi.Core
+    Data.Poly.Internal.Multi.Field
+    Data.Poly.Internal.Multi.GcdDomain
+    Data.Poly.Internal.Multi.Laurent
   build-depends:
     base >= 4.9 && < 5,
     deepseq >= 1.1 && < 1.5,

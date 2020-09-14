@@ -6,22 +6,17 @@
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE UndecidableInstances       #-}
 
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-
 module Multi
   ( testSuite
   ) where
 
 import Prelude hiding (gcd, quotRem, rem)
-import Control.Arrow
 import Control.Exception
 import Data.Euclidean (GcdDomain(..))
-import Data.Finite
 import Data.Function
 import Data.Int
 import Data.List (groupBy, sortOn)
 import Data.Mod
-import Data.Poly.Sparse.Multi
 import Data.Proxy
 import Data.Semiring (Semiring(..))
 import qualified Data.Vector as V
@@ -33,33 +28,10 @@ import qualified Data.Vector.Unboxed.Sized as SU
 import Test.Tasty
 import Test.Tasty.QuickCheck hiding (scale, numTests)
 
-#if MIN_VERSION_base(4,10,0)
-import GHC.TypeNats (KnownNat)
-#else
-import GHC.TypeLits (KnownNat)
-#endif
+import Data.Poly.Multi.Semiring
 
 import Quaternion
-import Sparse ()
 import TestUtils
-
-instance KnownNat n => Arbitrary (Finite n) where
-  arbitrary = elements finites
-
-instance (Arbitrary a, KnownNat n, G.Vector v a) => Arbitrary (SG.Vector v n a) where
-  arbitrary = SG.replicateM arbitrary
-  shrink vs = [ vs SG.// [(i, x)] | i <- finites, x <- shrink (SG.index vs i) ]
-
-instance (Eq a, Semiring a, Arbitrary a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Arbitrary (MultiPoly v n a) where
-  arbitrary = toMultiPoly . G.fromList <$> arbitrary
-  shrink = fmap (toMultiPoly . G.fromList) . shrink . G.toList . unMultiPoly
-
-newtype ShortMultiPoly a = ShortMultiPoly { unShortMultiPoly :: a }
-  deriving (Eq, Show, Semiring, GcdDomain)
-
-instance (Eq a, Semiring a, Arbitrary a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Arbitrary (ShortMultiPoly (MultiPoly v n a)) where
-  arbitrary = ShortMultiPoly . toMultiPoly . G.fromList . (\xs -> take (length xs `mod` 4) (map (first (SU.map (`mod` 3))) xs)) <$> arbitrary
-  shrink = fmap (ShortMultiPoly . toMultiPoly . G.fromList) . shrink . G.toList . unMultiPoly . unShortMultiPoly
 
 testSuite :: TestTree
 testSuite = testGroup "Multi"
@@ -104,11 +76,11 @@ numTests =
 
 gcdDomainTests :: [TestTree]
 gcdDomainTests =
-  [ myGcdDomainLaws (Proxy :: Proxy (ShortMultiPoly (VMultiPoly 3 Integer)))
+  [ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (VMultiPoly 3 Integer)))
   , tenTimesLess
-  $ myGcdDomainLaws (Proxy :: Proxy (ShortMultiPoly (VMultiPoly 3 (Mod 3))))
+  $ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (VMultiPoly 3 (Mod 3))))
   , tenTimesLess
-  $ myGcdDomainLaws (Proxy :: Proxy (ShortMultiPoly (VMultiPoly 3 Rational)))
+  $ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (VMultiPoly 3 Rational)))
   ]
 
 isListTests :: [TestTree]
@@ -296,8 +268,4 @@ conversionTests = testGroup "conversions"
     \(xs :: UMultiPoly 3 Int8) -> xs === unsegregate (segregate xs)
   , testProperty "segregate . unsegregate = id" $
     \xs -> xs === segregate (unsegregate xs :: UMultiPoly 3 Int8)
-  , testProperty "multiPolyToPoly . polyToMultiPoly" $
-    \xs -> xs === multiPolyToPoly (polyToMultiPoly xs :: UMultiPoly 1 Int8)
-  , testProperty "polyToMultiPoly . multiPolyToPoly" $
-    \(xs :: UMultiPoly 1 Int8) -> xs === polyToMultiPoly (multiPolyToPoly xs)
   ]

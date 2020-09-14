@@ -1,12 +1,14 @@
 -- |
--- Module:      Data.Poly.Internal.Sparse.Laurent
+-- Module:      Data.Poly.Internal.Multi.Laurent
 -- Copyright:   (c) 2020 Andrew Lelechenko
 -- Licence:     BSD3
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
 --
--- Sparse <https://en.wikipedia.org/wiki/Laurent_polynomial Laurent polynomials>.
+-- Multivariate sparse
+-- <https://en.wikipedia.org/wiki/Laurent_polynomial Laurent polynomials>.
 --
 
+{-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE PatternSynonyms            #-}
@@ -16,7 +18,7 @@
 {-# LANGUAGE UndecidableInstances       #-}
 {-# LANGUAGE ViewPatterns               #-}
 
-module Data.Poly.Internal.Sparse.Laurent
+module Data.Poly.Internal.Multi.Laurent
   ( Laurent
   , VLaurent
   , ULaurent
@@ -43,13 +45,15 @@ import Data.Semiring (Semiring(..), Ring())
 import qualified Data.Semiring as Semiring
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
+import qualified Data.Vector.Sized as SV
 import qualified Data.Vector.Unboxed as U
+import qualified Data.Vector.Unboxed.Sized as SU
 import GHC.Exts
 
-import Data.Poly.Internal.Sparse (Poly(..))
-import qualified Data.Poly.Internal.Sparse as Sparse
-import Data.Poly.Internal.Sparse.Field ()
-import Data.Poly.Internal.Sparse.GcdDomain ()
+import Data.Poly.Internal.Multi (Poly, MultiPoly(..))
+import qualified Data.Poly.Internal.Multi as Multi
+import Data.Poly.Internal.Multi.Field ()
+import Data.Poly.Internal.Multi.GcdDomain ()
 
 -- | <https://en.wikipedia.org/wiki/Laurent_polynomial Laurent polynomials>
 -- of one variable with coefficients from @a@,
@@ -70,10 +74,10 @@ import Data.Poly.Internal.Sparse.GcdDomain ()
 --
 data Laurent v a = Laurent !Int !(Poly v a)
 
-deriving instance Eq  (v (Word, a)) => Eq  (Laurent v a)
-deriving instance Ord (v (Word, a)) => Ord (Laurent v a)
+deriving instance Eq  (v (SU.Vector 1 Word, a)) => Eq  (Laurent v a)
+deriving instance Ord (v (SU.Vector 1 Word, a)) => Ord (Laurent v a)
 
-instance (Eq a, Semiring a, G.Vector v (Word, a)) => IsList (Laurent v a) where
+instance (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a)) => IsList (Laurent v a) where
   type Item (Laurent v a) = (Int, a)
 
   fromList xs = toLaurent minPow (fromList ys)
@@ -86,8 +90,8 @@ instance (Eq a, Semiring a, G.Vector v (Word, a)) => IsList (Laurent v a) where
       minPow = minimum $ maxBound : map fst xs
       ys = map (first (fromIntegral . subtract minPow)) xs
 
-  toList (Laurent off poly) =
-    map (first ((+ off) . fromIntegral)) $ G.toList $ unPoly poly
+  toList (Laurent off (MultiPoly poly)) =
+    map (first ((+ off) . fromIntegral . SU.head)) $ G.toList poly
 
 -- | Deconstruct a 'Laurent' polynomial into an offset (largest possible)
 -- and a regular polynomial.
@@ -104,51 +108,50 @@ unLaurent :: Laurent v a -> (Int, Poly v a)
 unLaurent (Laurent off poly) = (off, poly)
 
 -- | Construct 'Laurent' polynomial from an offset and a regular polynomial.
--- One can imagine it as 'Data.Poly.Sparse.Semiring.scale', but allowing negative offsets.
+-- One can imagine it as 'Data.Poly.Multi.Semiring.scale', but allowing negative offsets.
 --
--- >>> toLaurent 2 (2 * Data.Poly.Sparse.X + 1) :: ULaurent Int
+-- >>> toLaurent 2 (2 * Data.Poly.Multi.X + 1) :: ULaurent Int
 -- 2 * X^3 + 1 * X^2
--- >>> toLaurent (-2) (2 * Data.Poly.Sparse.X + 1) :: ULaurent Int
+-- >>> toLaurent (-2) (2 * Data.Poly.Multi.X + 1) :: ULaurent Int
 -- 2 * X^-1 + 1 * X^-2
 toLaurent
-  :: (Eq a, Semiring a, G.Vector v (Word, a))
+  :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a))
   => Int
   -> Poly v a
   -> Laurent v a
-toLaurent off (Poly xs)
+toLaurent off (MultiPoly xs)
   | G.null xs = Laurent 0 zero
-  | otherwise = Laurent (off + fromIntegral minPow) (Poly ys)
+  | otherwise = Laurent (off + fromIntegral (SU.head minPow)) (MultiPoly ys)
     where
       minPow = fst $ G.minimumBy (comparing fst) xs
       ys = if minPow == 0 then xs else G.map (first (subtract minPow)) xs
 {-# INLINE toLaurent #-}
 
 toLaurentNum
-  :: (Eq a, Num a, G.Vector v (Word, a))
+  :: (Eq a, Num a, G.Vector v (SU.Vector 1 Word, a))
   => Int
   -> Poly v a
   -> Laurent v a
-toLaurentNum off (Poly xs)
+toLaurentNum off (MultiPoly xs)
   | G.null xs = Laurent 0 0
-  | otherwise = Laurent (off + fromIntegral minPow) (Poly ys)
+  | otherwise = Laurent (off + fromIntegral (SU.head minPow)) (MultiPoly ys)
     where
       minPow = fst $ G.minimumBy (comparing fst) xs
       ys = if minPow == 0 then xs else G.map (first (subtract minPow)) xs
 {-# INLINE toLaurentNum #-}
 
-instance NFData (v (Word, a)) => NFData (Laurent v a) where
+instance NFData (v (SU.Vector 1 Word, a)) => NFData (Laurent v a) where
   rnf (Laurent off poly) = rnf off `seq` rnf poly
 
-instance (Show a, G.Vector v (Word, a)) => Show (Laurent v a) where
-  showsPrec d (Laurent off poly)
-    | G.null (unPoly poly)
+instance (Show a, G.Vector v (SU.Vector 1 Word, a)) => Show (Laurent v a) where
+  showsPrec d (Laurent off (MultiPoly poly))
+    | G.null poly
       = showString "0"
     | otherwise
       = showParen (d > 0)
       $ foldl (.) id
       $ intersperse (showString " + ")
-      $ G.foldl (\acc (i, c) -> showCoeff (fromIntegral i + off) c : acc) []
-      $ unPoly poly
+      $ G.foldl (\acc (i, c) -> showCoeff (fromIntegral (SU.head i) + off) c : acc) [] poly
     where
       showCoeff 0 c = showsPrec 7 c
       showCoeff 1 c = showsPrec 7 c . showString " * X"
@@ -166,20 +169,20 @@ type ULaurent = Laurent U.Vector
 -- Just (3,4)
 -- >>> leading (0 :: ULaurent Int)
 -- Nothing
-leading :: G.Vector v (Word, a) => Laurent v a -> Maybe (Int, a)
-leading (Laurent off poly) = first ((+ off) . fromIntegral) <$> Sparse.leading poly
+leading :: G.Vector v (SU.Vector 1 Word, a) => Laurent v a -> Maybe (Int, a)
+leading (Laurent off poly) = first ((+ off) . fromIntegral) <$> Multi.leading poly
 
 -- | Note that 'abs' = 'id' and 'signum' = 'const' 1.
-instance (Eq a, Num a, G.Vector v (Word, a)) => Num (Laurent v a) where
+instance (Eq a, Num a, G.Vector v (SU.Vector 1 Word, a)) => Num (Laurent v a) where
   Laurent off1 poly1 * Laurent off2 poly2 = toLaurentNum (off1 + off2) (poly1 * poly2)
   Laurent off1 poly1 + Laurent off2 poly2 = case off1 `compare` off2 of
-    LT -> toLaurentNum off1 (poly1 + Sparse.scale (fromIntegral $ off2 - off1) 1 poly2)
+    LT -> toLaurentNum off1 (poly1 + Multi.scale (fromIntegral $ off2 - off1) 1 poly2)
     EQ -> toLaurentNum off1 (poly1 + poly2)
-    GT -> toLaurentNum off2 (Sparse.scale (fromIntegral $ off1 - off2) 1 poly1 + poly2)
+    GT -> toLaurentNum off2 (Multi.scale (fromIntegral $ off1 - off2) 1 poly1 + poly2)
   Laurent off1 poly1 - Laurent off2 poly2 = case off1 `compare` off2 of
-    LT -> toLaurentNum off1 (poly1 - Sparse.scale (fromIntegral $ off2 - off1) 1 poly2)
+    LT -> toLaurentNum off1 (poly1 - Multi.scale (fromIntegral $ off2 - off1) 1 poly2)
     EQ -> toLaurentNum off1 (poly1 - poly2)
-    GT -> toLaurentNum off2 (Sparse.scale (fromIntegral $ off1 - off2) 1 poly1 - poly2)
+    GT -> toLaurentNum off2 (Multi.scale (fromIntegral $ off1 - off2) 1 poly1 - poly2)
   negate (Laurent off poly) = Laurent off (negate poly)
   abs = id
   signum = const 1
@@ -190,15 +193,15 @@ instance (Eq a, Num a, G.Vector v (Word, a)) => Num (Laurent v a) where
   {-# INLINE fromInteger #-}
   {-# INLINE (*) #-}
 
-instance (Eq a, Semiring a, G.Vector v (Word, a)) => Semiring (Laurent v a) where
+instance (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a)) => Semiring (Laurent v a) where
   zero = Laurent 0 zero
   one  = Laurent 0 one
   Laurent off1 poly1 `times` Laurent off2 poly2 =
     toLaurent (off1 + off2) (poly1 `times` poly2)
   Laurent off1 poly1 `plus` Laurent off2 poly2 = case off1 `compare` off2 of
-    LT -> toLaurent off1 (poly1 `plus` Sparse.scale' (fromIntegral $ off2 - off1) one poly2)
+    LT -> toLaurent off1 (poly1 `plus` Multi.scale' (fromIntegral $ off2 - off1) one poly2)
     EQ -> toLaurent off1 (poly1 `plus` poly2)
-    GT -> toLaurent off2 (Sparse.scale' (fromIntegral $ off1 - off2) one poly1 `plus` poly2)
+    GT -> toLaurent off2 (Multi.scale' (fromIntegral $ off1 - off2) one poly1 `plus` poly2)
   fromNatural n = Laurent 0 (fromNatural n)
   {-# INLINE zero #-}
   {-# INLINE one #-}
@@ -206,63 +209,63 @@ instance (Eq a, Semiring a, G.Vector v (Word, a)) => Semiring (Laurent v a) wher
   {-# INLINE times #-}
   {-# INLINE fromNatural #-}
 
-instance (Eq a, Ring a, G.Vector v (Word, a)) => Ring (Laurent v a) where
+instance (Eq a, Ring a, G.Vector v (SU.Vector 1 Word, a)) => Ring (Laurent v a) where
   negate (Laurent off poly) = Laurent off (Semiring.negate poly)
 
 -- | Create a monomial from a power and a coefficient.
-monomial :: (Eq a, Semiring a, G.Vector v (Word, a)) => Int -> a -> Laurent v a
+monomial :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a)) => Int -> a -> Laurent v a
 monomial p c
   | c == zero = Laurent 0 zero
-  | otherwise = Laurent p (Sparse.monomial' 0 c)
+  | otherwise = Laurent p (Multi.monomial' 0 c)
 {-# INLINE monomial #-}
 
 -- | Multiply a polynomial by a monomial, expressed as a power and a coefficient.
 --
 -- >>> scale 2 3 (X^2 + 1) :: ULaurent Double
 -- 3.0 * X^4 + 3.0 * X^2
-scale :: (Eq a, Semiring a, G.Vector v (Word, a)) => Int -> a -> Laurent v a -> Laurent v a
-scale yp yc (Laurent off poly) = toLaurent (off + yp) (Sparse.scale' 0 yc poly)
+scale :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a)) => Int -> a -> Laurent v a -> Laurent v a
+scale yp yc (Laurent off poly) = toLaurent (off + yp) (Multi.scale' 0 yc poly)
 
 -- | Evaluate at a given point.
 --
 -- >>> eval (X^2 + 1 :: ULaurent Double) 3
 -- 10.0
-eval :: (Field a, G.Vector v (Word, a)) => Laurent v a -> a -> a
-eval (Laurent off poly) x = Sparse.eval' poly x `times`
+eval :: (Field a, G.Vector v (SU.Vector 1 Word, a)) => Laurent v a -> a -> a
+eval (Laurent off poly) x = Multi.eval' poly (SV.singleton x) `times`
   (if off >= 0 then x Semiring.^ off else quot one x Semiring.^ (- off))
 {-# INLINE eval #-}
 
--- | Substitute another polynomial instead of 'Data.Poly.Sparse.X'.
+-- | Substitute another polynomial instead of 'Data.Poly.Multi.X'.
 --
 -- >>> import Data.Poly.Sparse (UPoly)
 -- >>> subst (Data.Poly.Sparse.X^2 + 1 :: UPoly Int) (X + 1 :: ULaurent Int)
 -- 1 * X^2 + 2 * X + 2
-subst :: (Eq a, Semiring a, G.Vector v (Word, a), G.Vector w (Word, a)) => Poly v a -> Laurent w a -> Laurent w a
-subst = Sparse.substitute' (scale 0)
+subst :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a), G.Vector w (SU.Vector 1 Word, a)) => Poly v a -> Laurent w a -> Laurent w a
+subst xs = Multi.substitute' (scale 0) xs . SV.singleton
 {-# INLINE subst #-}
 
 -- | Take a derivative.
 --
 -- >>> deriv (X^3 + 3 * X) :: ULaurent Int
 -- 3 * X^2 + 3
-deriv :: (Eq a, Ring a, G.Vector v (Word, a)) => Laurent v a -> Laurent v a
-deriv (Laurent off (Poly xs)) =
-  toLaurent (off - 1) $ Sparse.toPoly' $ G.map (\(i, x) -> (i, x `times` Semiring.fromIntegral (fromIntegral i + off))) xs
+deriv :: (Eq a, Ring a, G.Vector v (SU.Vector 1 Word, a)) => Laurent v a -> Laurent v a
+deriv (Laurent off (MultiPoly xs)) =
+  toLaurent (off - 1) $ Multi.toMultiPoly' $ G.map (\(i, x) -> (i, x `times` Semiring.fromIntegral (fromIntegral (SU.head i) + off))) xs
 {-# INLINE deriv #-}
 
 -- | Create an identity polynomial.
-pattern X :: (Eq a, Semiring a, G.Vector v (Word, a)) => Laurent v a
+pattern X :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a)) => Laurent v a
 pattern X <- (isVar -> True)
   where X = var
 
-var :: forall a v. (Eq a, Semiring a, G.Vector v (Word, a)) => Laurent v a
+var :: forall a v. (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a)) => Laurent v a
 var
   | (one :: a) == zero = Laurent 0 zero
   | otherwise          = Laurent 1 one
 {-# INLINE var #-}
 
-isVar :: forall v a. (Eq a, Semiring a, G.Vector v (Word, a)) => Laurent v a -> Bool
-isVar (Laurent off (Poly xs))
+isVar :: forall v a. (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a)) => Laurent v a -> Bool
+isVar (Laurent off (MultiPoly xs))
   | (one :: a) == zero = off == 0 && G.null xs
   | otherwise          = off == 1 && G.length xs == 1 && G.unsafeHead xs == (0, one)
 {-# INLINE isVar #-}
@@ -273,14 +276,14 @@ isVar (Laurent off (Poly xs))
 -- >>> X + 2 + 3 * X^-1 :: ULaurent Int
 -- 1 * X + 2 + 3 * X^-1
 (^-)
-  :: (Eq a, Semiring a, G.Vector v (Word, a))
+  :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a))
   => Laurent v a
   -> Int
   -> Laurent v a
 X^-n = monomial (negate n) one
 _^-_ = throw $ PatternMatchFail "(^-) can be applied only to X"
 
-instance (Eq a, Ring a, GcdDomain a, G.Vector v (Word, a)) => GcdDomain (Laurent v a) where
+instance (Eq a, Ring a, GcdDomain a, G.Vector v (SU.Vector 1 Word, a)) => GcdDomain (Laurent v a) where
   divide (Laurent off1 poly1) (Laurent off2 poly2) =
     toLaurent (off1 - off2) <$> divide poly1 poly2
   {-# INLINE divide #-}

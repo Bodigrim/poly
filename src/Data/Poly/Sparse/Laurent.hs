@@ -4,10 +4,11 @@
 -- Licence:     BSD3
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
 --
--- Sparse <https://en.wikipedia.org/wiki/Laurent_polynomial Laurent polynomials>.
+-- Sparse
+-- <https://en.wikipedia.org/wiki/Laurent_polynomial Laurent polynomials>.
 --
 
-{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE PatternSynonyms            #-}
 
 module Data.Poly.Sparse.Laurent
   ( Laurent
@@ -25,4 +26,4 @@ module Data.Poly.Sparse.Laurent
   , deriv
   ) where
 
-import Data.Poly.Internal.Sparse.Laurent
+import Data.Poly.Internal.Multi.Laurent

@@ -4,8 +4,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-
 module Dense
   ( testSuite
   , ShortPoly(..)
@@ -28,17 +26,6 @@ import Test.Tasty.QuickCheck hiding (scale, numTests)
 
 import Quaternion
 import TestUtils
-
-instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (Poly v a) where
-  arbitrary = S.toPoly . G.fromList <$> arbitrary
-  shrink = fmap (S.toPoly . G.fromList) . shrink . G.toList . unPoly
-
-newtype ShortPoly a = ShortPoly { unShortPoly :: a }
-  deriving (Eq, Show, Semiring, GcdDomain, Euclidean)
-
-instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (ShortPoly (Poly v a)) where
-  arbitrary = ShortPoly . S.toPoly . G.fromList . (\xs -> take (length xs `mod` 10) xs) <$> arbitrary
-  shrink = fmap (ShortPoly . S.toPoly . G.fromList) . shrink . G.toList . unPoly . unShortPoly
 
 testSuite :: TestTree
 testSuite = testGroup "Dense"

@@ -2,8 +2,6 @@
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE TypeOperators              #-}
 
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-
 module DFT
   ( testSuite
   ) where
