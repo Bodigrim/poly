@@ -39,6 +39,10 @@ import Unsafe.Coerce
 
 import Data.Poly.Internal.Multi
 
+#if __GLASGOW_HASKELL__ < 806
+import qualified Data.Vector as V
+#endif
+
 #if MIN_VERSION_base(4,10,0)
 import GHC.TypeNats (KnownNat, type (+), SomeNat(..), natVal, sameNat, someNatVal)
 #else
@@ -79,7 +83,7 @@ isSucc = case someNatVal (natVal (Proxy :: Proxy n) - 1) of
 #if __GLASGOW_HASKELL__ >= 806
 instance (Eq a, Ring a, GcdDomain a, KnownNat n, forall m. KnownNat m => G.Vector v (SU.Vector m Word, a), forall m. KnownNat m => Eq (v (SU.Vector m Word, a))) => GcdDomain (MultiPoly v n a) where
 #else
-instance (Eq a, Ring a, GcdDomain a, KnownNat n) => GcdDomain (VMultiPoly n a) where
+instance (Eq a, Ring a, GcdDomain a, KnownNat n, v ~ V.Vector) => GcdDomain (MultiPoly v n a) where
 #endif
   divide xs ys
     | G.null (unMultiPoly ys) = throw DivideByZero
