@@ -44,7 +44,6 @@ import GHC.TypeNats (KnownNat, type (+), SomeNat(..), natVal, sameNat, someNatVa
 #else
 import GHC.TypeLits (KnownNat, type (+), SomeNat(..), natVal, sameNat)
 import qualified GHC.TypeLits as TL
-import Data.Maybe
 
 someNatVal :: Integer -> SomeNat
 someNatVal = fromJust . TL.someNatVal
