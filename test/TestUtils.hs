@@ -90,8 +90,8 @@ instance (Eq a, Semiring a, Arbitrary a, G.Vector v (Word, a), G.Vector v (SU.Ve
   arbitrary = (ShortPoly .) . SparseLaurent.toLaurent <$> ((`rem` 10) <$> arbitrary) <*> (unShortPoly <$> arbitrary)
   shrink = fmap (ShortPoly . uncurry SparseLaurent.toLaurent . fmap unShortPoly) . shrink . fmap ShortPoly . SparseLaurent.unLaurent . unShortPoly
 
-
 -------------------------------------------------------------------------------
+
 tenTimesLess :: TestTree -> TestTree
 tenTimesLess = adjustOption $
   \(QuickCheckTests n) -> QuickCheckTests (max 100 (n `div` 10))

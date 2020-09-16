@@ -16,8 +16,8 @@ module Data.Poly.Sparse.Semiring
   , VPoly
   , UPoly
   , unPoly
-  , leading
   , toPoly
+  , leading
   , monomial
   , scale
   , pattern X
@@ -25,7 +25,6 @@ module Data.Poly.Sparse.Semiring
   , subst
   , deriv
   , integral
-  -- * Conversions
   , denseToSparse
   , sparseToDense
   ) where

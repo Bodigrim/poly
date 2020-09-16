@@ -286,9 +286,9 @@ convolution p add mult xs ys
 
 derivPoly
   :: (G.Vector v (t, a))
-  => (a -> Bool)
-  -> (t -> t)
-  -> (t -> a -> a)
+  => (a -> Bool)   -- ^ is coefficient non-zero?
+  -> (t -> t)      -- ^ how to modify powers?
+  -> (t -> a -> a) -- ^ how to modify coefficient?
   -> v (t, a)
   -> v (t, a)
 derivPoly p dec mul xs

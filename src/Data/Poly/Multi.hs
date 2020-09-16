@@ -4,7 +4,7 @@
 -- Licence:     BSD3
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
 --
--- Multivariate sparse polynomials with 'Num' instance.
+-- Sparse multivariate polynomials with 'Num' instance.
 --
 
 {-# LANGUAGE DataKinds        #-}
@@ -26,7 +26,6 @@ module Data.Poly.Multi
   , subst
   , deriv
   , integral
-  -- * Conversions
   , segregate
   , unsegregate
   ) where

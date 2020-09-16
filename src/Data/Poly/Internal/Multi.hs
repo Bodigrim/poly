@@ -89,7 +89,7 @@ import GHC.TypeNats (KnownNat, Nat, type (+), type (<=))
 import GHC.TypeLits (KnownNat, Nat, type (+), type (<=))
 #endif
 
--- | Polynomials of @n@ variables with coefficients from @a@,
+-- | Sparse polynomials of @n@ variables with coefficients from @a@,
 -- backed by a 'G.Vector' @v@ (boxed, unboxed, storable, etc.).
 --
 -- Use patterns 'Data.Poly.Multi.X',
@@ -117,13 +117,13 @@ deriving instance Eq     (v (SU.Vector n Word, a)) => Eq     (MultiPoly v n a)
 deriving instance Ord    (v (SU.Vector n Word, a)) => Ord    (MultiPoly v n a)
 deriving instance NFData (v (SU.Vector n Word, a)) => NFData (MultiPoly v n a)
 
--- | Polynomials backed by boxed vectors.
-type VMultiPoly n = MultiPoly V.Vector n
+-- | Multivariate polynomials backed by boxed vectors.
+type VMultiPoly (n :: Nat) (a :: Type) = MultiPoly V.Vector n a
 
--- | Polynomials backed by unboxed vectors.
-type UMultiPoly n = MultiPoly U.Vector n
+-- | Multivariate polynomials backed by unboxed vectors.
+type UMultiPoly (n :: Nat) (a :: Type) = MultiPoly U.Vector n a
 
--- | Polynomials of one variable with coefficients from @a@,
+-- | Sparse univariate polynomials with coefficients from @a@,
 -- backed by a 'G.Vector' @v@ (boxed, unboxed, storable, etc.).
 --
 -- Use pattern 'Data.Poly.Multi.X' for construction:
@@ -139,13 +139,13 @@ type UMultiPoly n = MultiPoly U.Vector n
 -- 'Ord' instance does not make much sense mathematically,
 -- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
 --
-type Poly v a = MultiPoly v 1 a
+type Poly (v :: Type -> Type) (a :: Type) = MultiPoly v 1 a
 
 -- | Polynomials backed by boxed vectors.
-type VPoly a = VMultiPoly 1 a
+type VPoly (a :: Type) = Poly V.Vector a
 
 -- | Polynomials backed by unboxed vectors.
-type UPoly a = UMultiPoly 1 a
+type UPoly (a :: Type) = Poly U.Vector a
 
 -- | Convert 'Poly' to a vector of coefficients.
 unPoly
@@ -261,8 +261,8 @@ leading (MultiPoly v)
 --
 -- >>> :set -XDataKinds
 -- >>> import Data.Vector.Generic.Sized (fromTuple)
--- >>> scale (fromTuple (1, 1)) 3 (X + Y) :: UMultiPoly 2 Int
--- 3 * X^2 * Y + 3 * X * Y^2
+-- >>> scale (fromTuple (1, 1)) 3 (X^2 + Y) :: UMultiPoly 2 Int
+-- 3 * X^3 * Y + 3 * X * Y^2
 scale
   :: (Eq a, Num a, KnownNat n, G.Vector v (SU.Vector n Word, a))
   => SU.Vector n Word
@@ -391,6 +391,7 @@ deriv i (MultiPoly xs) = MultiPoly $ derivPoly
   (\ps -> ps SU.// [(i, ps `SU.index` i - 1)])
   (\ps c -> fromIntegral (ps `SU.index` i) * c)
   xs
+{-# INLINE deriv #-}
 
 deriv'
   :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a))
@@ -402,6 +403,7 @@ deriv' i (MultiPoly xs) = MultiPoly $ derivPoly
   (\ps -> ps SU.// [(i, ps `SU.index` i - 1)])
   (\ps c -> fromNatural (fromIntegral (ps `SU.index` i)) `times` c)
   xs
+{-# INLINE deriv' #-}
 
 -- | Compute an indefinite integral of a polynomial
 -- by the /i/-th variable,
@@ -421,6 +423,7 @@ integral i (MultiPoly xs)
   = MultiPoly
   $ G.map (\(ps, c) -> let p = ps `SU.index` i in
     (ps SU.// [(i, p + 1)], c / fromIntegral (p + 1))) xs
+{-# INLINE integral #-}
 
 integral'
   :: (Field a, G.Vector v (SU.Vector n Word, a))
@@ -431,6 +434,7 @@ integral' i (MultiPoly xs)
   = MultiPoly
   $ G.map (\(ps, c) -> let p = ps `SU.index` i in
     (ps SU.// [(i, p + 1)], c `quot` Semiring.fromIntegral (p + 1))) xs
+{-# INLINE integral' #-}
 
 -- | Create a polynomial equal to the first variable.
 pattern X
@@ -520,7 +524,6 @@ isVar' i (MultiPoly xs)
 {-# INLINE isVar' #-}
 
 -------------------------------------------------------------------------------
--- GcdDomain
 
 groupOn :: (G.Vector v a, Eq b) => (a -> b) -> v a -> [v a]
 groupOn f = go
@@ -548,9 +551,9 @@ segregate
   . groupOn (SU.head . fst)
   . unMultiPoly
 
--- | Interpret an univariate polynomials, whose coefficients are
+-- | Interpret a univariate polynomials, whose coefficients are
 -- multivariate polynomials over the first /m/ variables,
--- as a multivatiate polynomial over 1+/m/ variables.
+-- as a multivariate polynomial over 1+/m/ variables.
 unsegregate
   :: (G.Vector v (SU.Vector (1 + m) Word, a), G.Vector v (SU.Vector m Word, a))
   => VPoly (MultiPoly v m a)

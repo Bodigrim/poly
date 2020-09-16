@@ -49,6 +49,7 @@ import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.Bits
 import Data.Euclidean (Euclidean, Field, quot)
+import Data.Kind
 import Data.List (foldl', intersperse)
 import Data.Semiring (Semiring(..), Ring())
 import qualified Data.Semiring as Semiring
@@ -74,7 +75,7 @@ import GHC.Exts
 -- 'Ord' instance does not make much sense mathematically,
 -- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
 --
-newtype Poly v a = Poly
+newtype Poly (v :: Type -> Type) (a :: Type) = Poly
   { unPoly :: v a
   -- ^ Convert 'Poly' to a vector of coefficients
   -- (first element corresponds to a constant term).

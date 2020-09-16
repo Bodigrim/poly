@@ -4,7 +4,7 @@
 -- Licence:     BSD3
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
 --
--- Multivariate sparse polynomials with 'Semiring' instance.
+-- Sparse multivariate polynomials with 'Semiring' instance.
 --
 
 {-# LANGUAGE CPP              #-}
@@ -29,7 +29,6 @@ module Data.Poly.Multi.Semiring
   , subst
   , deriv
   , integral
-  -- * Conversions
   , segregate
   , unsegregate
   ) where
@@ -79,8 +78,8 @@ monomial = Multi.monomial'
 --
 -- >>> :set -XDataKinds
 -- >>> import Data.Vector.Generic.Sized (fromTuple)
--- >>> scale (fromTuple (1, 1)) 3 (X + Y) :: UMultiPoly 2 Int
--- 3 * X^2 * Y + 3 * X * Y^2
+-- >>> scale (fromTuple (1, 1)) 3 (X^2 + Y) :: UMultiPoly 2 Int
+-- 3 * X^3 * Y + 3 * X * Y^2
 scale
   :: (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
   => SU.Vector n Word

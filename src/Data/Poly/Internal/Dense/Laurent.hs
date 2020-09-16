@@ -8,6 +8,7 @@
 --
 
 {-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE KindSignatures             #-}
 {-# LANGUAGE PatternSynonyms            #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE ViewPatterns               #-}
@@ -33,6 +34,7 @@ import Control.Arrow (first)
 import Control.DeepSeq (NFData(..))
 import Control.Exception
 import Data.Euclidean (GcdDomain(..), Euclidean(..), Field)
+import Data.Kind
 import Data.List (intersperse)
 import Data.Semiring (Semiring(..), Ring())
 import qualified Data.Semiring as Semiring
@@ -63,7 +65,7 @@ import Data.Poly.Internal.Dense.GcdDomain ()
 -- 'Ord' instance does not make much sense mathematically,
 -- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
 --
-data Laurent v a = Laurent !Int !(Poly v a)
+data Laurent (v :: Type -> Type) (a :: Type) = Laurent !Int !(Poly v a)
   deriving (Eq, Ord)
 
 -- | Deconstruct a 'Laurent' polynomial into an offset (largest possible)
@@ -133,6 +135,7 @@ instance (Show a, G.Vector v a) => Show (Laurent v a) where
       $ G.ifoldl (\acc i c -> showCoeff (i + off) c : acc) []
       $ unPoly poly
     where
+      -- Negative powers should be displayed without surrounding brackets
       showCoeff 0 c = showsPrec 7 c
       showCoeff 1 c = showsPrec 7 c . showString " * X"
       showCoeff i c = showsPrec 7 c . showString (" * X^" ++ show i)
@@ -201,15 +204,15 @@ monomial p c
 
 -- | Multiply a polynomial by a monomial, expressed as a power and a coefficient.
 --
--- >>> scale 2 3 (X^2 + 1) :: ULaurent Int
--- 3 * X^4 + 0 * X^3 + 3 * X^2
+-- >>> scale 2 3 (X^-2 + 1) :: ULaurent Int
+-- 3 * X^2 + 0 * X + 3
 scale :: (Eq a, Semiring a, G.Vector v a) => Int -> a -> Laurent v a -> Laurent v a
 scale yp yc (Laurent off poly) = toLaurent (off + yp) (Dense.scale' 0 yc poly)
 
 -- | Evaluate at a given point.
 --
--- >>> eval (X^2 + 1 :: ULaurent Double) 3
--- 10.0
+-- >>> eval (X^-2 + 1 :: ULaurent Double) 2
+-- 1.25
 eval :: (Field a, G.Vector v a) => Laurent v a -> a -> a
 eval (Laurent off poly) x = Dense.eval' poly x `times`
   (if off >= 0 then x Semiring.^ off else quot one x Semiring.^ (- off))
@@ -218,16 +221,16 @@ eval (Laurent off poly) x = Dense.eval' poly x `times`
 -- | Substitute another polynomial instead of 'Data.Poly.X'.
 --
 -- >>> import Data.Poly (UPoly)
--- >>> subst (Data.Poly.X^2 + 1 :: UPoly Int) (X + 1 :: ULaurent Int)
--- 1 * X^2 + 2 * X + 2
+-- >>> subst (Data.Poly.X^2 + 1 :: UPoly Int) (X^-1 + 1 :: ULaurent Int)
+-- 2 + 2 * X^-1 + 1 * X^-2
 subst :: (Eq a, Semiring a, G.Vector v a, G.Vector w a) => Poly v a -> Laurent w a -> Laurent w a
 subst = Dense.substitute' (scale 0)
 {-# INLINE subst #-}
 
 -- | Take a derivative.
 --
--- >>> deriv (X^3 + 3 * X) :: ULaurent Int
--- 3 * X^2 + 0 * X + 3
+-- >>> deriv (X^-1 + 3 * X) :: ULaurent Int
+-- 3 + 0 * X^-1 + (-1) * X^-2
 deriv :: (Eq a, Ring a, G.Vector v a) => Laurent v a -> Laurent v a
 deriv (Laurent off (Poly xs)) =
   toLaurent (off - 1) $ Dense.toPoly' $ G.imap (times . Semiring.fromIntegral . (+ off)) xs
@@ -250,18 +253,22 @@ isVar (Laurent off (Poly xs))
   | otherwise          = off == 1 && G.length xs == 1 && G.unsafeHead xs == one
 {-# INLINE isVar #-}
 
--- | This operator can be applied only to 'X',
--- but is instrumental to express Laurent polynomials in mathematical fashion:
+-- | This operator can be applied only to monomials with unit coefficients,
+-- but is instrumental to express Laurent polynomials
+-- in mathematical fashion:
 --
--- >>> X + 2 + 3 * X^-1 :: ULaurent Int
--- 1 * X + 2 + 3 * X^-1
+-- >>> X + 2 + 3 * (X^2)^-1 :: ULaurent Int
+-- 1 * X + 2 + 0 * X^-1 + 3 * X^-2
 (^-)
-  :: (Eq a, Semiring a, G.Vector v a)
+  :: (Eq a, Num a, G.Vector v a)
   => Laurent v a
   -> Int
   -> Laurent v a
-X^-n = monomial (negate n) one
-_^-_ = throw $ PatternMatchFail "(^-) can be applied only to X"
+Laurent off (Poly xs) ^- n
+  | G.length xs == 1, G.unsafeHead xs == 1
+  = Laurent (off * (-n)) (Poly xs)
+  | otherwise
+  = throw $ PatternMatchFail "(^-) can be applied only to a monom with unit coefficient"
 
 instance (Eq a, Ring a, GcdDomain a, G.Vector v a) => GcdDomain (Laurent v a) where
   divide (Laurent off1 poly1) (Laurent off2 poly2) =

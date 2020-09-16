@@ -16,8 +16,8 @@ module Data.Poly.Sparse
   , VPoly
   , UPoly
   , unPoly
-  , leading
   , toPoly
+  , leading
   , monomial
   , scale
   , pattern X
@@ -25,7 +25,6 @@ module Data.Poly.Sparse
   , subst
   , deriv
   , integral
-  -- * Conversions
   , denseToSparse
   , sparseToDense
   ) where
@@ -36,7 +35,7 @@ import qualified Data.Vector.Unboxed.Sized as SU
 import qualified Data.Vector.Sized as SV
 
 import Data.Poly.Internal.Convert
-import Data.Poly.Internal.Multi (Poly, VPoly, UPoly, unPoly, leading, pattern X)
+import Data.Poly.Internal.Multi (Poly, VPoly, UPoly, unPoly, leading)
 import qualified Data.Poly.Internal.Multi as Multi
 import Data.Poly.Internal.Multi.Field ()
 import Data.Poly.Internal.Multi.GcdDomain ()
@@ -73,6 +72,12 @@ scale
   -> Poly v a
   -> Poly v a
 scale = Multi.scale . SU.singleton
+
+-- | Create an identity polynomial.
+pattern X
+  :: (Eq a, Num a, G.Vector v (SU.Vector 1 Word, a))
+  => Poly v a
+pattern X = Multi.X
 
 -- | Evaluate at a given point.
 --

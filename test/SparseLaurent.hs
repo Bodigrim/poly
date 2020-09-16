@@ -1,7 +1,6 @@
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE UndecidableInstances       #-}
 
@@ -11,7 +10,6 @@ module SparseLaurent
 
 import Prelude hiding (gcd, quotRem, quot, rem)
 import Control.Exception
-import Data.Either
 import Data.Euclidean (GcdDomain(..), Field)
 import Data.Int
 import qualified Data.Poly.Sparse
@@ -189,9 +187,11 @@ patternTests = testGroup "pattern"
   , testProperty "X :: ULaurent ()" $ once $
     (X :: ULaurent ()) === zero
   , testProperty "X^-k" $
-    \k -> (X^-k :: ULaurent Int) === monomial (- k) 1
+    \(NonNegative j) k -> ((X^j)^-k :: ULaurent Int) === monomial (- j * k) 1
   , testProperty "^-" $
-    \(p :: ULaurent Int) k -> case p of
-      X -> property True
-      _ -> ioProperty (isLeft <$> (try (evaluate (p^-k)) :: IO (Either PatternMatchFail (ULaurent Int))))
+    \(p :: ULaurent Int) (NonNegative k) -> ioProperty $ do
+      et <- try (evaluate (p^-k)) :: IO (Either PatternMatchFail (ULaurent Int))
+      pure $ case et of
+        Left{}  -> True
+        Right t -> p^k * t == one
   ]
