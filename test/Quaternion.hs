@@ -61,9 +61,9 @@ instance Arbitrary a => Arbitrary (Quaternion a) where
 newtype instance MVector s (Quaternion a) = MV_Quaternion (MVector s (a, a, a, a))
 newtype instance Vector    (Quaternion a) = V_Quaternion  (Vector    (a, a, a, a))
 
-instance (Unbox a) => Unbox (Quaternion a)
+instance Unbox a => Unbox (Quaternion a)
 
-instance (Unbox a) => M.MVector MVector (Quaternion a) where
+instance Unbox a => M.MVector MVector (Quaternion a) where
   {-# INLINE basicLength #-}
   {-# INLINE basicUnsafeSlice #-}
   {-# INLINE basicOverlaps #-}
@@ -90,7 +90,7 @@ instance (Unbox a) => M.MVector MVector (Quaternion a) where
   basicUnsafeMove (MV_Quaternion v1) (MV_Quaternion v2) = M.basicUnsafeMove v1 v2
   basicUnsafeGrow (MV_Quaternion v) n = MV_Quaternion `fmap` M.basicUnsafeGrow v n
 
-instance (Unbox a) => G.Vector Vector (Quaternion a) where
+instance Unbox a => G.Vector Vector (Quaternion a) where
   {-# INLINE basicUnsafeFreeze #-}
   {-# INLINE basicUnsafeThaw #-}
   {-# INLINE basicLength #-}

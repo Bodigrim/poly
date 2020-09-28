@@ -20,14 +20,15 @@ import Data.Proxy
 import Data.Semiring (Semiring(..))
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
-import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Generic.Sized as SG
 import qualified Data.Vector.Sized as SV
+import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Unboxed.Sized as SU
 import Test.Tasty
 import Test.Tasty.QuickCheck hiding (scale, numTests)
 
-import Data.Poly.Multi.Semiring
+import Data.Poly.Multi
+import qualified Data.Poly.Multi.Semiring as S
 
 import Quaternion
 import TestUtils
@@ -50,54 +51,54 @@ lawsTests = testGroup "Laws"
 
 semiringTests :: [TestTree]
 semiringTests =
-  [ mySemiringLaws (Proxy :: Proxy (VMultiPoly 3 ()))
-  , mySemiringLaws (Proxy :: Proxy (VMultiPoly 3 Int8))
+  [ mySemiringLaws (Proxy :: Proxy (UMultiPoly 3 ()))
+  , mySemiringLaws (Proxy :: Proxy (UMultiPoly 3 Int8))
   , mySemiringLaws (Proxy :: Proxy (VMultiPoly 3 Integer))
   , tenTimesLess
-  $ mySemiringLaws (Proxy :: Proxy (VMultiPoly 3 (Quaternion Int)))
+  $ mySemiringLaws (Proxy :: Proxy (UMultiPoly 3 (Quaternion Int)))
   ]
 
 ringTests :: [TestTree]
 ringTests =
-  [ myRingLaws (Proxy :: Proxy (VMultiPoly 3 ()))
-  , myRingLaws (Proxy :: Proxy (VMultiPoly 3 Int8))
+  [ myRingLaws (Proxy :: Proxy (UMultiPoly 3 ()))
+  , myRingLaws (Proxy :: Proxy (UMultiPoly 3 Int8))
   , myRingLaws (Proxy :: Proxy (VMultiPoly 3 Integer))
-  , myRingLaws (Proxy :: Proxy (VMultiPoly 3 (Quaternion Int)))
+  , myRingLaws (Proxy :: Proxy (UMultiPoly 3 (Quaternion Int)))
   ]
 
 numTests :: [TestTree]
 numTests =
-  [ myNumLaws (Proxy :: Proxy (VMultiPoly 3 Int8))
+  [ myNumLaws (Proxy :: Proxy (UMultiPoly 3 Int8))
   , myNumLaws (Proxy :: Proxy (VMultiPoly 3 Integer))
   , tenTimesLess
-  $ myNumLaws (Proxy :: Proxy (VMultiPoly 3 (Quaternion Int)))
+  $ myNumLaws (Proxy :: Proxy (UMultiPoly 3 (Quaternion Int)))
   ]
 
 gcdDomainTests :: [TestTree]
 gcdDomainTests =
   [ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (VMultiPoly 3 Integer)))
   , tenTimesLess
-  $ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (VMultiPoly 3 (Mod 3))))
+  $ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (UMultiPoly 3 (Mod 3))))
   , tenTimesLess
   $ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (VMultiPoly 3 Rational)))
   ]
 
 isListTests :: [TestTree]
 isListTests =
-  [ myIsListLaws (Proxy :: Proxy (VMultiPoly 3 ()))
-  , myIsListLaws (Proxy :: Proxy (VMultiPoly 3 Int8))
+  [ myIsListLaws (Proxy :: Proxy (UMultiPoly 3 ()))
+  , myIsListLaws (Proxy :: Proxy (UMultiPoly 3 Int8))
   , myIsListLaws (Proxy :: Proxy (VMultiPoly 3 Integer))
   , tenTimesLess
-  $ myIsListLaws (Proxy :: Proxy (VMultiPoly 3 (Quaternion Int)))
+  $ myIsListLaws (Proxy :: Proxy (UMultiPoly 3 (Quaternion Int)))
   ]
 
 showTests :: [TestTree]
 showTests =
-  [ myShowLaws (Proxy :: Proxy (VMultiPoly 4 ()))
-  , myShowLaws (Proxy :: Proxy (VMultiPoly 4 Int8))
+  [ myShowLaws (Proxy :: Proxy (UMultiPoly 4 ()))
+  , myShowLaws (Proxy :: Proxy (UMultiPoly 4 Int8))
   , myShowLaws (Proxy :: Proxy (VMultiPoly 4 Integer))
   , tenTimesLess
-  $ myShowLaws (Proxy :: Proxy (VMultiPoly 4 (Quaternion Int)))
+  $ myShowLaws (Proxy :: Proxy (UMultiPoly 4 (Quaternion Int)))
   ]
 
 arithmeticTests :: TestTree
@@ -155,7 +156,10 @@ otherTestGroup _ =
     \(ps :: SU.Vector 3 Word) (c :: a) -> monomial ps c === toMultiPoly (V.fromList (monomialRef ps c))
   , tenTimesLess $
     testProperty "scale matches multiplication by monomial" $
-    \ps c (xs :: VMultiPoly 3 a) -> scale ps c xs === monomial ps c * xs
+    \ps c (xs :: UMultiPoly 3 a) -> scale ps c xs === monomial ps c * xs
+  , tenTimesLess $
+    testProperty "scale' matches multiplication by monomial" $
+    \ps c (xs :: UMultiPoly 3 a) -> S.scale ps c xs === S.monomial ps c * xs
   ]
 
 monomialRef :: Num a => t -> a -> [(t, a)]
@@ -170,9 +174,9 @@ divideByZeroTests = testGroup "divideByZero"
 
 evalTests :: TestTree
 evalTests = testGroup "eval" $ concat
-  [ evalTestGroup  (Proxy :: Proxy (VMultiPoly 3 Int8))
+  [ evalTestGroup  (Proxy :: Proxy (UMultiPoly 3 Int8))
   , evalTestGroup  (Proxy :: Proxy (VMultiPoly 3 Integer))
-  , substTestGroup (Proxy :: Proxy (VMultiPoly 3 Int8))
+  , substTestGroup (Proxy :: Proxy (UMultiPoly 3 Int8))
   ]
 
 evalTestGroup
@@ -189,10 +193,21 @@ evalTestGroup _ =
     \p -> e X (SV.fromTuple (p, undefined, undefined)) === p
   , testProperty "eval (monomial 0 c) p = c" $
     \c ps -> e (monomial 0 c) ps === c
+
+  , testProperty "eval' (p + q) rs = eval' p rs + eval' q rs" $
+    \p q rs -> e' (p + q) rs === e' p rs + e' q rs
+  , testProperty "eval' (p * q) rs = eval' p rs * eval' q rs" $
+    \p q rs -> e' (p * q) rs === e' p rs * e' q rs
+  , testProperty "eval' x p = p" $
+    \p -> e' S.X (SV.fromTuple (p, undefined, undefined)) === p
+  , testProperty "eval' (monomial 0 c) p = c" $
+    \c ps -> e' (monomial 0 c) ps === c
   ]
   where
     e :: MultiPoly v 3 a -> SV.Vector 3 a -> a
     e = eval
+    e' :: MultiPoly v 3 a -> SV.Vector 3 a -> a
+    e' = S.eval
 
 substTestGroup
   :: forall v a.
@@ -204,31 +219,38 @@ substTestGroup _ =
     \p -> e X (SV.fromTuple (p, undefined, undefined)) === p
   , testProperty "subst (monomial 0 c) ps = monomial 0 c" $
     \c ps -> e (monomial 0 c) ps === monomial 0 c
+  , testProperty "subst' x p = p" $
+    \p -> e' S.X (SV.fromTuple (p, undefined, undefined)) === p
+  , testProperty "subst' (S.monomial 0 c) ps = S.monomial 0 c" $
+    \c ps -> e' (S.monomial 0 c) ps === S.monomial 0 c
   ]
   where
     e :: MultiPoly v 3 a -> SV.Vector 3 (MultiPoly v 3 a) -> MultiPoly v 3 a
     e = subst
+    e' :: MultiPoly v 3 a -> SV.Vector 3 (MultiPoly v 3 a) -> MultiPoly v 3 a
+    e' = S.subst
 
 derivTests :: TestTree
 derivTests = testGroup "deriv"
-  [ testProperty "deriv . integral = id" $
+  [ testProperty "deriv = S.deriv" $
+    \k (p :: VMultiPoly 3 Integer) -> deriv k p === S.deriv k p
+  , testProperty "integral = S.integral" $
+    \k (p :: VMultiPoly 3 Rational) -> integral k p === S.integral k p
+  , testProperty "deriv . integral = id" $
     \k (p :: VMultiPoly 3 Rational) ->
       deriv k (integral k p) === p
   , testProperty "deriv c = 0" $
     \k c ->
-      deriv k (monomial 0 c :: VMultiPoly 3 Int) === 0
+      deriv k (monomial 0 c :: UMultiPoly 3 Int) === 0
   , testProperty "deriv cX = c" $
     \c ->
-      deriv 0 (monomial 0 c * X :: VMultiPoly 3 Int) === monomial 0 c
+      deriv 0 (monomial 0 c * X :: UMultiPoly 3 Int) === monomial 0 c
   , testProperty "deriv (p + q) = deriv p + deriv q" $
     \k p q ->
-      deriv k (p + q) === (deriv k p + deriv k q :: VMultiPoly 3 Int)
+      deriv k (p + q) === (deriv k p + deriv k q :: UMultiPoly 3 Int)
   , testProperty "deriv (p * q) = p * deriv q + q * deriv p" $
     \k p q ->
-      deriv k (p * q) === (p * deriv k q + q * deriv k p :: VMultiPoly 3 Int)
-  -- , testProperty "deriv (subst p q) = deriv q * subst (deriv p) q" $
-  --   \(p :: Poly V.Vector Int) (q :: Poly U.Vector Int) k ->
-  --     deriv k (subst p q) === deriv k q * subst (deriv k p) q
+      deriv k (p * q) === (p * deriv k q + q * deriv k p :: UMultiPoly 3 Int)
   ]
 
 patternTests :: TestTree
@@ -238,27 +260,27 @@ patternTests = testGroup "pattern"
   , testProperty "X  :: UMultiPoly Int" $ once $
     (X :: UMultiPoly 1 Int) === monomial 1 1
   , testProperty "X :: UMultiPoly ()" $ once $
-    case (zero :: UMultiPoly 1 ()) of X -> True; _ -> False
+    case (zero :: UMultiPoly 1 ()) of S.X -> True; _ -> False
   , testProperty "X :: UMultiPoly ()" $ once $
-    (X :: UMultiPoly 1 ()) === zero
+    (S.X :: UMultiPoly 1 ()) === zero
 
   , testProperty "Y  :: UMultiPoly Int" $ once $
     case (monomial (SG.fromTuple (0, 1)) 1 :: UMultiPoly 2 Int) of Y -> True; _ -> False
   , testProperty "Y  :: UMultiPoly Int" $ once $
     (Y :: UMultiPoly 2 Int) === monomial (SG.fromTuple (0, 1)) 1
   , testProperty "Y :: UMultiPoly ()" $ once $
-    case (zero :: UMultiPoly 2 ()) of Y -> True; _ -> False
+    case (zero :: UMultiPoly 2 ()) of S.Y -> True; _ -> False
   , testProperty "Y :: UMultiPoly ()" $ once $
-    (Y :: UMultiPoly 2 ()) === zero
+    (S.Y :: UMultiPoly 2 ()) === zero
 
   , testProperty "Z  :: UMultiPoly Int" $ once $
     case (monomial (SG.fromTuple (0, 0, 1)) 1 :: UMultiPoly 3 Int) of Z -> True; _ -> False
   , testProperty "Z  :: UMultiPoly Int" $ once $
     (Z :: UMultiPoly 3 Int) === monomial (SG.fromTuple (0, 0, 1)) 1
   , testProperty "Z :: UMultiPoly ()" $ once $
-    case (zero :: UMultiPoly 3 ()) of Z -> True; _ -> False
+    case (zero :: UMultiPoly 3 ()) of S.Z -> True; _ -> False
   , testProperty "Z :: UMultiPoly ()" $ once $
-    (Z :: UMultiPoly 3 ()) === zero
+    (S.Z :: UMultiPoly 3 ()) === zero
   ]
 
 conversionTests :: TestTree

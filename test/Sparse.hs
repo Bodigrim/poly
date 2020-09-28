@@ -251,13 +251,13 @@ derivTests = testGroup "deriv"
   , testProperty "deriv . integral = id" $
     \(p :: Poly V.Vector Rational) -> deriv (integral p) === p
   , testProperty "deriv c = 0" $
-    \c -> deriv (monomial 0 c :: Poly V.Vector Int) === 0
+    \c -> deriv (monomial 0 c :: Poly U.Vector Int) === 0
   , testProperty "deriv cX = c" $
-    \c -> deriv (monomial 0 c * X :: Poly V.Vector Int) === monomial 0 c
+    \c -> deriv (monomial 0 c * X :: Poly U.Vector Int) === monomial 0 c
   , testProperty "deriv (p + q) = deriv p + deriv q" $
-    \p q -> deriv (p + q) === (deriv p + deriv q :: Poly V.Vector Int)
+    \p q -> deriv (p + q) === (deriv p + deriv q :: Poly U.Vector Int)
   , testProperty "deriv (p * q) = p * deriv q + q * deriv p" $
-    \p q -> deriv (p * q) === (p * deriv q + q * deriv p :: Poly V.Vector Int)
+    \p q -> deriv (p * q) === (p * deriv q + q * deriv p :: Poly U.Vector Int)
   -- , testProperty "deriv (subst p q) = deriv q * subst (deriv p) q" $
   --   \(p :: Poly V.Vector Int) (q :: Poly U.Vector Int) ->
   --     deriv (subst p q) === deriv q * subst (deriv p) q
