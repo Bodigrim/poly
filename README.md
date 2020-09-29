@@ -1,6 +1,6 @@
 # poly [![Build Status](https://travis-ci.org/Bodigrim/poly.svg)](https://travis-ci.org/Bodigrim/poly) [![Hackage](http://img.shields.io/hackage/v/poly.svg)](https://hackage.haskell.org/package/poly) [![Hackage CI](https://matrix.hackage.haskell.org/api/v2/packages/poly/badge)](https://matrix.hackage.haskell.org/package/poly) [![Stackage LTS](http://stackage.org/package/poly/badge/lts)](http://stackage.org/lts/package/poly) [![Stackage Nightly](http://stackage.org/package/poly/badge/nightly)](http://stackage.org/nightly/package/poly) [![Coverage Status](https://coveralls.io/repos/github/Bodigrim/poly/badge.svg)](https://coveralls.io/github/Bodigrim/poly)
 
-Haskell library for univariate polynomials, backed by `Vector`.
+Haskell library for univariate and multivariate polynomials, backed by `Vector`.
 
 ```haskell
 > (X + 1) + (X - 1) :: VPoly Integer
@@ -114,18 +114,26 @@ Just (2,1.0)
 
 ## Flavours
 
-The same API is exposed in four flavours:
-
-* `Data.Poly` provides dense polynomials with `Num`-based interface.
+* `Data.Poly` provides dense univariate polynomials with `Num`-based interface.
   This is a default choice for most users.
 
-* `Data.Poly.Semiring` provides dense polynomials with `Semiring`-based interface.
+* `Data.Poly.Semiring` provides dense univariate polynomials with `Semiring`-based interface.
 
-* `Data.Poly.Sparse` provides sparse polynomials with `Num`-based interface.
+* `Data.Poly.Laurent` provides dense univariate Laurent polynomials with `Semiring`-based interface.
+
+* `Data.Poly.Sparse` provides sparse univariate polynomials with `Num`-based interface.
   Besides that, you may find it easier to use in REPL
   because of a more readable `Show` instance, skipping zero coefficients.
 
-* `Data.Poly.Sparse.Semiring` provides sparse polynomials with `Semiring`-based interface.
+* `Data.Poly.Sparse.Semiring` provides sparse univariate polynomials with `Semiring`-based interface.
+
+* `Data.Poly.Sparse.Laurent` provides sparse univariate Laurent polynomials with `Semiring`-based interface.
+
+* `Data.Poly.Multi` provides sparse multivariate polynomials with `Num`-based interface.
+
+* `Data.Poly.Multi.Semiring` provides sparse multivariate polynomials with `Semiring`-based interface.
+
+* `Data.Poly.Multi.Laurent` provides sparse multivariate Laurent polynomials with `Semiring`-based interface.
 
 All flavours are available backed by boxed or unboxed vectors.
 
