@@ -25,10 +25,8 @@ module Data.Poly.Semiring
   , subst
   , deriv
   , integral
-  -- * Conversions
   , denseToSparse
   , sparseToDense
-  -- * Discrete Fourier transform
   , dft
   , inverseDft
   , dftMult

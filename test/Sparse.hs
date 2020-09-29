@@ -116,6 +116,9 @@ arithmeticTests = testGroup "Arithmetic"
     testProperty "multiplication matches reference" $
     \(xs :: [(Word, Int)]) ys -> toPoly (V.fromList (mulRef xs ys)) ===
       toPoly (V.fromList xs) * toPoly (V.fromList ys)
+  , tenTimesLess $
+    testProperty "quotRemFractional matches quotRem" $
+    \(xs :: VPoly Rational) ys -> ys /= 0 ==> quotRemFractional xs ys === quotRem xs ys
   ]
 
 addRef :: Num a => [(Word, a)] -> [(Word, a)] -> [(Word, a)]

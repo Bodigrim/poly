@@ -17,9 +17,11 @@
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Data.Poly.Internal.Multi.Field () where
+module Data.Poly.Internal.Multi.Field
+  ( quotRemFractional
+  ) where
 
-import Prelude hiding (quotRem, quot, rem, gcd)
+import Prelude hiding (quotRem, quot, rem, div, gcd)
 import Control.Arrow
 import Control.Exception
 import Data.Euclidean (Euclidean(..), Field)
@@ -36,23 +38,36 @@ instance (Eq a, Field a, G.Vector v (SU.Vector 1 Word, a)) => Euclidean (Poly v 
     | G.null xs = 0
     | otherwise = fromIntegral (SU.head (fst (G.unsafeLast xs)))
 
-  quotRem = quotientRemainder
+  quotRem = quotientRemainder zero plus minus times quot
+
+-- | Polynomial division with remainder.
+--
+-- >>> quotRemFractional (X^3 + 2) (X^2 - 1 :: UPoly Double)
+-- (1.0 * X,1.0 * X + 2.0)
+quotRemFractional :: (Eq a, Fractional a, G.Vector v (SU.Vector 1 Word, a)) => Poly v a -> Poly v a -> (Poly v a, Poly v a)
+quotRemFractional = quotientRemainder 0 (+) (-) (*) (/)
+{-# INLINE quotRemFractional #-}
 
 quotientRemainder
-  :: (Eq a, Field a, G.Vector v (SU.Vector 1 Word, a))
-  => Poly v a
-  -> Poly v a
+  :: G.Vector v (SU.Vector 1 Word, a)
+  => Poly v a                           -- ^ zero
+  -> (Poly v a -> Poly v a -> Poly v a) -- ^ add
+  -> (Poly v a -> Poly v a -> Poly v a) -- ^ subtract
+  -> (Poly v a -> Poly v a -> Poly v a) -- ^ multiply
+  -> (a -> a -> a)                      -- ^ divide
+  -> Poly v a                           -- ^ dividend
+  -> Poly v a                           -- ^ divisor
   -> (Poly v a, Poly v a)
-quotientRemainder ts ys = case leading ys of
+quotientRemainder zer add sub mul div ts ys = case leading ys of
   Nothing -> throw DivideByZero
   Just (yp, yc) -> go ts
     where
       go xs = case leading xs of
-        Nothing -> (zero, zero)
+        Nothing -> (zer, zer)
         Just (xp, xc) -> case xp `compare` yp of
-          LT -> (zero, xs)
+          LT -> (zer, xs)
           EQ -> (zs, xs')
-          GT -> first (`plus` zs) $ go xs'
+          GT -> first (`add` zs) $ go xs'
           where
-            zs = MultiPoly $ G.singleton (SU.singleton (xp `minus` yp), xc `quot` yc)
-            xs' = xs `minus` zs `times` ys
+            zs = MultiPoly $ G.singleton (SU.singleton (xp - yp), xc `div` yc)
+            xs' = xs `sub` (zs `mul` ys)

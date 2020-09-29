@@ -25,6 +25,7 @@ module Data.Poly.Sparse
   , subst
   , deriv
   , integral
+  , quotRemFractional
   , denseToSparse
   , sparseToDense
   ) where
@@ -37,7 +38,7 @@ import qualified Data.Vector.Sized as SV
 import Data.Poly.Internal.Convert
 import Data.Poly.Internal.Multi (Poly, VPoly, UPoly, unPoly, leading)
 import qualified Data.Poly.Internal.Multi as Multi
-import Data.Poly.Internal.Multi.Field ()
+import Data.Poly.Internal.Multi.Field (quotRemFractional)
 import Data.Poly.Internal.Multi.GcdDomain ()
 
 -- | Make 'Poly' from a list of (power, coefficient) pairs.

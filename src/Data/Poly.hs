@@ -23,12 +23,12 @@ module Data.Poly
   , subst
   , deriv
   , integral
-  -- * Conversions
+  , quotRemFractional
   , denseToSparse
   , sparseToDense
   ) where
 
 import Data.Poly.Internal.Convert
 import Data.Poly.Internal.Dense
-import Data.Poly.Internal.Dense.Field ()
+import Data.Poly.Internal.Dense.Field (quotRemFractional)
 import Data.Poly.Internal.Dense.GcdDomain ()
