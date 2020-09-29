@@ -77,7 +77,7 @@ gcdDomainTests :: [TestTree]
 gcdDomainTests =
   [ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (VMultiPoly 3 Integer)))
   , tenTimesLess
-  $ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (UMultiPoly 3 (Mod 3))))
+  $ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (VMultiPoly 3 (Mod 3))))
   , tenTimesLess
   $ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (VMultiPoly 3 Rational)))
   ]
