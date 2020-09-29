@@ -176,9 +176,10 @@ instance (Show a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Show (MultiPo
         $ filter ((/= 0) . fst)
         $ zip (SU.toList is) (finites :: [Finite n]))
 
+      -- Powers are guaranteed to be non-negative
       showPower :: Word -> Finite n -> String -> String
       showPower 1 n = showString (showVar n)
-      showPower i n = showString (showVar n) . showString "^" . showsPrec 7 i
+      showPower i n = showString (showVar n) . showString ("^" ++ show i)
 
       showVar :: Finite n -> String
       showVar = \case
@@ -504,10 +505,8 @@ isVar
   -> MultiPoly v n a
   -> Bool
 isVar i (MultiPoly xs)
-  | (1 :: a) == 0
-  = G.null xs
-  | otherwise
-  = G.length xs == 1 && G.unsafeHead xs == (SU.generate (\j -> if i == j then 1 else 0), 1)
+  | (1 :: a) == 0 = G.null xs
+  | otherwise     = G.length xs == 1 && G.unsafeHead xs == (SU.generate (\j -> if i == j then 1 else 0), 1)
 {-# INLINE isVar #-}
 
 isVar'
@@ -517,10 +516,8 @@ isVar'
   -> MultiPoly v n a
   -> Bool
 isVar' i (MultiPoly xs)
-  | (one :: a) == zero
-  = G.null xs
-  | otherwise
-  = G.length xs == 1 && G.unsafeHead xs == (SU.generate (\j -> if i == j then 1 else 0), one)
+  | (one :: a) == zero = G.null xs
+  | otherwise          = G.length xs == 1 && G.unsafeHead xs == (SU.generate (\j -> if i == j then 1 else 0), one)
 {-# INLINE isVar' #-}
 
 -------------------------------------------------------------------------------
@@ -564,4 +561,3 @@ unsegregate
   . G.toList
   . G.map (\(v, MultiPoly vs) -> G.map (first (v SU.++)) vs)
   . unMultiPoly
-

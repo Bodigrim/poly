@@ -272,4 +272,8 @@ conversionTests = testGroup "conversions"
     \(xs :: UPoly Int8) -> xs === sparseToDense (denseToSparse xs)
   , testProperty "sparseToDense' . denseToSparse' = id" $
     \(xs :: UPoly Int8) -> xs === S.sparseToDense (S.denseToSparse xs)
+  , testProperty "toPoly . unPoly = id" $
+    \(xs :: UPoly Int8) -> xs === toPoly (unPoly xs)
+  , testProperty "S.toPoly . S.unPoly = id" $
+    \(xs :: UPoly Int8) -> xs === S.toPoly (S.unPoly xs)
   ]

@@ -259,6 +259,10 @@ patternTests = testGroup "pattern"
     case (monomial 1 1 :: UMultiPoly 1 Int) of X -> True; _ -> False
   , testProperty "X  :: UMultiPoly Int" $ once $
     (X :: UMultiPoly 1 Int) === monomial 1 1
+  , testProperty "S.X  :: UMultiPoly Int8" $ once $
+    case (S.monomial 1 1 :: UMultiPoly 1 Int8) of S.X -> True; _ -> False
+  , testProperty "S.X  :: UMultiPoly Int8" $ once $
+    (S.X :: UMultiPoly 1 Int8) === S.monomial 1 1
   , testProperty "X :: UMultiPoly ()" $ once $
     case (zero :: UMultiPoly 1 ()) of S.X -> True; _ -> False
   , testProperty "X :: UMultiPoly ()" $ once $
@@ -268,6 +272,10 @@ patternTests = testGroup "pattern"
     case (monomial (SG.fromTuple (0, 1)) 1 :: UMultiPoly 2 Int) of Y -> True; _ -> False
   , testProperty "Y  :: UMultiPoly Int" $ once $
     (Y :: UMultiPoly 2 Int) === monomial (SG.fromTuple (0, 1)) 1
+  , testProperty "S.Y  :: UMultiPoly Int8" $ once $
+    case (S.monomial (SG.fromTuple (0, 1)) 1 :: UMultiPoly 2 Int8) of S.Y -> True; _ -> False
+  , testProperty "S.Y  :: UMultiPoly Int8" $ once $
+    (S.Y :: UMultiPoly 2 Int8) === S.monomial (SG.fromTuple (0, 1)) 1
   , testProperty "Y :: UMultiPoly ()" $ once $
     case (zero :: UMultiPoly 2 ()) of S.Y -> True; _ -> False
   , testProperty "Y :: UMultiPoly ()" $ once $
@@ -277,6 +285,10 @@ patternTests = testGroup "pattern"
     case (monomial (SG.fromTuple (0, 0, 1)) 1 :: UMultiPoly 3 Int) of Z -> True; _ -> False
   , testProperty "Z  :: UMultiPoly Int" $ once $
     (Z :: UMultiPoly 3 Int) === monomial (SG.fromTuple (0, 0, 1)) 1
+  , testProperty "S.Z  :: UMultiPoly Int8" $ once $
+    case (S.monomial (SG.fromTuple (0, 0, 1)) 1 :: UMultiPoly 3 Int) of S.Z -> True; _ -> False
+  , testProperty "S.Z  :: UMultiPoly Int" $ once $
+    (S.Z :: UMultiPoly 3 Int) === S.monomial (SG.fromTuple (0, 0, 1)) 1
   , testProperty "Z :: UMultiPoly ()" $ once $
     case (zero :: UMultiPoly 3 ()) of S.Z -> True; _ -> False
   , testProperty "Z :: UMultiPoly ()" $ once $
@@ -289,4 +301,8 @@ conversionTests = testGroup "conversions"
     \(xs :: UMultiPoly 3 Int8) -> xs === unsegregate (segregate xs)
   , testProperty "segregate . unsegregate = id" $
     \xs -> xs === segregate (unsegregate xs :: UMultiPoly 3 Int8)
+  , testProperty "toMultiPoly . unMultiPoly = id" $
+    \(xs :: UMultiPoly 3 Int8) -> xs === toMultiPoly (unMultiPoly xs)
+  , testProperty "S.toMultiPoly . S.unMultiPoly = id" $
+    \(xs :: UMultiPoly 3 Int8) -> xs === S.toMultiPoly (S.unMultiPoly xs)
   ]

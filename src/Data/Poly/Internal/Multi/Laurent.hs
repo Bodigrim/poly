@@ -59,8 +59,7 @@ import Control.Exception
 import Data.Euclidean (GcdDomain(..), Euclidean(..), Field)
 import Data.Finite
 import Data.Kind
-import Data.List (intersperse)
-import Data.Ord
+import Data.List (intersperse, foldl1')
 import Data.Semiring (Semiring(..), Ring())
 import qualified Data.Semiring as Semiring
 import qualified Data.Vector as V
@@ -144,7 +143,7 @@ instance (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Int, a), G.Vecto
   fromList [] = MultiLaurent 0 zero
   fromList xs = toMultiLaurent minPow (fromList ys)
     where
-      minPow = minimum $ map fst xs
+      minPow = foldl1' (SU.zipWith min) (map fst xs)
       ys = map (first (SU.map fromIntegral . subtract minPow)) xs
 
   toList (MultiLaurent off (MultiPoly poly)) =
@@ -188,16 +187,18 @@ unLaurent = first SU.head . unMultiLaurent
 -- >>> toMultiLaurent (fromTuple (0, -2)) (2 * Data.Poly.Multi.X + 1) :: UMultiLaurent 2 Int
 -- 2 * X * Y^-2 + 1 * Y^-2
 toMultiLaurent
-  :: (G.Vector v (SU.Vector n Word, a))
+  :: (KnownNat n, G.Vector v (SU.Vector n Word, a))
   => SU.Vector n Int
   -> MultiPoly v n a
   -> MultiLaurent v n a
 toMultiLaurent off (MultiPoly xs)
-  | G.null xs = MultiLaurent (SU.map (const 0) off) (MultiPoly G.empty)
+  | G.null xs = MultiLaurent 0 (MultiPoly G.empty)
   | otherwise = MultiLaurent (SU.zipWith (\o m -> o + fromIntegral m) off minPow) (MultiPoly ys)
     where
-      minPow = fst $ G.minimumBy (comparing fst) xs
-      ys = if SU.all (== 0) minPow then xs else G.map (first (SU.zipWith subtract minPow)) xs
+      minPow = G.foldl'(\acc (x, _) -> SU.zipWith min acc x) (SU.replicate maxBound) xs
+      ys
+        | SU.all (== 0) minPow = xs
+        | otherwise = G.map (first (SU.zipWith subtract minPow)) xs
 {-# INLINE toMultiLaurent #-}
 
 -- | Construct 'Laurent' polynomial from an offset and a regular polynomial.
@@ -257,14 +258,16 @@ leading (MultiLaurent off poly) = first ((+ SU.head off) . fromIntegral) <$> Mul
 -- | Note that 'abs' = 'id' and 'signum' = 'const' 1.
 instance (Eq a, Num a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Num (MultiLaurent v n a) where
   MultiLaurent off1 poly1 * MultiLaurent off2 poly2 = toMultiLaurent (off1 + off2) (poly1 * poly2)
-  MultiLaurent off1 poly1 + MultiLaurent off2 poly2 = case off1 `compare` off2 of
-    LT -> toMultiLaurent off1 (poly1 + Multi.scale (SU.map fromIntegral $ off2 - off1) 1 poly2)
-    EQ -> toMultiLaurent off1 (poly1 + poly2)
-    GT -> toMultiLaurent off2 (Multi.scale (SU.map fromIntegral $ off1 - off2) 1 poly1 + poly2)
-  MultiLaurent off1 poly1 - MultiLaurent off2 poly2 = case off1 `compare` off2 of
-    LT -> toMultiLaurent off1 (poly1 - Multi.scale (SU.map fromIntegral $ off2 - off1) 1 poly2)
-    EQ -> toMultiLaurent off1 (poly1 - poly2)
-    GT -> toMultiLaurent off2 (Multi.scale (SU.map fromIntegral $ off1 - off2) 1 poly1 - poly2)
+  MultiLaurent off1 poly1 + MultiLaurent off2 poly2 = toMultiLaurent off (poly1' + poly2')
+    where
+      off    = SU.zipWith min off1 off2
+      poly1' = Multi.scale (SU.zipWith (\x y -> fromIntegral (x - y)) off1 off) 1 poly1
+      poly2' = Multi.scale (SU.zipWith (\x y -> fromIntegral (x - y)) off2 off) 1 poly2
+  MultiLaurent off1 poly1 - MultiLaurent off2 poly2 = toMultiLaurent off (poly1' - poly2')
+    where
+      off    = SU.zipWith min off1 off2
+      poly1' = Multi.scale (SU.zipWith (\x y -> fromIntegral (x - y)) off1 off) 1 poly1
+      poly2' = Multi.scale (SU.zipWith (\x y -> fromIntegral (x - y)) off2 off) 1 poly2
   negate (MultiLaurent off poly) = MultiLaurent off (negate poly)
   abs = id
   signum = const 1
@@ -280,10 +283,11 @@ instance (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Sem
   one  = MultiLaurent 0 one
   MultiLaurent off1 poly1 `times` MultiLaurent off2 poly2 =
     toMultiLaurent (off1 + off2) (poly1 `times` poly2)
-  MultiLaurent off1 poly1 `plus` MultiLaurent off2 poly2 = case off1 `compare` off2 of
-    LT -> toMultiLaurent off1 (poly1 `plus` Multi.scale' (SU.map fromIntegral $ off2 - off1) one poly2)
-    EQ -> toMultiLaurent off1 (poly1 `plus` poly2)
-    GT -> toMultiLaurent off2 (Multi.scale' (SU.map fromIntegral $ off1 - off2) one poly1 `plus` poly2)
+  MultiLaurent off1 poly1 `plus` MultiLaurent off2 poly2 = toMultiLaurent off (poly1' `plus` poly2')
+    where
+      off    = SU.zipWith min off1 off2
+      poly1' = Multi.scale' (SU.zipWith (\x y -> fromIntegral (x - y)) off1 off) one poly1
+      poly2' = Multi.scale' (SU.zipWith (\x y -> fromIntegral (x - y)) off2 off) one poly2
   fromNatural n = MultiLaurent 0 (fromNatural n)
   {-# INLINE zero #-}
   {-# INLINE one #-}
@@ -357,7 +361,7 @@ subst = Multi.substitute' (scale 0)
 -- >>> deriv 1 (X^3 + 3 * Y) :: UMultiLaurent 2 Int
 -- 3
 deriv
-  :: (Eq a, Ring a, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Ring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
   => Finite n
   -> MultiLaurent v n a
   -> MultiLaurent v n a
@@ -476,7 +480,7 @@ instance (Eq a, Ring a, GcdDomain a, KnownNat n, v ~ V.Vector) => GcdDomain (Mul
 -- as a univariate Laurent polynomial, whose coefficients are
 -- multivariate Laurent polynomials over the last /m/ variables.
 segregate
-  :: (G.Vector v (SU.Vector (1 + m) Word, a), G.Vector v (SU.Vector m Word, a))
+  :: (KnownNat m, G.Vector v (SU.Vector (1 + m) Word, a), G.Vector v (SU.Vector m Word, a))
   => MultiLaurent v (1 + m) a
   -> VLaurent (MultiLaurent v m a)
 segregate (MultiLaurent off poly)
@@ -491,15 +495,18 @@ segregate (MultiLaurent off poly)
 -- as a multivariate polynomial over 1+/m/ variables.
 unsegregate
   :: forall v m a.
-     (G.Vector v (SU.Vector (1 + m) Word, a), G.Vector v (SU.Vector m Word, a))
+     (KnownNat m, KnownNat (1 + m), G.Vector v (SU.Vector (1 + m) Word, a), G.Vector v (SU.Vector m Word, a))
   => VLaurent (MultiLaurent v m a)
   -> MultiLaurent v (1 + m) a
 unsegregate (MultiLaurent off poly)
+  | G.null (unMultiPoly poly)
+  = MultiLaurent 0 (MultiPoly G.empty)
+  | otherwise
   = toMultiLaurent (off SU.++ offs) (MultiPoly (G.concat (G.toList ys)))
   where
     xs :: V.Vector (SU.Vector 1 Word, (SU.Vector m Int, MultiPoly v m a))
     xs = G.map (fmap unMultiLaurent) $ Multi.unMultiPoly poly
     offs :: SU.Vector m Int
-    offs = fst $ snd $ G.minimumBy (comparing (fst . snd)) xs
+    offs = G.foldl' (\acc (_, (v, _)) -> SU.zipWith min acc v) (SU.replicate maxBound) xs
     ys :: V.Vector (v (SU.Vector (1 + m) Word, a))
     ys = G.map (\(v, (vs, p)) -> G.map (first ((v SU.++) . SU.zipWith3 (\a b c -> c + fromIntegral (b - a)) offs vs)) (unMultiPoly p)) xs

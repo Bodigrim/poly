@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE UndecidableInstances       #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
@@ -19,12 +20,13 @@ module TestUtils
   , myShowLaws
   ) where
 
+import Prelude hiding (lcm, rem)
 import Control.Arrow
-import Data.Euclidean hiding (rem)
+import Data.Euclidean
 import Data.Finite
 import Data.Mod
 import Data.Proxy
-import Data.Semiring (Semiring, Ring)
+import Data.Semiring (Semiring(..), Ring)
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Sized as SG
 import qualified Data.Vector.Unboxed.Sized as SU
@@ -135,8 +137,8 @@ myNumLaws proxy = testGroup tpclss $ map tune props
       where
         test = uncurry testProperty pair
 
-myGcdDomainLaws :: (Eq a, GcdDomain a, Arbitrary a, Show a) => Proxy a -> TestTree
-myGcdDomainLaws proxy = testGroup tpclss $ map tune props
+myGcdDomainLaws :: forall a. (Eq a, GcdDomain a, Arbitrary a, Show a) => Proxy a -> TestTree
+myGcdDomainLaws proxy = testGroup tpclss $ map tune $ lcm0 : props
   where
     Laws tpclss props = gcdDomainLaws proxy
 
@@ -149,6 +151,8 @@ myGcdDomainLaws proxy = testGroup tpclss $ map tune props
       _ -> test
       where
         test = uncurry testProperty pair
+
+    lcm0 = ("lcm0", property $ \(x :: a) -> lcm x zero === zero .&&. lcm zero x === zero)
 
 myEuclideanLaws :: (Eq a, Euclidean a, Arbitrary a, Show a) => Proxy a -> TestTree
 myEuclideanLaws proxy = testGroup tpclss $ map (uncurry testProperty) props

@@ -100,9 +100,11 @@ instance (Show a, G.Vector v a) => Show (Poly v a) where
       $ intersperse (showString " + ")
       $ G.ifoldl (\acc i c -> showCoeff i c : acc) [] xs
     where
+      -- Powers are guaranteed to be non-negative
+      showCoeff :: Int -> a -> String -> String
       showCoeff 0 c = showsPrec 7 c
       showCoeff 1 c = showsPrec 7 c . showString " * X"
-      showCoeff i c = showsPrec 7 c . showString " * X^" . showsPrec 7 i
+      showCoeff i c = showsPrec 7 c . showString (" * X^" ++ show i)
 
 -- | Polynomials backed by boxed vectors.
 type VPoly = Poly V.Vector

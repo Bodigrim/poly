@@ -163,7 +163,7 @@ derivTests = testGroup "deriv"
   [ testProperty "deriv c = 0" $
     \k c -> deriv k (monomial 0 c :: VMultiLaurent 3 Int) === 0
   , testProperty "deriv cX = c" $
-    \k c -> deriv k (monomial 0 c * X :: VMultiLaurent 3 Int) === monomial 0 c
+    \c -> deriv 0 (monomial 0 c * X :: VMultiLaurent 3 Int) === monomial 0 c
   , testProperty "deriv (p + q) = deriv p + deriv q" $
     \k p q -> deriv k (p + q) === (deriv k p + deriv k q :: VMultiLaurent 3 Int)
   , testProperty "deriv (p * q) = p * deriv q + q * deriv p" $
@@ -191,7 +191,7 @@ patternTests = testGroup "pattern"
     (Y :: UMultiLaurent 2 ()) === zero
 
   , testProperty "Z  :: UMultiLaurent Int" $ once $
-    case (monomial (SG.fromTuple (0, 0, 1)) 3 :: UMultiLaurent 3 Int) of Z -> True; _ -> False
+    case (monomial (SG.fromTuple (0, 0, 1)) 1 :: UMultiLaurent 3 Int) of Z -> True; _ -> False
   , testProperty "Z  :: UMultiLaurent Int" $ once $
     (Z :: UMultiLaurent 3 Int) === monomial (SG.fromTuple (0, 0, 1)) 1
   , testProperty "Z :: UMultiLaurent ()" $ once $

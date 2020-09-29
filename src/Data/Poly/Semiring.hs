@@ -116,9 +116,10 @@ dftMult
 dftMult getPrimRoot (Poly xs) (Poly ys) =
   toPoly $ inverseDft primRoot $ G.zipWith times (dft primRoot xs') (dft primRoot ys')
   where
+    nextPowerOf2 :: Int -> Int
     nextPowerOf2 0 = 1
     nextPowerOf2 1 = 1
-    nextPowerOf2 x = 1 `unsafeShiftL` (finiteBitSize x - countLeadingZeros (x - 1))
+    nextPowerOf2 x = 1 `unsafeShiftL` (finiteBitSize (0 :: Int) - countLeadingZeros (x - 1))
 
     padTo l vs = G.generate l (\k -> if k < G.length vs then vs G.! k else zero)
 
