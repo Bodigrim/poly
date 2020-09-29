@@ -45,10 +45,10 @@ lawsTests = testGroup "Laws"
 semiringTests :: [TestTree]
 semiringTests =
   [ mySemiringLaws (Proxy :: Proxy (UMultiLaurent 3 ()))
-  , mySemiringLaws (Proxy :: Proxy (UMultiLaurent 3 Int8))
-  , mySemiringLaws (Proxy :: Proxy (VMultiLaurent 3 Integer))
+  , mySemiringLaws (Proxy :: Proxy (ShortPoly (UMultiLaurent 2 Int8)))
+  , mySemiringLaws (Proxy :: Proxy (ShortPoly (VMultiLaurent 2 Integer)))
   , tenTimesLess
-  $ mySemiringLaws (Proxy :: Proxy (UMultiLaurent 3 (Quaternion Int)))
+  $ mySemiringLaws (Proxy :: Proxy (ShortPoly (UMultiLaurent 2 (Quaternion Int))))
   ]
 
 ringTests :: [TestTree]
@@ -61,10 +61,10 @@ ringTests =
 
 numTests :: [TestTree]
 numTests =
-  [ myNumLaws (Proxy :: Proxy (UMultiLaurent 3 Int8))
-  , myNumLaws (Proxy :: Proxy (VMultiLaurent 3 Integer))
+  [ myNumLaws (Proxy :: Proxy (ShortPoly (UMultiLaurent 2 Int8)))
+  , myNumLaws (Proxy :: Proxy (ShortPoly (VMultiLaurent 2 Integer)))
   , tenTimesLess
-  $ myNumLaws (Proxy :: Proxy (UMultiLaurent 3 (Quaternion Int)))
+  $ myNumLaws (Proxy :: Proxy (ShortPoly (UMultiLaurent 2 (Quaternion Int))))
   ]
 
 gcdDomainTests :: [TestTree]
@@ -131,9 +131,9 @@ evalTestGroup
   -> [TestTree]
 evalTestGroup _ =
   [ testProperty "eval (p + q) r = eval p r + eval q r" $
-    \p q r -> e (p `plus` q) r === e p r `plus` e q r
+    \(ShortPoly p) (ShortPoly q) r -> e (p `plus` q) r === e p r `plus` e q r
   , testProperty "eval (p * q) r = eval p r * eval q r" $
-    \p q r -> e (p `times` q) r === e p r `times` e q r
+    \(ShortPoly p) (ShortPoly q) r -> e (p `times` q) r === e p r `times` e q r
   , testProperty "eval x p = p" $
     \p -> e X (SV.fromTuple (p, undefined, undefined)) === p
   , testProperty "eval (monomial 0 c) p = c" $

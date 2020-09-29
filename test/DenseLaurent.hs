@@ -117,9 +117,9 @@ evalTestGroup
   -> [TestTree]
 evalTestGroup _ =
   [ testProperty "eval (p + q) r = eval p r + eval q r" $
-    \p q r -> e (p `plus` q) r === e p r `plus` e q r
+    \(ShortPoly p) (ShortPoly q) r -> e (p `plus` q) r === e p r `plus` e q r
   , testProperty "eval (p * q) r = eval p r * eval q r" $
-    \p q r -> e (p `times` q) r === e p r `times` e q r
+    \(ShortPoly p) (ShortPoly q) r -> e (p `times` q) r === e p r `times` e q r
   , testProperty "eval x p = p" $
     \p -> e X p === p
   , testProperty "eval (monomial 0 c) p = c" $
@@ -137,7 +137,7 @@ substTestGroup
 substTestGroup _ =
   [ tenTimesLess $ tenTimesLess $ tenTimesLess $
     testProperty "subst (p + q) r = subst p r + subst q r" $
-    \p q r -> e (p + q) r === e p r + e q r
+    \p q (ShortPoly r) -> e (p + q) r === e p r + e q r
   , testProperty "subst x p = p" $
     \p -> e Data.Poly.X p === p
   , testProperty "subst (monomial 0 c) p = monomial 0 c" $
@@ -159,7 +159,7 @@ derivTests = testGroup "deriv"
     \p q -> deriv (p * q) === (p * deriv q + q * deriv p :: ULaurent Int)
   , tenTimesLess $ tenTimesLess $ tenTimesLess $
     testProperty "deriv (subst p q) = deriv q * subst (deriv p) q" $
-    \(p :: Data.Poly.UPoly Int) (q :: ULaurent Int) ->
+    \(ShortPoly (p :: Data.Poly.UPoly Int)) (ShortPoly (q :: ULaurent Int)) ->
       deriv (subst p q) === deriv q * subst (Data.Poly.deriv p) q
   ]
 

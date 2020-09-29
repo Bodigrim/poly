@@ -177,18 +177,18 @@ evalTestGroup
   -> [TestTree]
 evalTestGroup _ =
   [ testProperty "eval (p + q) r = eval p r + eval q r" $
-    \p q r -> e (p + q) r === e p r + e q r
+    \(ShortPoly p) (ShortPoly q) r -> e (p + q) r === e p r + e q r
   , testProperty "eval (p * q) r = eval p r * eval q r" $
-    \p q r -> e (p * q) r === e p r * e q r
+    \(ShortPoly p) (ShortPoly q) r -> e (p * q) r === e p r * e q r
   , testProperty "eval x p = p" $
     \p -> e X p === p
   , testProperty "eval (monomial 0 c) p = c" $
     \c p -> e (monomial 0 c) p === c
 
   , testProperty "eval' (p + q) r = eval' p r + eval' q r" $
-    \p q r -> e' (p + q) r === e' p r + e' q r
+    \(ShortPoly p) (ShortPoly q) r -> e' (p + q) r === e' p r + e' q r
   , testProperty "eval' (p * q) r = eval' p r * eval' q r" $
-    \p q r -> e' (p * q) r === e' p r * e' q r
+    \(ShortPoly p) (ShortPoly q) r -> e' (p * q) r === e' p r * e' q r
   , testProperty "eval' x p = p" $
     \p -> e' S.X p === p
   , testProperty "eval' (S.monomial 0 c) p = c" $
@@ -209,14 +209,14 @@ substTestGroup
 substTestGroup _ =
   [ tenTimesLess $ tenTimesLess $ tenTimesLess $
     testProperty "subst (p + q) r = subst p r + subst q r" $
-    \p q r -> e (p + q) r === e p r + e q r
+    \p q (ShortPoly r) -> e (p + q) r === e p r + e q r
   , testProperty "subst x p = p" $
     \p -> e X p === p
   , testProperty "subst (monomial 0 c) p = monomial 0 c" $
     \c p -> e (monomial 0 c) p === monomial 0 c
   , tenTimesLess $ tenTimesLess $ tenTimesLess $
     testProperty "subst' (p + q) r = subst' p r + subst' q r" $
-    \p q r -> e' (p + q) r === e' p r + e' q r
+    \p q (ShortPoly r) -> e' (p + q) r === e' p r + e' q r
   , testProperty "subst' x p = p" $
     \p -> e' S.X p === p
   , testProperty "subst' (S.monomial 0 c) p = S.monomial 0 c" $
@@ -246,7 +246,7 @@ derivTests = testGroup "deriv"
     \p q -> deriv (p * q) === (p * deriv q + q * deriv p :: UPoly Int)
   , tenTimesLess $ tenTimesLess $ tenTimesLess $
     testProperty "deriv (subst p q) = deriv q * subst (deriv p) q" $
-    \(p :: UPoly Int) (q :: UPoly Int) ->
+    \(ShortPoly (p :: UPoly Int)) (ShortPoly (q :: UPoly Int)) ->
       deriv (subst p q) === deriv q * subst (deriv p) q
   ]
 

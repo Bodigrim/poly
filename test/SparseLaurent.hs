@@ -133,9 +133,9 @@ evalTestGroup
   -> [TestTree]
 evalTestGroup _ =
   [ testProperty "eval (p + q) r = eval p r + eval q r" $
-    \p q r -> e (p `plus` q) r === e p r `plus` e q r
+    \(ShortPoly p) (ShortPoly q) r -> e (p `plus` q) r === e p r `plus` e q r
   , testProperty "eval (p * q) r = eval p r * eval q r" $
-    \p q r -> e (p `times` q) r === e p r `times` e q r
+    \(ShortPoly p) (ShortPoly q) r -> e (p `times` q) r === e p r `times` e q r
   , testProperty "eval x p = p" $
     \p -> e X p === p
   , testProperty "eval (monomial 0 c) p = c" $
@@ -170,9 +170,6 @@ derivTests = testGroup "deriv"
     \p q -> deriv (p + q) === (deriv p + deriv q :: ULaurent Int)
   , testProperty "deriv (p * q) = p * deriv q + q * deriv p" $
     \p q -> deriv (p * q) === (p * deriv q + q * deriv p :: ULaurent Int)
-  -- , testProperty "deriv (subst p q) = deriv q * subst (deriv p) q" $
-  --   \(p :: ULaurent Int) (q :: ULaurent Int) ->
-  --     deriv (subst p q) === deriv q * subst (deriv p) q
   ]
 
 patternTests :: TestTree

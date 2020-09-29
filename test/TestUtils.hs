@@ -47,7 +47,7 @@ import Data.Poly.Multi.Semiring
 import qualified Data.Poly.Multi.Laurent as MultiLaurent
 
 newtype ShortPoly a = ShortPoly { unShortPoly :: a }
-  deriving (Eq, Show, Semiring, GcdDomain, Euclidean)
+  deriving (Eq, Show, Semiring, GcdDomain, Euclidean, Num)
 
 instance KnownNat m => Arbitrary (Mod m) where
   arbitrary = oneof [arbitraryBoundedEnum, fromInteger <$> arbitrary]
