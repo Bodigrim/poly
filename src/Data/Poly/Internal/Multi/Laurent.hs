@@ -69,18 +69,13 @@ import qualified Data.Vector.Sized as SV
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Unboxed.Sized as SU
 import GHC.Exts
+import GHC.TypeNats (KnownNat, Nat, type (+), type (<=))
 
 import Data.Poly.Internal.Multi.Core (derivPoly)
 import Data.Poly.Internal.Multi (Poly, MultiPoly(..))
 import qualified Data.Poly.Internal.Multi as Multi
 import Data.Poly.Internal.Multi.Field ()
 import Data.Poly.Internal.Multi.GcdDomain ()
-
-#if MIN_VERSION_base(4,10,0)
-import GHC.TypeNats (KnownNat, Nat, type (+), type (<=))
-#else
-import GHC.TypeLits (KnownNat, Nat, type (+), type (<=))
-#endif
 
 -- | Sparse
 -- <https://en.wikipedia.org/wiki/Laurent_polynomial Laurent polynomials>

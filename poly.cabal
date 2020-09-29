@@ -12,7 +12,7 @@ copyright: 2019-2020 Andrew Lelechenko
 category: Math, Numerical
 build-type: Simple
 cabal-version: >=1.10
-tested-with: GHC ==8.0.2 GHC ==8.2.2 GHC ==8.4.4 GHC ==8.6.5 GHC ==8.8.4 GHC ==8.10.2
+tested-with: GHC ==8.2.2 GHC ==8.4.4 GHC ==8.6.5 GHC ==8.8.4 GHC ==8.10.2
 extra-source-files:
   changelog.md
   README.md
@@ -51,7 +51,7 @@ library
     Data.Poly.Internal.Multi.GcdDomain
     Data.Poly.Internal.Multi.Laurent
   build-depends:
-    base >= 4.9 && < 5,
+    base >= 4.10 && < 5,
     deepseq >= 1.1 && < 1.5,
     finite-typelits >= 0.1,
     primitive >= 0.6,
@@ -77,7 +77,7 @@ test-suite poly-tests
     SparseLaurent
     TestUtils
   build-depends:
-    base >=4.9 && <5,
+    base >=4.10 && <5,
     finite-typelits,
     mod >=0.1.2,
     poly,
@@ -104,7 +104,7 @@ test-suite poly-doctests
 
 benchmark poly-gauge
   build-depends:
-    base >=4.9 && <5,
+    base >=4.10 && <5,
     deepseq >= 1.1 && < 1.5,
     gauge >= 0.1,
     mod >=0.1.2,

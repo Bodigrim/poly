@@ -5,7 +5,6 @@
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
 --
 
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
@@ -20,10 +19,6 @@
 {-# LANGUAGE TypeOperators              #-}
 {-# LANGUAGE UndecidableInstances       #-}
 {-# LANGUAGE ViewPatterns               #-}
-
-#if __GLASGOW_HASKELL__ >= 806
-{-# LANGUAGE QuantifiedConstraints      #-}
-#endif
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -80,14 +75,9 @@ import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Unboxed.Sized as SU
 import qualified Data.Vector.Sized as SV
 import GHC.Exts (IsList(..))
+import GHC.TypeNats (KnownNat, Nat, type (+), type (<=))
 
 import Data.Poly.Internal.Multi.Core
-
-#if MIN_VERSION_base(4,10,0)
-import GHC.TypeNats (KnownNat, Nat, type (+), type (<=))
-#else
-import GHC.TypeLits (KnownNat, Nat, type (+), type (<=))
-#endif
 
 -- | Sparse polynomials of @n@ variables with coefficients from @a@,
 -- backed by a 'G.Vector' @v@ (boxed, unboxed, storable, etc.).

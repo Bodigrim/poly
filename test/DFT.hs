@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE TypeOperators              #-}
 
@@ -10,14 +9,9 @@ import Data.Complex
 import Data.Mod.Word
 import Data.Poly.Semiring (UPoly, unPoly, toPoly, dft, inverseDft, dftMult)
 import qualified Data.Vector.Unboxed as U
+import GHC.TypeNats (KnownNat, natVal, type (+), type (^))
 import Test.Tasty
 import Test.Tasty.QuickCheck hiding (scale, numTests)
-
-#if MIN_VERSION_base(4,10,0)
-import GHC.TypeNats (KnownNat, natVal, type (+), type (^))
-#else
-import GHC.TypeLits (KnownNat, natVal, type (+), type (^))
-#endif
 
 import Dense ()
 

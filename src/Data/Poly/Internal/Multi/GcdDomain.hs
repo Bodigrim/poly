@@ -35,22 +35,13 @@ import Data.Semiring (Semiring(..), Ring(), minus)
 import Data.Type.Equality
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed.Sized as SU
+import GHC.TypeNats (KnownNat, type (+), SomeNat(..), natVal, sameNat, someNatVal)
 import Unsafe.Coerce
 
 import Data.Poly.Internal.Multi
 
 #if __GLASGOW_HASKELL__ < 806
 import qualified Data.Vector as V
-#endif
-
-#if MIN_VERSION_base(4,10,0)
-import GHC.TypeNats (KnownNat, type (+), SomeNat(..), natVal, sameNat, someNatVal)
-#else
-import GHC.TypeLits (KnownNat, type (+), SomeNat(..), natVal, sameNat)
-import qualified GHC.TypeLits as TL
-
-someNatVal :: Integer -> SomeNat
-someNatVal = fromJust . TL.someNatVal
 #endif
 
 instance {-# OVERLAPPING #-} (Eq a, Ring a, GcdDomain a, G.Vector v (SU.Vector 1 Word, a)) => GcdDomain (Poly v a) where

@@ -7,7 +7,6 @@
 -- Sparse multivariate polynomials with 'Semiring' instance.
 --
 
-{-# LANGUAGE CPP              #-}
 {-# LANGUAGE DataKinds        #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE PatternSynonyms  #-}
@@ -40,17 +39,12 @@ import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Sized as SG
 import qualified Data.Vector.Sized as SV
 import qualified Data.Vector.Unboxed.Sized as SU
+import GHC.TypeNats (KnownNat, type (<=))
 
 import Data.Poly.Internal.Multi (MultiPoly, VMultiPoly, UMultiPoly, unMultiPoly, segregate, unsegregate)
 import qualified Data.Poly.Internal.Multi as Multi
 import Data.Poly.Internal.Multi.Field ()
 import Data.Poly.Internal.Multi.GcdDomain ()
-
-#if MIN_VERSION_base(4,10,0)
-import GHC.TypeNats (KnownNat, type (<=))
-#else
-import GHC.TypeLits (KnownNat, type (<=))
-#endif
 
 -- | Make 'MultiPoly' from a list of (powers, coefficient) pairs.
 --

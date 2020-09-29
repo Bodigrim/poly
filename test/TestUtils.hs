@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
@@ -31,15 +30,10 @@ import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Sized as SG
 import qualified Data.Vector.Unboxed.Sized as SU
 import GHC.Exts
+import GHC.TypeNats (KnownNat)
 import Test.QuickCheck.Classes
 import Test.Tasty
 import Test.Tasty.QuickCheck
-
-#if MIN_VERSION_base(4,10,0)
-import GHC.TypeNats (KnownNat)
-#else
-import GHC.TypeLits (KnownNat)
-#endif
 
 import qualified Data.Poly.Semiring as Dense
 import qualified Data.Poly.Laurent as DenseLaurent
