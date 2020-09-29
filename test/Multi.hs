@@ -15,7 +15,7 @@ import Data.Euclidean (GcdDomain(..))
 import Data.Function
 import Data.Int
 import Data.List (groupBy, sortOn)
-import Data.Mod
+import Data.Mod.Word
 import Data.Proxy
 import Data.Semiring (Semiring(..))
 import qualified Data.Vector as V

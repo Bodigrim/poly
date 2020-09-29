@@ -16,7 +16,6 @@ import qualified Data.Poly.Sparse
 import Data.Poly.Sparse.Laurent
 import Data.Proxy
 import Data.Semiring (Semiring(..))
-import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Unboxed.Sized as SU
@@ -42,52 +41,52 @@ lawsTests = testGroup "Laws"
 
 semiringTests :: [TestTree]
 semiringTests =
-  [ mySemiringLaws (Proxy :: Proxy (Laurent U.Vector ()))
-  , mySemiringLaws (Proxy :: Proxy (Laurent U.Vector Int8))
-  , mySemiringLaws (Proxy :: Proxy (Laurent V.Vector Integer))
+  [ mySemiringLaws (Proxy :: Proxy (ULaurent ()))
+  , mySemiringLaws (Proxy :: Proxy (ULaurent Int8))
+  , mySemiringLaws (Proxy :: Proxy (VLaurent Integer))
   , tenTimesLess
-  $ mySemiringLaws (Proxy :: Proxy (Laurent U.Vector (Quaternion Int)))
+  $ mySemiringLaws (Proxy :: Proxy (ULaurent (Quaternion Int)))
   ]
 
 ringTests :: [TestTree]
 ringTests =
-  [ myRingLaws (Proxy :: Proxy (Laurent U.Vector ()))
-  , myRingLaws (Proxy :: Proxy (Laurent U.Vector Int8))
-  , myRingLaws (Proxy :: Proxy (Laurent V.Vector Integer))
-  , myRingLaws (Proxy :: Proxy (Laurent U.Vector (Quaternion Int)))
+  [ myRingLaws (Proxy :: Proxy (ULaurent ()))
+  , myRingLaws (Proxy :: Proxy (ULaurent Int8))
+  , myRingLaws (Proxy :: Proxy (VLaurent Integer))
+  , myRingLaws (Proxy :: Proxy (ULaurent (Quaternion Int)))
   ]
 
 numTests :: [TestTree]
 numTests =
-  [ myNumLaws (Proxy :: Proxy (Laurent U.Vector Int8))
-  , myNumLaws (Proxy :: Proxy (Laurent V.Vector Integer))
+  [ myNumLaws (Proxy :: Proxy (ULaurent Int8))
+  , myNumLaws (Proxy :: Proxy (VLaurent Integer))
   , tenTimesLess
-  $ myNumLaws (Proxy :: Proxy (Laurent U.Vector (Quaternion Int)))
+  $ myNumLaws (Proxy :: Proxy (ULaurent (Quaternion Int)))
   ]
 
 gcdDomainTests :: [TestTree]
 gcdDomainTests =
-  [ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (Laurent V.Vector Integer)))
+  [ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (VLaurent Integer)))
   , tenTimesLess
-  $ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (Laurent V.Vector Rational)))
+  $ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (VLaurent Rational)))
   ]
 
 isListTests :: [TestTree]
 isListTests =
-  [ myIsListLaws (Proxy :: Proxy (Laurent U.Vector ()))
-  , myIsListLaws (Proxy :: Proxy (Laurent U.Vector Int8))
-  , myIsListLaws (Proxy :: Proxy (Laurent V.Vector Integer))
+  [ myIsListLaws (Proxy :: Proxy (ULaurent ()))
+  , myIsListLaws (Proxy :: Proxy (ULaurent Int8))
+  , myIsListLaws (Proxy :: Proxy (VLaurent Integer))
   , tenTimesLess
-  $ myIsListLaws (Proxy :: Proxy (Laurent U.Vector (Quaternion Int)))
+  $ myIsListLaws (Proxy :: Proxy (ULaurent (Quaternion Int)))
   ]
 
 showTests :: [TestTree]
 showTests =
-  [ myShowLaws (Proxy :: Proxy (Laurent U.Vector ()))
-  , myShowLaws (Proxy :: Proxy (Laurent U.Vector Int8))
-  , myShowLaws (Proxy :: Proxy (Laurent V.Vector Integer))
+  [ myShowLaws (Proxy :: Proxy (ULaurent ()))
+  , myShowLaws (Proxy :: Proxy (ULaurent Int8))
+  , myShowLaws (Proxy :: Proxy (VLaurent Integer))
   , tenTimesLess
-  $ myShowLaws (Proxy :: Proxy (Laurent U.Vector (Quaternion Int)))
+  $ myShowLaws (Proxy :: Proxy (ULaurent (Quaternion Int)))
   ]
 
 otherTests :: TestTree
@@ -123,8 +122,8 @@ divideByZeroTests = testGroup "divideByZero"
 
 evalTests :: TestTree
 evalTests = testGroup "eval" $ concat
-  [ evalTestGroup  (Proxy :: Proxy (Laurent V.Vector Rational))
-  , substTestGroup (Proxy :: Proxy (Laurent U.Vector Int8))
+  [ evalTestGroup  (Proxy :: Proxy (VLaurent Rational))
+  , substTestGroup (Proxy :: Proxy (ULaurent Int8))
   ]
 
 evalTestGroup
@@ -164,15 +163,15 @@ substTestGroup _ =
 derivTests :: TestTree
 derivTests = testGroup "deriv"
   [ testProperty "deriv c = 0" $
-    \c -> deriv (monomial 0 c :: Laurent V.Vector Int) === 0
+    \c -> deriv (monomial 0 c :: ULaurent Int) === 0
   , testProperty "deriv cX = c" $
-    \c -> deriv (monomial 0 c * X :: Laurent V.Vector Int) === monomial 0 c
+    \c -> deriv (monomial 0 c * X :: ULaurent Int) === monomial 0 c
   , testProperty "deriv (p + q) = deriv p + deriv q" $
-    \p q -> deriv (p + q) === (deriv p + deriv q :: Laurent V.Vector Int)
+    \p q -> deriv (p + q) === (deriv p + deriv q :: ULaurent Int)
   , testProperty "deriv (p * q) = p * deriv q + q * deriv p" $
-    \p q -> deriv (p * q) === (p * deriv q + q * deriv p :: Laurent V.Vector Int)
+    \p q -> deriv (p * q) === (p * deriv q + q * deriv p :: ULaurent Int)
   -- , testProperty "deriv (subst p q) = deriv q * subst (deriv p) q" $
-  --   \(p :: Laurent V.Vector Int) (q :: Laurent U.Vector Int) ->
+  --   \(p :: ULaurent Int) (q :: ULaurent Int) ->
   --     deriv (subst p q) === deriv q * subst (deriv p) q
   ]
 

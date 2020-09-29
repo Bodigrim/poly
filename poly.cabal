@@ -79,7 +79,7 @@ test-suite poly-tests
   build-depends:
     base >=4.9 && <5,
     finite-typelits,
-    mod,
+    mod >=0.1.2,
     poly,
     QuickCheck >=2.12,
     quickcheck-classes >=0.6.3,
@@ -107,7 +107,7 @@ benchmark poly-gauge
     base >=4.9 && <5,
     deepseq >= 1.1 && < 1.5,
     gauge >= 0.1,
-    mod,
+    mod >=0.1.2,
     poly,
     semirings >= 0.2,
     vector >= 0.12.0.2

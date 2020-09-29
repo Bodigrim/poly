@@ -161,13 +161,13 @@ substTestGroup _ =
 derivTests :: TestTree
 derivTests = testGroup "deriv"
   [ testProperty "deriv c = 0" $
-    \k c -> deriv k (monomial 0 c :: VMultiLaurent 3 Int) === 0
+    \k c -> deriv k (monomial 0 c :: UMultiLaurent 3 Int) === 0
   , testProperty "deriv cX = c" $
-    \c -> deriv 0 (monomial 0 c * X :: VMultiLaurent 3 Int) === monomial 0 c
+    \c -> deriv 0 (monomial 0 c * X :: UMultiLaurent 3 Int) === monomial 0 c
   , testProperty "deriv (p + q) = deriv p + deriv q" $
-    \k p q -> deriv k (p + q) === (deriv k p + deriv k q :: VMultiLaurent 3 Int)
+    \k p q -> deriv k (p + q) === (deriv k p + deriv k q :: UMultiLaurent 3 Int)
   , testProperty "deriv (p * q) = p * deriv q + q * deriv p" $
-    \k p q -> deriv k (p * q) === (p * deriv k q + q * deriv k p :: VMultiLaurent 3 Int)
+    \k p q -> deriv k (p * q) === (p * deriv k q + q * deriv k p :: UMultiLaurent 3 Int)
   ]
 
 patternTests :: TestTree

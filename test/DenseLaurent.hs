@@ -14,7 +14,6 @@ import qualified Data.Poly
 import Data.Poly.Laurent
 import Data.Proxy
 import Data.Semiring (Semiring(..))
-import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed as U
 import Test.Tasty
@@ -151,16 +150,16 @@ substTestGroup _ =
 derivTests :: TestTree
 derivTests = testGroup "deriv"
   [ testProperty "deriv c = 0" $
-    \c -> deriv (monomial 0 c :: VLaurent Int) === 0
+    \c -> deriv (monomial 0 c :: ULaurent Int) === 0
   , testProperty "deriv cX = c" $
-    \c -> deriv (monomial 0 c * X :: VLaurent Int) === monomial 0 c
+    \c -> deriv (monomial 0 c * X :: ULaurent Int) === monomial 0 c
   , testProperty "deriv (p + q) = deriv p + deriv q" $
-    \p q -> deriv (p + q) === (deriv p + deriv q :: VLaurent Int)
+    \p q -> deriv (p + q) === (deriv p + deriv q :: ULaurent Int)
   , testProperty "deriv (p * q) = p * deriv q + q * deriv p" $
-    \p q -> deriv (p * q) === (p * deriv q + q * deriv p :: VLaurent Int)
+    \p q -> deriv (p * q) === (p * deriv q + q * deriv p :: ULaurent Int)
   , tenTimesLess $ tenTimesLess $ tenTimesLess $
     testProperty "deriv (subst p q) = deriv q * subst (deriv p) q" $
-    \(p :: Data.Poly.Poly V.Vector Int) (q :: ULaurent Int) ->
+    \(p :: Data.Poly.UPoly Int) (q :: ULaurent Int) ->
       deriv (subst p q) === deriv q * subst (Data.Poly.deriv p) q
   ]
 

@@ -12,7 +12,7 @@ import Prelude hiding (gcd, quotRem, quot, rem)
 import Control.Exception
 import Data.Euclidean (Euclidean(..), GcdDomain(..))
 import Data.Int
-import Data.Mod
+import Data.Mod.Word
 import Data.Poly
 import qualified Data.Poly.Semiring as S
 import Data.Proxy
@@ -44,54 +44,54 @@ lawsTests = testGroup "Laws"
 
 semiringTests :: [TestTree]
 semiringTests =
-  [ mySemiringLaws (Proxy :: Proxy (Poly U.Vector ()))
-  , mySemiringLaws (Proxy :: Proxy (Poly U.Vector Int8))
-  , mySemiringLaws (Proxy :: Proxy (Poly V.Vector Integer))
-  , mySemiringLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
+  [ mySemiringLaws (Proxy :: Proxy (UPoly ()))
+  , mySemiringLaws (Proxy :: Proxy (UPoly Int8))
+  , mySemiringLaws (Proxy :: Proxy (VPoly Integer))
+  , mySemiringLaws (Proxy :: Proxy (UPoly (Quaternion Int)))
   ]
 
 ringTests :: [TestTree]
 ringTests =
-  [ myRingLaws (Proxy :: Proxy (Poly U.Vector ()))
-  , myRingLaws (Proxy :: Proxy (Poly U.Vector Int8))
-  , myRingLaws (Proxy :: Proxy (Poly V.Vector Integer))
-  , myRingLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
+  [ myRingLaws (Proxy :: Proxy (UPoly ()))
+  , myRingLaws (Proxy :: Proxy (UPoly Int8))
+  , myRingLaws (Proxy :: Proxy (VPoly Integer))
+  , myRingLaws (Proxy :: Proxy (UPoly (Quaternion Int)))
   ]
 
 numTests :: [TestTree]
 numTests =
-  [ myNumLaws (Proxy :: Proxy (Poly U.Vector Int8))
-  , myNumLaws (Proxy :: Proxy (Poly V.Vector Integer))
-  , myNumLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
+  [ myNumLaws (Proxy :: Proxy (UPoly Int8))
+  , myNumLaws (Proxy :: Proxy (VPoly Integer))
+  , myNumLaws (Proxy :: Proxy (UPoly (Quaternion Int)))
   ]
 
 gcdDomainTests :: [TestTree]
 gcdDomainTests =
-  [ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Integer)))
-  , myGcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector (Mod 3))))
-  , myGcdDomainLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
+  [ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (VPoly Integer)))
+  , myGcdDomainLaws (Proxy :: Proxy (ShortPoly (UPoly (Mod 3))))
+  , myGcdDomainLaws (Proxy :: Proxy (ShortPoly (VPoly Rational)))
   ]
 
 euclideanTests :: [TestTree]
 euclideanTests =
-  [ myEuclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector (Mod 3))))
-  , myEuclideanLaws (Proxy :: Proxy (ShortPoly (Poly V.Vector Rational)))
+  [ myEuclideanLaws (Proxy :: Proxy (ShortPoly (UPoly (Mod 3))))
+  , myEuclideanLaws (Proxy :: Proxy (ShortPoly (VPoly Rational)))
   ]
 
 isListTests :: [TestTree]
 isListTests =
-  [ myIsListLaws (Proxy :: Proxy (Poly U.Vector ()))
-  , myIsListLaws (Proxy :: Proxy (Poly U.Vector Int8))
-  , myIsListLaws (Proxy :: Proxy (Poly V.Vector Integer))
-  , myIsListLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
+  [ myIsListLaws (Proxy :: Proxy (UPoly ()))
+  , myIsListLaws (Proxy :: Proxy (UPoly Int8))
+  , myIsListLaws (Proxy :: Proxy (VPoly Integer))
+  , myIsListLaws (Proxy :: Proxy (UPoly (Quaternion Int)))
   ]
 
 showTests :: [TestTree]
 showTests =
-  [ myShowLaws (Proxy :: Proxy (Poly U.Vector ()))
-  , myShowLaws (Proxy :: Proxy (Poly U.Vector Int8))
-  , myShowLaws (Proxy :: Proxy (Poly V.Vector Integer))
-  , myShowLaws (Proxy :: Proxy (Poly U.Vector (Quaternion Int)))
+  [ myShowLaws (Proxy :: Proxy (UPoly ()))
+  , myShowLaws (Proxy :: Proxy (UPoly Int8))
+  , myShowLaws (Proxy :: Proxy (VPoly Integer))
+  , myShowLaws (Proxy :: Proxy (UPoly (Quaternion Int)))
   ]
 
 arithmeticTests :: TestTree
@@ -165,9 +165,9 @@ divideByZeroTests = testGroup "divideByZero"
 
 evalTests :: TestTree
 evalTests = testGroup "eval" $ concat
-  [ evalTestGroup  (Proxy :: Proxy (Poly U.Vector Int8))
-  , evalTestGroup  (Proxy :: Proxy (Poly V.Vector Integer))
-  , substTestGroup (Proxy :: Proxy (Poly U.Vector Int8))
+  [ evalTestGroup  (Proxy :: Proxy (UPoly Int8))
+  , evalTestGroup  (Proxy :: Proxy (VPoly Integer))
+  , substTestGroup (Proxy :: Proxy (UPoly Int8))
   ]
 
 evalTestGroup
@@ -231,22 +231,22 @@ substTestGroup _ =
 derivTests :: TestTree
 derivTests = testGroup "deriv"
   [ testProperty "deriv = S.deriv" $
-    \(p :: Poly V.Vector Integer) -> deriv p === S.deriv p
+    \(p :: VPoly Integer) -> deriv p === S.deriv p
   , testProperty "integral = S.integral" $
-    \(p :: Poly V.Vector Rational) -> integral p === S.integral p
+    \(p :: VPoly Rational) -> integral p === S.integral p
   , testProperty "deriv . integral = id" $
-    \(p :: Poly V.Vector Rational) -> deriv (integral p) === p
+    \(p :: VPoly Rational) -> deriv (integral p) === p
   , testProperty "deriv c = 0" $
-    \c -> deriv (monomial 0 c :: Poly V.Vector Int) === 0
+    \c -> deriv (monomial 0 c :: UPoly Int) === 0
   , testProperty "deriv cX = c" $
-    \c -> deriv (monomial 0 c * X :: Poly V.Vector Int) === monomial 0 c
+    \c -> deriv (monomial 0 c * X :: UPoly Int) === monomial 0 c
   , testProperty "deriv (p + q) = deriv p + deriv q" $
-    \p q -> deriv (p + q) === (deriv p + deriv q :: Poly V.Vector Int)
+    \p q -> deriv (p + q) === (deriv p + deriv q :: UPoly Int)
   , testProperty "deriv (p * q) = p * deriv q + q * deriv p" $
-    \p q -> deriv (p * q) === (p * deriv q + q * deriv p :: Poly V.Vector Int)
+    \p q -> deriv (p * q) === (p * deriv q + q * deriv p :: UPoly Int)
   , tenTimesLess $ tenTimesLess $ tenTimesLess $
     testProperty "deriv (subst p q) = deriv q * subst (deriv p) q" $
-    \(p :: Poly V.Vector Int) (q :: Poly U.Vector Int) ->
+    \(p :: UPoly Int) (q :: UPoly Int) ->
       deriv (subst p q) === deriv q * subst (deriv p) q
   ]
 

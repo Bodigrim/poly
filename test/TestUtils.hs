@@ -24,7 +24,7 @@ import Prelude hiding (lcm, rem)
 import Control.Arrow
 import Data.Euclidean
 import Data.Finite
-import Data.Mod
+import Data.Mod.Word
 import Data.Proxy
 import Data.Semiring (Semiring(..), Ring)
 import qualified Data.Vector.Generic as G

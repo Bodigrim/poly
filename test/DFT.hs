@@ -7,9 +7,8 @@ module DFT
   ) where
 
 import Data.Complex
-import Data.Mod
+import Data.Mod.Word
 import Data.Poly.Semiring (UPoly, unPoly, toPoly, dft, inverseDft, dftMult)
-import qualified Data.Vector as V
 import qualified Data.Vector.Unboxed as U
 import Test.Tasty
 import Test.Tasty.QuickCheck hiding (scale, numTests)
@@ -43,20 +42,20 @@ testSuite = testGroup "DFT"
 
 dftMatchesRef :: KnownNat n1 => Mod n1 -> TestTree
 dftMatchesRef primRoot = testProperty (show n) $ do
-  xs <- V.replicateM n arbitrary
+  xs <- U.replicateM n arbitrary
   pure $ dft primRoot xs === dftRef primRoot xs
   where
     n = fromIntegral (natVal primRoot - 1)
 
-dftRef :: Num a => a -> V.Vector a -> V.Vector a
-dftRef primRoot xs = V.generate (V.length xs) $
-  \k -> sum (map (\j -> xs V.! j * primRoot ^ (j * k)) [0..n-1])
+dftRef :: (Num a, U.Unbox a) => a -> U.Vector a -> U.Vector a
+dftRef primRoot xs = U.generate (U.length xs) $
+  \k -> sum (map (\j -> xs U.! j * primRoot ^ (j * k)) [0..n-1])
   where
-    n = length xs
+    n = U.length xs
 
 dftIsInvertible :: KnownNat n1 => Mod n1 -> TestTree
 dftIsInvertible primRoot = testProperty (show n) $ do
-  xs <- V.replicateM n arbitrary
+  xs <- U.replicateM n arbitrary
   let ys = dft primRoot xs
       zs = inverseDft primRoot ys
   pure $ xs === zs
