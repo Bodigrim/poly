@@ -3,11 +3,23 @@
 Haskell library for univariate and multivariate polynomials, backed by `Vector`.
 
 ```haskell
+> -- Univariate polynomials
 > (X + 1) + (X - 1) :: VPoly Integer
-2 * X + 0
-
+2 * X
 > (X + 1) * (X - 1) :: UPoly Int
-1 * X^2 + 0 * X + (-1)
+1 * X^2 + (-1)
+
+> -- Multivariate polynomials
+> (X + Y) * (X - Y) :: VMultiPoly 2 Integer
+1 * X^2 + (-1) * Y^2
+> (X + Y + Z) ^ 2 :: UMultiPoly 3 Int
+1 * X^2 + 2 * X * Y + 2 * X * Z + 1 * Y^2 + 2 * Y * Z + 1 * Z^2
+
+> -- Laurent polynomials
+> (X^-2 + 1) * (X - X^-1) :: VLaurent Integer
+1 * X + (-1) * X^-3
+> (X^-1 + Y) * (X + Y^-1) :: UMultiLaurent 2 Int
+1 * X * Y + 2 + 1 * X^-1 * Y^-1
 ```
 
 ## Vectors
@@ -150,3 +162,9 @@ Here is a couple of benchmarks for `UPoly Int`.
 | addition, 10000 coeffs.       |            6545 |     167  |  39x
 | multiplication, 100 coeffs.   |            1733 |      33  |  52x
 | multiplication, 1000 coeffs.  |          442000 |    1456  | 303x
+
+## Additional resources
+
+* __Polynomials in Haskell__, MuniHac, 12.09.2020:
+  [slides](https://github.com/Bodigrim/my-talks/raw/master/munihac2020/slides.pdf),
+  [video](https://youtu.be/NAs3ExQZUjA).
