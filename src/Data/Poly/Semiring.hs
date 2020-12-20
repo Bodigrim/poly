@@ -125,6 +125,7 @@ dftMult getPrimRoot (Poly xs) (Poly ys) =
     xs' = padTo zl xs
     ys' = padTo zl ys
     primRoot = getPrimRoot zl
+{-# INLINABLE dftMult #-}
 
 -- | Convert from dense to sparse polynomials.
 --

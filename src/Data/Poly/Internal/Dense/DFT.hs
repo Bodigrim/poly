@@ -67,6 +67,7 @@ dft primRoot (xs :: v a)
           MG.unsafeWrite ys k             $! y0 `plus`  y1
           MG.unsafeWrite ys (k + halfLen) $! y0 `minus` y1
         G.unsafeFreeze ys
+{-# INLINABLE dft #-}
 
 -- | Inverse <https://en.wikipedia.org/wiki/Fast_Fourier_transform discrete Fourier transform>
 -- \( x_k = {1\over N} \sum_{j=0}^{N-1} y_j \sqrt[N]{1}^{-jk} \).
@@ -78,3 +79,4 @@ inverseDft
 inverseDft primRoot ys = G.map (`times` invN) $ dft (recip primRoot) ys
   where
     invN = recip $ fromIntegral $ G.length ys
+{-# INLINABLE inverseDft #-}
