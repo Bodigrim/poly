@@ -11,7 +11,7 @@ maintainer: andrew.lelechenko@gmail.com
 copyright: 2019-2020 Andrew Lelechenko
 category: Math, Numerical
 build-type: Simple
-cabal-version: >=1.10
+cabal-version: 2.0
 tested-with: GHC ==8.2.2 GHC ==8.4.4 GHC ==8.6.5 GHC ==8.8.4 GHC ==8.10.2
 extra-source-files:
   changelog.md
@@ -102,15 +102,18 @@ test-suite poly-doctests
       poly,
       doctest
 
-benchmark poly-gauge
+benchmark poly-bench
   build-depends:
     base >=4.10 && <5,
     deepseq >= 1.1 && < 1.5,
-    gauge >= 0.1,
     mod >=0.1.2,
     poly,
     semirings >= 0.2,
     vector >= 0.12.0.2
+  build-depends:
+    tasty-bench
+  mixins:
+    tasty-bench (Test.Tasty.Bench as Gauge.Main)
   type: exitcode-stdio-1.0
   main-is: Bench.hs
   other-modules:
