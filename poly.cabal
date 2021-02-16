@@ -21,6 +21,11 @@ source-repository head
   type: git
   location: https://github.com/Bodigrim/poly
 
+flag sparse
+  description:
+    Enable sparse and multivariate polynomials, incurring larger dependency footprint.
+  default: True
+
 library
   hs-source-dirs: src
   exposed-modules:
@@ -29,38 +34,50 @@ library
     Data.Poly.Semiring
     Data.Poly.Orthogonal
 
-    Data.Poly.Sparse
-    Data.Poly.Sparse.Laurent
-    Data.Poly.Sparse.Semiring
+  if flag(sparse)
+    exposed-modules:
+      Data.Poly.Sparse
+      Data.Poly.Sparse.Laurent
+      Data.Poly.Sparse.Semiring
 
-    Data.Poly.Multi
-    Data.Poly.Multi.Laurent
-    Data.Poly.Multi.Semiring
+      Data.Poly.Multi
+      Data.Poly.Multi.Laurent
+      Data.Poly.Multi.Semiring
+
   other-modules:
-    Data.Poly.Internal.Convert
-
     Data.Poly.Internal.Dense
     Data.Poly.Internal.Dense.Field
     Data.Poly.Internal.Dense.DFT
     Data.Poly.Internal.Dense.GcdDomain
     Data.Poly.Internal.Dense.Laurent
 
-    Data.Poly.Internal.Multi
-    Data.Poly.Internal.Multi.Core
-    Data.Poly.Internal.Multi.Field
-    Data.Poly.Internal.Multi.GcdDomain
-    Data.Poly.Internal.Multi.Laurent
+  if flag(sparse)
+    other-modules:
+      Data.Poly.Internal.Convert
+      Data.Poly.Internal.Multi
+      Data.Poly.Internal.Multi.Core
+      Data.Poly.Internal.Multi.Field
+      Data.Poly.Internal.Multi.GcdDomain
+      Data.Poly.Internal.Multi.Laurent
+
   build-depends:
     base >= 4.10 && < 5,
     deepseq >= 1.1 && < 1.5,
-    finite-typelits >= 0.1,
     primitive >= 0.6,
     semirings >= 0.5.2,
-    vector >= 0.12.0.2,
-    vector-algorithms >= 0.8.0.3,
-    vector-sized >= 1.1
+    vector >= 0.12.0.2
+
+  if flag(sparse)
+    build-depends:
+      finite-typelits >= 0.1,
+      vector-algorithms >= 0.8.0.3,
+      vector-sized >= 1.1
+
   default-language: Haskell2010
   ghc-options: -Wall -Wcompat -Wredundant-constraints
+
+  if flag(sparse)
+    cpp-options: -DSupportSparse
 
 test-suite poly-tests
   type: exitcode-stdio-1.0
@@ -69,16 +86,17 @@ test-suite poly-tests
     Dense
     DenseLaurent
     DFT
-    Multi
-    MultiLaurent
     Orthogonal
     Quaternion
-    Sparse
-    SparseLaurent
     TestUtils
+  if flag(sparse)
+    other-modules:
+      Multi
+      MultiLaurent
+      Sparse
+      SparseLaurent
   build-depends:
     base >=4.10 && <5,
-    finite-typelits,
     mod >=0.1.2,
     poly,
     QuickCheck >=2.12,
@@ -86,11 +104,16 @@ test-suite poly-tests
     semirings >= 0.5.2,
     tasty >= 0.11,
     tasty-quickcheck >= 0.8,
-    vector >= 0.12.0.2,
-    vector-sized >= 1.4.2
+    vector >= 0.12.0.2
+  if flag(sparse)
+    build-depends:
+      finite-typelits,
+      vector-sized >= 1.4.2
   default-language: Haskell2010
   hs-source-dirs: test
   ghc-options: -Wall -Wcompat -threaded -rtsopts
+  if flag(sparse)
+    cpp-options: -DSupportSparse
 
 test-suite poly-doctests
   type:             exitcode-stdio-1.0
@@ -118,7 +141,11 @@ benchmark poly-bench
   main-is: Bench.hs
   other-modules:
     DenseBench
-    SparseBench
+  if flag(sparse)
+    other-modules:
+      SparseBench
   default-language: Haskell2010
   hs-source-dirs: bench
   ghc-options: -Wall -Wcompat
+  if flag(sparse)
+    cpp-options: -DSupportSparse

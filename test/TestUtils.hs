@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
@@ -20,15 +21,11 @@ module TestUtils
   ) where
 
 import Prelude hiding (lcm, rem)
-import Control.Arrow
 import Data.Euclidean
-import Data.Finite
 import Data.Mod.Word
 import Data.Proxy
 import Data.Semiring (Semiring(..), Ring)
 import qualified Data.Vector.Generic as G
-import qualified Data.Vector.Generic.Sized as SG
-import qualified Data.Vector.Unboxed.Sized as SU
 import GHC.Exts
 import GHC.TypeNats (KnownNat)
 import Test.QuickCheck.Classes
@@ -37,8 +34,15 @@ import Test.Tasty.QuickCheck
 
 import qualified Data.Poly.Semiring as Dense
 import qualified Data.Poly.Laurent as DenseLaurent
+
+#ifdef SupportSparse
+import Control.Arrow
+import Data.Finite
+import qualified Data.Vector.Generic.Sized as SG
+import qualified Data.Vector.Unboxed.Sized as SU
 import Data.Poly.Multi.Semiring
 import qualified Data.Poly.Multi.Laurent as MultiLaurent
+#endif
 
 newtype ShortPoly a = ShortPoly { unShortPoly :: a }
   deriving (Eq, Show, Semiring, GcdDomain, Euclidean, Num)
@@ -46,13 +50,6 @@ newtype ShortPoly a = ShortPoly { unShortPoly :: a }
 instance KnownNat m => Arbitrary (Mod m) where
   arbitrary = oneof [arbitraryBoundedEnum, fromInteger <$> arbitrary]
   shrink = map fromInteger . shrink . toInteger . unMod
-
-instance KnownNat n => Arbitrary (Finite n) where
-  arbitrary = elements finites
-
-instance (Arbitrary a, KnownNat n, G.Vector v a) => Arbitrary (SG.Vector v n a) where
-  arbitrary = SG.replicateM arbitrary
-  shrink vs = [ vs SG.// [(i, x)] | i <- finites, x <- shrink (SG.index vs i) ]
 
 instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (Dense.Poly v a) where
   arbitrary = Dense.toPoly . G.fromList <$> arbitrary
@@ -70,6 +67,15 @@ instance (Eq a, Semiring a, Arbitrary a, G.Vector v a) => Arbitrary (ShortPoly (
   arbitrary = (ShortPoly .) . DenseLaurent.toLaurent <$> ((`rem` 10) <$> arbitrary) <*> (unShortPoly <$> arbitrary)
   shrink = fmap (ShortPoly . uncurry DenseLaurent.toLaurent . fmap unShortPoly) . shrink . fmap ShortPoly . DenseLaurent.unLaurent . unShortPoly
 
+#ifdef SupportSparse
+
+instance KnownNat n => Arbitrary (Finite n) where
+  arbitrary = elements finites
+
+instance (Arbitrary a, KnownNat n, G.Vector v a) => Arbitrary (SG.Vector v n a) where
+  arbitrary = SG.replicateM arbitrary
+  shrink vs = [ vs SG.// [(i, x)] | i <- finites, x <- shrink (SG.index vs i) ]
+
 instance (Eq a, Semiring a, Arbitrary a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Arbitrary (MultiPoly v n a) where
   arbitrary = toMultiPoly . G.fromList <$> arbitrary
   shrink = fmap (toMultiPoly . G.fromList) . shrink . G.toList . unMultiPoly
@@ -85,6 +91,8 @@ instance (Eq a, Semiring a, Arbitrary a, KnownNat n, G.Vector v (Word, a), G.Vec
 instance (Eq a, Semiring a, Arbitrary a, KnownNat n, G.Vector v (Word, a), G.Vector v (SU.Vector n Word, a)) => Arbitrary (ShortPoly (MultiLaurent.MultiLaurent v n a)) where
   arbitrary = (ShortPoly .) . MultiLaurent.toMultiLaurent <$> (SU.map (`rem` 10) <$> arbitrary) <*> (unShortPoly <$> arbitrary)
   shrink = fmap (ShortPoly . uncurry MultiLaurent.toMultiLaurent . fmap unShortPoly) . shrink . fmap ShortPoly . MultiLaurent.unMultiLaurent . unShortPoly
+
+#endif
 
 -------------------------------------------------------------------------------
 

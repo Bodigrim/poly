@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
@@ -271,12 +272,14 @@ patternTests = testGroup "pattern"
 
 conversionTests :: TestTree
 conversionTests = testGroup "conversions"
-  [ testProperty "sparseToDense . denseToSparse = id" $
-    \(xs :: UPoly Int8) -> xs === sparseToDense (denseToSparse xs)
-  , testProperty "sparseToDense' . denseToSparse' = id" $
-    \(xs :: UPoly Int8) -> xs === S.sparseToDense (S.denseToSparse xs)
-  , testProperty "toPoly . unPoly = id" $
+  [ testProperty "toPoly . unPoly = id" $
     \(xs :: UPoly Int8) -> xs === toPoly (unPoly xs)
   , testProperty "S.toPoly . S.unPoly = id" $
     \(xs :: UPoly Int8) -> xs === S.toPoly (S.unPoly xs)
+#ifdef SupportSparse
+  , testProperty "sparseToDense . denseToSparse = id" $
+    \(xs :: UPoly Int8) -> xs === sparseToDense (denseToSparse xs)
+  , testProperty "sparseToDense' . denseToSparse' = id" $
+    \(xs :: UPoly Int8) -> xs === S.sparseToDense (S.denseToSparse xs)
+#endif
   ]

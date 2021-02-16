@@ -7,6 +7,7 @@
 -- Dense polynomials and a 'Num'-based interface.
 --
 
+{-# LANGUAGE CPP             #-}
 {-# LANGUAGE PatternSynonyms #-}
 
 module Data.Poly
@@ -24,11 +25,15 @@ module Data.Poly
   , deriv
   , integral
   , quotRemFractional
+#ifdef SupportSparse
   , denseToSparse
   , sparseToDense
+#endif
   ) where
 
+#ifdef SupportSparse
 import Data.Poly.Internal.Convert
+#endif
 import Data.Poly.Internal.Dense
 import Data.Poly.Internal.Dense.Field (quotRemFractional)
 import Data.Poly.Internal.Dense.GcdDomain ()

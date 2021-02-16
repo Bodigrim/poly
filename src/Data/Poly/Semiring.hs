@@ -7,6 +7,7 @@
 -- Dense polynomials and a 'Semiring'-based interface.
 --
 
+{-# LANGUAGE CPP              #-}
 {-# LANGUAGE DataKinds        #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE PatternSynonyms  #-}
@@ -25,8 +26,10 @@ module Data.Poly.Semiring
   , subst
   , deriv
   , integral
+#ifdef SupportSparse
   , denseToSparse
   , sparseToDense
+#endif
   , dft
   , inverseDft
   , dftMult
@@ -36,15 +39,18 @@ import Data.Bits
 import Data.Euclidean (Field)
 import Data.Semiring (Semiring(..))
 import qualified Data.Vector.Generic as G
-import qualified Data.Vector.Unboxed.Sized as SU
 
-import qualified Data.Poly.Internal.Convert as Convert
 import Data.Poly.Internal.Dense (Poly(..), VPoly, UPoly, leading)
 import qualified Data.Poly.Internal.Dense as Dense
 import Data.Poly.Internal.Dense.Field ()
 import Data.Poly.Internal.Dense.DFT
 import Data.Poly.Internal.Dense.GcdDomain ()
+
+#ifdef SupportSparse
+import qualified Data.Vector.Unboxed.Sized as SU
 import qualified Data.Poly.Internal.Multi as Sparse
+import qualified Data.Poly.Internal.Convert as Convert
+#endif
 
 -- | Make 'Poly' from a vector of coefficients
 -- (first element corresponds to a constant term).
@@ -127,6 +133,7 @@ dftMult getPrimRoot (Poly xs) (Poly ys) =
     primRoot = getPrimRoot zl
 {-# INLINABLE dftMult #-}
 
+#ifdef SupportSparse
 -- | Convert from dense to sparse polynomials.
 --
 -- >>> :set -XFlexibleContexts
@@ -142,3 +149,4 @@ denseToSparse = Convert.denseToSparse'
 -- 1 * X^2 + 0 * X + 1
 sparseToDense :: (Semiring a, G.Vector v a, G.Vector v (SU.Vector 1 Word, a)) => Sparse.Poly v a -> Dense.Poly v a
 sparseToDense = Convert.sparseToDense'
+#endif
