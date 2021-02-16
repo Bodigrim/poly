@@ -1,0 +1,5 @@
+packages: .
+
+constraints:
+  semirings -unordered-containers,
+  quickcheck-classes -aeson -semigroupoids
