@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
@@ -43,6 +44,7 @@ lawsTests = testGroup "Laws"
   $ semiringTests ++ ringTests ++ numTests ++ gcdDomainTests ++ isListTests ++ showTests
 
 semiringTests :: [TestTree]
+#ifdef MIN_VERSION_quickcheck_classes
 semiringTests =
   [ mySemiringLaws (Proxy :: Proxy (UMultiLaurent 3 ()))
   , mySemiringLaws (Proxy :: Proxy (ShortPoly (UMultiLaurent 2 Int8)))
@@ -50,14 +52,21 @@ semiringTests =
   , tenTimesLess
   $ mySemiringLaws (Proxy :: Proxy (ShortPoly (UMultiLaurent 2 (Quaternion Int))))
   ]
+#else
+semiringTests = []
+#endif
 
 ringTests :: [TestTree]
+#ifdef MIN_VERSION_quickcheck_classes
 ringTests =
   [ myRingLaws (Proxy :: Proxy (UMultiLaurent 3 ()))
   , myRingLaws (Proxy :: Proxy (UMultiLaurent 3 Int8))
   , myRingLaws (Proxy :: Proxy (VMultiLaurent 3 Integer))
   , myRingLaws (Proxy :: Proxy (UMultiLaurent 3 (Quaternion Int)))
   ]
+#else
+ringTests = []
+#endif
 
 numTests :: [TestTree]
 numTests =
@@ -68,11 +77,15 @@ numTests =
   ]
 
 gcdDomainTests :: [TestTree]
+#ifdef MIN_VERSION_quickcheck_classes
 gcdDomainTests =
   [ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (VMultiLaurent 3 Integer)))
   , tenTimesLess
   $ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (VMultiLaurent 3 Rational)))
   ]
+#else
+gcdDomainTests = []
+#endif
 
 isListTests :: [TestTree]
 isListTests =

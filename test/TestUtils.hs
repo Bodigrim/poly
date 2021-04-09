@@ -11,11 +11,13 @@
 module TestUtils
   ( ShortPoly(..)
   , tenTimesLess
+  , myNumLaws
+#ifdef MIN_VERSION_quickcheck_classes
   , mySemiringLaws
   , myRingLaws
-  , myNumLaws
   , myGcdDomainLaws
   , myEuclideanLaws
+#endif
   , myIsListLaws
   , myShowLaws
   ) where
@@ -28,9 +30,13 @@ import Data.Semiring (Semiring(..), Ring)
 import qualified Data.Vector.Generic as G
 import GHC.Exts
 import GHC.TypeNats (KnownNat)
-import Test.QuickCheck.Classes
+import Test.QuickCheck.Classes.Base
 import Test.Tasty
 import Test.Tasty.QuickCheck
+
+#ifdef MIN_VERSION_quickcheck_classes
+import Test.QuickCheck.Classes
+#endif
 
 import qualified Data.Poly.Semiring as Dense
 import qualified Data.Poly.Laurent as DenseLaurent
@@ -100,6 +106,26 @@ tenTimesLess :: TestTree -> TestTree
 tenTimesLess = adjustOption $
   \(QuickCheckTests n) -> QuickCheckTests (max 100 (n `div` 10))
 
+myNumLaws :: (Eq a, Num a, Arbitrary a, Show a) => Proxy a -> TestTree
+myNumLaws proxy = testGroup tpclss $ map tune props
+  where
+    Laws tpclss props = numLaws proxy
+
+    tune pair = case fst pair of
+      "Multiplicative Associativity" ->
+        tenTimesLess test
+      "Multiplication Left Distributes Over Addition" ->
+        tenTimesLess test
+      "Multiplication Right Distributes Over Addition" ->
+        tenTimesLess test
+      "Subtraction" ->
+        tenTimesLess test
+      _ -> test
+      where
+        test = uncurry testProperty pair
+
+#ifdef MIN_VERSION_quickcheck_classes
+
 mySemiringLaws :: (Eq a, Semiring a, Arbitrary a, Show a) => Proxy a -> TestTree
 mySemiringLaws proxy = testGroup tpclss $ map tune props
   where
@@ -120,24 +146,6 @@ myRingLaws :: (Eq a, Ring a, Arbitrary a, Show a) => Proxy a -> TestTree
 myRingLaws proxy = testGroup tpclss $ map (uncurry testProperty) props
   where
     Laws tpclss props = ringLaws proxy
-
-myNumLaws :: (Eq a, Num a, Arbitrary a, Show a) => Proxy a -> TestTree
-myNumLaws proxy = testGroup tpclss $ map tune props
-  where
-    Laws tpclss props = numLaws proxy
-
-    tune pair = case fst pair of
-      "Multiplicative Associativity" ->
-        tenTimesLess test
-      "Multiplication Left Distributes Over Addition" ->
-        tenTimesLess test
-      "Multiplication Right Distributes Over Addition" ->
-        tenTimesLess test
-      "Subtraction" ->
-        tenTimesLess test
-      _ -> test
-      where
-        test = uncurry testProperty pair
 
 myGcdDomainLaws :: forall a. (Eq a, GcdDomain a, Arbitrary a, Show a) => Proxy a -> TestTree
 myGcdDomainLaws proxy = testGroup tpclss $ map tune $ lcm0 : props
@@ -160,6 +168,8 @@ myEuclideanLaws :: (Eq a, Euclidean a, Arbitrary a, Show a) => Proxy a -> TestTr
 myEuclideanLaws proxy = testGroup tpclss $ map (uncurry testProperty) props
   where
     Laws tpclss props = euclideanLaws proxy
+
+#endif
 
 myIsListLaws :: (Eq a, IsList a, Arbitrary a, Show a, Show (Item a), Arbitrary (Item a)) => Proxy a -> TestTree
 myIsListLaws proxy = testGroup tpclss $ map (uncurry testProperty) props

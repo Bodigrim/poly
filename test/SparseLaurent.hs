@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
@@ -40,6 +41,7 @@ lawsTests = testGroup "Laws"
   $ semiringTests ++ ringTests ++ numTests ++ gcdDomainTests ++ isListTests ++ showTests
 
 semiringTests :: [TestTree]
+#ifdef MIN_VERSION_quickcheck_classes
 semiringTests =
   [ mySemiringLaws (Proxy :: Proxy (ULaurent ()))
   , mySemiringLaws (Proxy :: Proxy (ULaurent Int8))
@@ -47,14 +49,21 @@ semiringTests =
   , tenTimesLess
   $ mySemiringLaws (Proxy :: Proxy (ULaurent (Quaternion Int)))
   ]
+#else
+semiringTests = []
+#endif
 
 ringTests :: [TestTree]
+#ifdef MIN_VERSION_quickcheck_classes
 ringTests =
   [ myRingLaws (Proxy :: Proxy (ULaurent ()))
   , myRingLaws (Proxy :: Proxy (ULaurent Int8))
   , myRingLaws (Proxy :: Proxy (VLaurent Integer))
   , myRingLaws (Proxy :: Proxy (ULaurent (Quaternion Int)))
   ]
+#else
+ringTests = []
+#endif
 
 numTests :: [TestTree]
 numTests =
@@ -65,11 +74,15 @@ numTests =
   ]
 
 gcdDomainTests :: [TestTree]
+#ifdef MIN_VERSION_quickcheck_classes
 gcdDomainTests =
   [ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (VLaurent Integer)))
   , tenTimesLess
   $ myGcdDomainLaws (Proxy :: Proxy (ShortPoly (VLaurent Rational)))
   ]
+#else
+gcdDomainTests = []
+#endif
 
 isListTests :: [TestTree]
 isListTests =

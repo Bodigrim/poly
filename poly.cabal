@@ -100,6 +100,7 @@ test-suite poly-tests
     mod >=0.1.2,
     poly,
     QuickCheck >=2.12,
+    quickcheck-classes-base,
     quickcheck-classes >=0.6.3,
     semirings >= 0.5.2,
     tasty >= 0.11,
