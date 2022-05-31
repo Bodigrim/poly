@@ -414,10 +414,14 @@ isVar i (MultiLaurent off (MultiPoly xs))
   && G.length xs == 1 && G.unsafeHead xs == (0, one)
 {-# INLINE isVar #-}
 
--- | This operator can be applied only to monomials with unit coefficients,
--- but is still instrumental to express Laurent polynomials
--- in mathematical fashion:
+-- | Used to construct monomials with negative powers.
 --
+-- This operator can be applied only to monomials with unit coefficients,
+-- but is instrumental to express Laurent polynomials
+-- in a mathematical fashion:
+--
+-- >>> X^-3 * Y^-1 :: UMultiLaurent 2 Int
+-- 1 * X^-3 * Y^-1
 -- >>> 3 * X^-1 + 2 * (Y^2)^-2 :: UMultiLaurent 2 Int
 -- 2 * Y^-4 + 3 * X^-1
 (^-)

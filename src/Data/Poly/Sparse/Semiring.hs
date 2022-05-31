@@ -76,7 +76,9 @@ scale
   -> Poly v a
 scale = Multi.scale' . SU.singleton
 
--- | Create an identity polynomial.
+-- | The polynomial 'X'.
+--
+-- > X == monomial 1 one
 pattern X
   :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a))
   => Poly v a

@@ -58,15 +58,22 @@ scale
   -> Laurent v a
 scale = Multi.scale . SU.singleton
 
--- | Create an identity polynomial.
+-- | The polynomial 'X'.
+--
+-- > X == monomial 1 one
 pattern X
   :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a))
   => Laurent v a
 pattern X = Multi.X
 
--- | This operator can be applied only to monomials with unit coefficients,
--- but is instrumental to express Laurent polynomials in mathematical fashion:
+-- | Used to construct monomials with negative powers.
 --
+-- This operator can be applied only to monomials with unit coefficients,
+-- but is instrumental to express Laurent polynomials
+-- in a mathematical fashion:
+--
+-- >>> X^-3 :: ULaurent Int
+-- 1 * X^-3
 -- >>> X + 2 + 3 * (X^2)^-1 :: ULaurent Int
 -- 1 * X + 2 + 3 * X^-2
 (^-)

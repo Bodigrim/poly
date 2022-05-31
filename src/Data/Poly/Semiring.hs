@@ -74,7 +74,9 @@ monomial = Dense.monomial'
 scale :: (Eq a, Semiring a, G.Vector v a) => Word -> a -> Poly v a -> Poly v a
 scale = Dense.scale'
 
--- | Create an identity polynomial.
+-- | The polynomial 'X'.
+--
+-- > X == monomial 1 one
 pattern X :: (Eq a, Semiring a, G.Vector v a) => Poly v a
 pattern X = Dense.X'
 

@@ -236,7 +236,9 @@ deriv (Laurent off (Poly xs)) =
   toLaurent (off - 1) $ Dense.toPoly' $ G.imap (times . Semiring.fromIntegral . (+ off)) xs
 {-# INLINE deriv #-}
 
--- | Create an identity polynomial.
+-- | The polynomial 'X'.
+--
+-- > X == monomial 1 one
 pattern X :: (Eq a, Semiring a, G.Vector v a) => Laurent v a
 pattern X <- (isVar -> True)
   where X = var
@@ -253,10 +255,14 @@ isVar (Laurent off (Poly xs))
   | otherwise          = off == 1 && G.length xs == 1 && G.unsafeHead xs == one
 {-# INLINE isVar #-}
 
--- | This operator can be applied only to monomials with unit coefficients,
--- but is instrumental to express Laurent polynomials
--- in mathematical fashion:
+-- | Used to construct monomials with negative powers.
 --
+-- This operator can be applied only to monomials with unit coefficients,
+-- but is instrumental to express Laurent polynomials
+-- in a mathematical fashion:
+--
+-- >>> X^-3 :: ULaurent Int
+-- 1 * X^-3
 -- >>> X + 2 + 3 * (X^2)^-1 :: ULaurent Int
 -- 1 * X + 2 + 0 * X^-1 + 3 * X^-2
 (^-)
