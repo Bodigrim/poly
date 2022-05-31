@@ -4,7 +4,7 @@
 -- Licence:     BSD3
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
 --
--- Euclidean for Field underlying
+-- 'Euclidean' instance with a 'Field' constraint on the coefficient type.
 --
 
 {-# LANGUAGE ConstraintKinds            #-}

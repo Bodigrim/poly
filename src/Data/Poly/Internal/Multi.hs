@@ -82,7 +82,7 @@ import Data.Poly.Internal.Multi.Core
 -- | Sparse polynomials of @n@ variables with coefficients from @a@,
 -- backed by a 'G.Vector' @v@ (boxed, unboxed, storable, etc.).
 --
--- Use patterns 'Data.Poly.Multi.X',
+-- Use the patterns 'Data.Poly.Multi.X',
 -- 'Data.Poly.Multi.Y' and
 -- 'Data.Poly.Multi.Z' for construction:
 --
@@ -95,12 +95,12 @@ import Data.Poly.Internal.Multi.Core
 -- Polynomials are stored normalized, without
 -- zero coefficients, so 0 * 'Data.Poly.Multi.X' + 1 equals to 1.
 --
--- 'Ord' instance does not make much sense mathematically,
+-- The 'Ord' instance does not make much sense mathematically,
 -- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
 --
 newtype MultiPoly (v :: Type -> Type) (n :: Nat) (a :: Type) = MultiPoly
   { unMultiPoly :: v (SU.Vector n Word, a)
-  -- ^ Convert 'MultiPoly' to a vector of (powers, coefficient) pairs.
+  -- ^ Convert a 'MultiPoly' to a vector of (powers, coefficient) pairs.
   }
 
 deriving instance Eq     (v (SU.Vector n Word, a)) => Eq     (MultiPoly v n a)
@@ -137,7 +137,7 @@ type VPoly (a :: Type) = Poly V.Vector a
 -- | Polynomials backed by unboxed vectors.
 type UPoly (a :: Type) = Poly U.Vector a
 
--- | Convert 'Poly' to a vector of coefficients.
+-- | Convert a 'Poly' to a vector of coefficients.
 unPoly
   :: (G.Vector v (Word, a), G.Vector v (SU.Vector 1 Word, a))
   => Poly v a
@@ -178,7 +178,7 @@ instance (Show a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Show (MultiPo
         2 -> "Z"
         k -> "X" ++ show k
 
--- | Make 'MultiPoly' from a list of (powers, coefficient) pairs.
+-- | Make a 'MultiPoly' from a list of (powers, coefficient) pairs.
 --
 -- >>> :set -XOverloadedLists -XDataKinds
 -- >>> import Data.Vector.Generic.Sized (fromTuple)
@@ -236,7 +236,7 @@ instance (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Sem
 instance (Eq a, Ring a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Ring (MultiPoly v n a) where
   negate (MultiPoly xs) = MultiPoly $ G.map (fmap Semiring.negate) xs
 
--- | Return a leading power and coefficient of a non-zero polynomial.
+-- | Return the leading power and coefficient of a non-zero polynomial.
 --
 -- >>> import Data.Poly.Sparse (UPoly)
 -- >>> leading ((2 * X + 1) * (2 * X^2 - 1) :: UPoly Int)
@@ -289,7 +289,7 @@ monomial' p c
   | c == zero = MultiPoly G.empty
   | otherwise = MultiPoly $ G.singleton (p, c)
 
--- | Evaluate at a given point.
+-- | Evaluate the polynomial at a given point.
 --
 -- >>> :set -XDataKinds
 -- >>> import Data.Vector.Generic.Sized (fromTuple)
@@ -311,7 +311,7 @@ eval'
 eval' = substitute' times
 {-# INLINE eval' #-}
 
--- | Substitute another polynomials instead of variables.
+-- | Substitute other polynomials instead of the variables.
 --
 -- >>> :set -XDataKinds
 -- >>> import Data.Vector.Generic.Sized (fromTuple)
@@ -365,7 +365,7 @@ substitute' f (MultiPoly cs) xs = G.foldl' go zero cs
     doMonom = SU.ifoldl' (\acc i p -> acc `times` ((xs `SG.index` i) Semiring.^ p)) one
 {-# INLINE substitute' #-}
 
--- | Take a derivative with respect to the /i/-th variable.
+-- | Take the derivative of the polynomial with respect to the /i/-th variable.
 --
 -- >>> :set -XDataKinds
 -- >>> deriv 0 (X^3 + 3 * Y) :: UMultiPoly 2 Int
@@ -396,9 +396,9 @@ deriv' i (MultiPoly xs) = MultiPoly $ derivPoly
   xs
 {-# INLINE deriv' #-}
 
--- | Compute an indefinite integral of a polynomial
--- by the /i/-th variable,
--- setting constant term to zero.
+-- | Compute an indefinite integral of the polynomial
+-- with respect to the /i/-th variable,
+-- setting the constant term to zero.
 --
 -- >>> :set -XDataKinds
 -- >>> integral 0 (3 * X^2 + 2 * Y) :: UMultiPoly 2 Double

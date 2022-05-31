@@ -4,7 +4,7 @@
 -- Licence:     BSD3
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
 --
--- Sparse polynomials with 'Semiring' instance.
+-- Sparse polynomials with a 'Semiring' instance.
 --
 
 {-# LANGUAGE DataKinds        #-}
@@ -43,7 +43,7 @@ import qualified Data.Poly.Internal.Multi as Multi
 import Data.Poly.Internal.Multi.Field ()
 import Data.Poly.Internal.Multi.GcdDomain ()
 
--- | Make 'Poly' from a list of (power, coefficient) pairs.
+-- | Make a 'Poly' from a list of (power, coefficient) pairs.
 --
 -- >>> :set -XOverloadedLists
 -- >>> toPoly [(0,1),(1,2),(2,3)] :: VPoly Integer
@@ -82,7 +82,7 @@ pattern X
   => Poly v a
 pattern X = Multi.X'
 
--- | Evaluate at a given point.
+-- | Evaluate the polynomial at a given point.
 --
 -- >>> eval (X^2 + 1 :: UPoly Int) 3
 -- 10
@@ -104,7 +104,7 @@ subst
   -> Poly w a
 subst p = Multi.subst' p . SV.singleton
 
--- | Take a derivative.
+-- | Take the derivative of the polynomial.
 --
 -- >>> deriv (X^3 + 3 * X) :: UPoly Int
 -- 3 * X^2 + 3
@@ -114,8 +114,8 @@ deriv
   -> Poly v a
 deriv = Multi.deriv' 0
 
--- | Compute an indefinite integral of a polynomial,
--- setting constant term to zero.
+-- | Compute an indefinite integral of the polynomial,
+-- setting the constant term to zero.
 --
 -- >>> integral (3 * X^2 + 3) :: UPoly Double
 -- 1.0 * X^3 + 3.0 * X

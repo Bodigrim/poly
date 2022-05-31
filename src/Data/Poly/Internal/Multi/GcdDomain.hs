@@ -4,7 +4,7 @@
 -- Licence:     BSD3
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
 --
--- GcdDomain for GcdDomain underlying
+-- 'GcdDomain' instance with a 'GcdDomain' constraint on the coefficient type.
 --
 
 {-# LANGUAGE CPP                        #-}

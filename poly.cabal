@@ -2,7 +2,7 @@ name: poly
 version: 0.5.0.0
 synopsis: Polynomials
 description:
-  Polynomials backed by `Vector`.
+  Polynomials backed by `Vector`s.
 homepage: https://github.com/Bodigrim/poly#readme
 license: BSD3
 license-file: LICENSE
@@ -23,7 +23,7 @@ source-repository head
 
 flag sparse
   description:
-    Enable sparse and multivariate polynomials, incurring larger dependency footprint.
+    Enable sparse and multivariate polynomials, incurring a larger dependency footprint.
   default: True
 
 library

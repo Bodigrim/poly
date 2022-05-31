@@ -52,8 +52,8 @@ import qualified Data.Poly.Internal.Multi as Sparse
 import qualified Data.Poly.Internal.Convert as Convert
 #endif
 
--- | Make 'Poly' from a vector of coefficients
--- (first element corresponds to a constant term).
+-- | Make a 'Poly' from a vector of coefficients
+-- (first element corresponds to the constant term).
 --
 -- >>> :set -XOverloadedLists
 -- >>> toPoly [1,2,3] :: VPoly Integer
@@ -78,7 +78,7 @@ scale = Dense.scale'
 pattern X :: (Eq a, Semiring a, G.Vector v a) => Poly v a
 pattern X = Dense.X'
 
--- | Evaluate at a given point.
+-- | Evaluate the polynomial at a given point.
 --
 -- >>> eval (X^2 + 1 :: UPoly Int) 3
 -- 10
@@ -92,15 +92,15 @@ eval = Dense.eval'
 subst :: (Eq a, Semiring a, G.Vector v a, G.Vector w a) => Poly v a -> Poly w a -> Poly w a
 subst = Dense.subst'
 
--- | Take a derivative.
+-- | Take the derivative of the polynomial.
 --
 -- >>> deriv (X^3 + 3 * X) :: UPoly Int
 -- 3 * X^2 + 0 * X + 3
 deriv :: (Eq a, Semiring a, G.Vector v a) => Poly v a -> Poly v a
 deriv = Dense.deriv'
 
--- | Compute an indefinite integral of a polynomial,
--- setting constant term to zero.
+-- | Compute an indefinite integral of the polynomial,
+-- setting the constant term to zero.
 --
 -- >>> integral (3 * X^2 + 3) :: UPoly Double
 -- 1.0 * X^3 + 0.0 * X^2 + 3.0 * X + 0.0

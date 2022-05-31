@@ -76,7 +76,7 @@ pattern X = Multi.X
   -> Laurent v a
 (^-) = (Multi.^-)
 
--- | Evaluate at a given point.
+-- | Evaluate the polynomial at a given point.
 --
 -- >>> eval (X^-2 + 1 :: ULaurent Double) 2
 -- 1.25
@@ -99,7 +99,7 @@ subst
   -> Laurent w a
 subst p = Multi.subst p . SV.singleton
 
--- | Take a derivative.
+-- | Take the derivative of the polynomial.
 --
 -- >>> deriv (X^-3 + 3 * X) :: ULaurent Int
 -- 3 + (-3) * X^-4
