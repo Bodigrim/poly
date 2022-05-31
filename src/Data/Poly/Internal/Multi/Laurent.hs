@@ -82,7 +82,7 @@ import Data.Poly.Internal.Multi.GcdDomain ()
 -- of @n@ variables with coefficients from @a@,
 -- backed by a 'G.Vector' @v@ (boxed, unboxed, storable, etc.).
 --
--- Use patterns 'X', 'Y', 'Z' and operator '^-' for construction:
+-- Use the patterns 'X', 'Y', 'Z' and the '^-' operator for construction:
 --
 -- >>> (X + 1) + (Y^-1 - 1) :: VMultiLaurent 2 Integer
 -- 1 * X + 1 * Y^-1
@@ -92,7 +92,7 @@ import Data.Poly.Internal.Multi.GcdDomain ()
 -- Polynomials are stored normalized, without
 -- zero coefficients, so 0 * X + 1 + 0 * X^-1 equals to 1.
 --
--- 'Ord' instance does not make much sense mathematically,
+-- The 'Ord' instance does not make much sense mathematically,
 -- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
 --
 data MultiLaurent (v :: Type -> Type) (n :: Nat) (a :: Type) =
@@ -111,7 +111,7 @@ type UMultiLaurent (n :: Nat) (a :: Type) = MultiLaurent U.Vector n a
 -- of one variable with coefficients from @a@,
 -- backed by a 'G.Vector' @v@ (boxed, unboxed, storable, etc.).
 --
--- Use pattern 'X' and operator '^-' for construction:
+-- Use the pattern 'X' and the '^-' operator for construction:
 --
 -- >>> (X + 1) + (X^-1 - 1) :: VLaurent Integer
 -- 1 * X + 1 * X^-1
@@ -121,7 +121,7 @@ type UMultiLaurent (n :: Nat) (a :: Type) = MultiLaurent U.Vector n a
 -- Polynomials are stored normalized, without
 -- zero coefficients, so 0 * X + 1 + 0 * X^-1 equals to 1.
 --
--- 'Ord' instance does not make much sense mathematically,
+-- The 'Ord' instance does not make much sense mathematically,
 -- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
 --
 type Laurent (v :: Type -> Type) (a :: Type) = MultiLaurent v 1 a
@@ -172,7 +172,7 @@ unMultiLaurent (MultiLaurent off poly) = (off, poly)
 unLaurent :: Laurent v a -> (Int, Poly v a)
 unLaurent = first SU.head . unMultiLaurent
 
--- | Construct 'MultiLaurent' polynomial from an offset and a regular polynomial.
+-- | Construct a 'MultiLaurent' polynomial from an offset and a regular polynomial.
 -- One can imagine it as 'Data.Poly.Multi.Semiring.scale', but allowing negative offsets.
 --
 -- >>> :set -XDataKinds
@@ -196,7 +196,7 @@ toMultiLaurent off (MultiPoly xs)
         | otherwise = G.map (first (SU.zipWith subtract minPow)) xs
 {-# INLINE toMultiLaurent #-}
 
--- | Construct 'Laurent' polynomial from an offset and a regular polynomial.
+-- | Construct a 'Laurent' polynomial from an offset and a regular polynomial.
 -- One can imagine it as 'Data.Poly.Sparse.Semiring.scale', but allowing negative offsets.
 --
 -- >>> toLaurent 2 (2 * Data.Poly.Sparse.X + 1) :: ULaurent Int
@@ -241,7 +241,7 @@ instance (Show a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Show (MultiLa
         2 -> "Z"
         k -> "X" ++ show k
 
--- | Return a leading power and coefficient of a non-zero polynomial.
+-- | Return the leading power and coefficient of a non-zero polynomial.
 --
 -- >>> leading ((2 * X + 1) * (2 * X^2 - 1) :: ULaurent Int)
 -- Just (3,4)
@@ -318,7 +318,7 @@ scale
   -> MultiLaurent v n a
 scale yp yc (MultiLaurent off poly) = toMultiLaurent (off + yp) (Multi.scale' 0 yc poly)
 
--- | Evaluate at a given point.
+-- | Evaluate the polynomial at a given point.
 --
 -- >>> :set -XDataKinds
 -- >>> import Data.Vector.Generic.Sized (fromTuple)
@@ -348,7 +348,7 @@ subst
 subst = Multi.substitute' (scale 0)
 {-# INLINE subst #-}
 
--- | Take a derivative with respect to the /i/-th variable.
+-- | Take the derivative of the polynomial with respect to the /i/-th variable.
 --
 -- >>> :set -XDataKinds
 -- >>> deriv 0 (X^3 + 3 * Y) :: UMultiLaurent 2 Int

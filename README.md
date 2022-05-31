@@ -1,6 +1,6 @@
-# poly [![Hackage](http://img.shields.io/hackage/v/poly.svg)](https://hackage.haskell.org/package/poly) [![Stackage LTS](http://stackage.org/package/poly/badge/lts)](http://stackage.org/lts/package/poly) [![Stackage Nightly](http://stackage.org/package/poly/badge/nightly)](http://stackage.org/nightly/package/poly) [![Coverage Status](https://coveralls.io/repos/github/Bodigrim/poly/badge.svg)](https://coveralls.io/github/Bodigrim/poly)
+# poly [![Hackage](https://img.shields.io/hackage/v/poly.svg)](https://hackage.haskell.org/package/poly) [![Stackage LTS](https://www.stackage.org/package/poly/badge/lts)](https://www.stackage.org/lts/package/poly) [![Stackage Nightly](https://www.stackage.org/package/poly/badge/nightly)](https://www.stackage.org/nightly/package/poly) [![Coverage Status](https://coveralls.io/repos/github/Bodigrim/poly/badge.svg)](https://coveralls.io/github/Bodigrim/poly)
 
-Haskell library for univariate and multivariate polynomials, backed by `Vector`.
+Haskell library for univariate and multivariate polynomials, backed by `Vector`s.
 
 ```haskell
 > -- Univariate polynomials
@@ -24,7 +24,7 @@ Haskell library for univariate and multivariate polynomials, backed by `Vector`.
 
 ## Vectors
 
-`Poly v a` is polymorphic over a container `v`, implementing `Vector` interface, and coefficients of type `a`. Usually `v` is either a boxed vector from `Data.Vector` or an unboxed vector from `Data.Vector.Unboxed`. Use unboxed vectors whenever possible, e. g., when coefficients are `Int` or `Double`.
+`Poly v a` is polymorphic over a container `v`, implementing the `Vector` interface, and coefficients of type `a`. Usually `v` is either a boxed vector from [`Data.Vector`](https://hackage.haskell.org/package/vector/docs/Data-Vector.html) or an unboxed vector from [`Data.Vector.Unboxed`](https://hackage.haskell.org/package/vector/docs/Data-Vector-Unboxed.html). Use unboxed vectors whenever possible, e. g., when the coefficients are `Int`s or `Double`s.
 
 There are handy type synonyms:
 
@@ -74,7 +74,7 @@ Most operations are provided by means of instances, like `Eq` and `Num`. For exa
 1 * X^4 + 0 * X^3 + 0 * X^2 + 0 * X + (-1)
 ```
 
-One can also find convenient to `scale` by monomial (cf. `monomial` above):
+One can also find it convenient to `scale` by a monomial (cf. `monomial` above):
 
 ```haskell
 > scale 2 3.5 (X^2 + 1) :: UPoly Double
@@ -82,8 +82,8 @@ One can also find convenient to `scale` by monomial (cf. `monomial` above):
 ```
 
 While `Poly` cannot be made an instance of `Integral` (because there is no meaningful `toInteger`),
-it is an instance of `GcdDomain` and `Euclidean` from `semirings` package. These type classes
-cover main functionality of `Integral`, providing division with remainder and `gcd` / `lcm`:
+it is an instance of `GcdDomain` and `Euclidean` from the [`semirings`](https://hackage.haskell.org/package/semirings) package. These type classes
+cover the main functionality of `Integral`, providing division with remainder and `gcd` / `lcm`:
 
 ```haskell
 > Data.Euclidean.gcd (X^2 + 7 * X + 6) (X^2 - 5 * X - 6) :: UPoly Int
@@ -93,8 +93,8 @@ cover main functionality of `Integral`, providing division with remainder and `g
 (1.0 * X + 0.0,1.0 * X + 2.0)
 ```
 
-Miscellaneous utilities include `eval` for evaluation at a given value of indeterminate,
-and reciprocals `deriv` / `integral`:
+Miscellaneous utilities include `eval` for evaluation at a given point,
+and `deriv` / `integral` for taking the derivative and an indefinite integral, respectively:
 
 ```haskell
 > eval (X^2 + 1 :: UPoly Int) 3
@@ -126,34 +126,34 @@ Just (2,1.0)
 
 ## Flavours
 
-* `Data.Poly` provides dense univariate polynomials with `Num`-based interface.
+* `Data.Poly` provides dense univariate polynomials with a `Num`-based interface.
   This is a default choice for most users.
 
-* `Data.Poly.Semiring` provides dense univariate polynomials with `Semiring`-based interface.
+* `Data.Poly.Semiring` provides dense univariate polynomials with a `Semiring`-based interface.
 
-* `Data.Poly.Laurent` provides dense univariate Laurent polynomials with `Semiring`-based interface.
+* `Data.Poly.Laurent` provides dense univariate Laurent polynomials with a `Semiring`-based interface.
 
-* `Data.Poly.Sparse` provides sparse univariate polynomials with `Num`-based interface.
-  Besides that, you may find it easier to use in REPL
+* `Data.Poly.Sparse` provides sparse univariate polynomials with a `Num`-based interface.
+  Besides that, you may find it easier to use in the REPL
   because of a more readable `Show` instance, skipping zero coefficients.
 
-* `Data.Poly.Sparse.Semiring` provides sparse univariate polynomials with `Semiring`-based interface.
+* `Data.Poly.Sparse.Semiring` provides sparse univariate polynomials with a `Semiring`-based interface.
 
-* `Data.Poly.Sparse.Laurent` provides sparse univariate Laurent polynomials with `Semiring`-based interface.
+* `Data.Poly.Sparse.Laurent` provides sparse univariate Laurent polynomials with a `Semiring`-based interface.
 
-* `Data.Poly.Multi` provides sparse multivariate polynomials with `Num`-based interface.
+* `Data.Poly.Multi` provides sparse multivariate polynomials with a `Num`-based interface.
 
-* `Data.Poly.Multi.Semiring` provides sparse multivariate polynomials with `Semiring`-based interface.
+* `Data.Poly.Multi.Semiring` provides sparse multivariate polynomials with a `Semiring`-based interface.
 
-* `Data.Poly.Multi.Laurent` provides sparse multivariate Laurent polynomials with `Semiring`-based interface.
+* `Data.Poly.Multi.Laurent` provides sparse multivariate Laurent polynomials with a `Semiring`-based interface.
 
 All flavours are available backed by boxed or unboxed vectors.
 
 ## Performance
 
-As a rough guide, `poly` is at least 20x-40x faster than [`polynomial`](http://hackage.haskell.org/package/polynomial) library.
-Multiplication is implemented via Karatsuba algorithm.
-Here is a couple of benchmarks for `UPoly Int`.
+As a rough guide, `poly` is at least 20x-40x faster than the [`polynomial`](http://hackage.haskell.org/package/polynomial) library.
+Multiplication is implemented via the Karatsuba algorithm.
+Here are a couple of benchmarks for `UPoly Int`:
 
 | Benchmark                     | polynomial, μs  | poly, μs | speedup
 | :---------------------------- | --------------: | -------: | ------:

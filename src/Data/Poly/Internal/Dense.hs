@@ -62,7 +62,7 @@ import GHC.Exts
 -- | Polynomials of one variable with coefficients from @a@,
 -- backed by a 'G.Vector' @v@ (boxed, unboxed, storable, etc.).
 --
--- Use pattern 'X' for construction:
+-- Use the pattern 'X' for construction:
 --
 -- >>> (X + 1) + (X - 1) :: VPoly Integer
 -- 2 * X + 0
@@ -72,13 +72,13 @@ import GHC.Exts
 -- Polynomials are stored normalized, without leading
 -- zero coefficients, so 0 * 'X' + 1 equals to 1.
 --
--- 'Ord' instance does not make much sense mathematically,
+-- The 'Ord' instance does not make much sense mathematically,
 -- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
 --
 newtype Poly (v :: Type -> Type) (a :: Type) = Poly
   { unPoly :: v a
-  -- ^ Convert 'Poly' to a vector of coefficients
-  -- (first element corresponds to a constant term).
+  -- ^ Convert a 'Poly' to a vector of coefficients
+  -- (first element corresponds to the constant term).
   }
   deriving (Eq, NFData, Ord)
 
@@ -112,8 +112,8 @@ type VPoly = Poly V.Vector
 -- | Polynomials backed by unboxed vectors.
 type UPoly = Poly U.Vector
 
--- | Make 'Poly' from a list of coefficients
--- (first element corresponds to a constant term).
+-- | Make a 'Poly' from a list of coefficients
+-- (first element corresponds to the constant term).
 --
 -- >>> :set -XOverloadedLists
 -- >>> toPoly [1,2,3] :: VPoly Integer
@@ -126,7 +126,7 @@ toPoly = Poly . dropWhileEnd (== 0)
 toPoly' :: (Eq a, Semiring a, G.Vector v a) => v a -> Poly v a
 toPoly' = Poly . dropWhileEnd (== zero)
 
--- | Return a leading power and coefficient of a non-zero polynomial.
+-- | Return the leading power and coefficient of a non-zero polynomial.
 --
 -- >>> leading ((2 * X + 1) * (2 * X^2 - 1) :: UPoly Int)
 -- Just (3,4)
@@ -374,7 +374,7 @@ infixr 1 :*:
 fst' :: StrictPair a b -> a
 fst' (a :*: _) = a
 
--- | Evaluate at a given point.
+-- | Evaluate the polynomial at a given point.
 --
 -- >>> eval (X^2 + 1 :: UPoly Int) 3
 -- 10
@@ -408,7 +408,7 @@ substitute' f (Poly cs) x = fst' $
   G.foldl' (\(acc :*: xn) cn -> acc `plus` f cn xn :*: x `times` xn) (zero :*: one) cs
 {-# INLINE substitute' #-}
 
--- | Take a derivative.
+-- | Take the derivative of the polynomial.
 --
 -- >>> deriv (X^3 + 3 * X) :: UPoly Int
 -- 3 * X^2 + 0 * X + 3
@@ -424,8 +424,8 @@ deriv' (Poly xs)
   | otherwise = toPoly' $ G.imap (\i x -> fromNatural (fromIntegral (i + 1)) `times` x) $ G.tail xs
 {-# INLINE deriv' #-}
 
--- | Compute an indefinite integral of a polynomial,
--- setting constant term to zero.
+-- | Compute an indefinite integral of the polynomial,
+-- setting the constant term to zero.
 --
 -- >>> integral (3 * X^2 + 3) :: UPoly Double
 -- 1.0 * X^3 + 0.0 * X^2 + 3.0 * X + 0.0

@@ -4,7 +4,7 @@
 -- Licence:     BSD3
 -- Maintainer:  Andrew Lelechenko <andrew.lelechenko@gmail.com>
 --
--- Sparse multivariate polynomials with 'Semiring' instance.
+-- Sparse multivariate polynomials with a 'Semiring' instance.
 --
 
 {-# LANGUAGE DataKinds        #-}
@@ -46,7 +46,7 @@ import qualified Data.Poly.Internal.Multi as Multi
 import Data.Poly.Internal.Multi.Field ()
 import Data.Poly.Internal.Multi.GcdDomain ()
 
--- | Make 'MultiPoly' from a list of (powers, coefficient) pairs.
+-- | Make a 'MultiPoly' from a list of (powers, coefficient) pairs.
 --
 -- >>> :set -XOverloadedLists -XDataKinds
 -- >>> import Data.Vector.Generic.Sized (fromTuple)
@@ -100,7 +100,7 @@ pattern Z
   => MultiPoly v n a
 pattern Z = Multi.Z'
 
--- | Evaluate at a given point.
+-- | Evaluate the polynomial at a given point.
 --
 -- >>> :set -XDataKinds
 -- >>> import Data.Vector.Generic.Sized (fromTuple)
@@ -113,7 +113,7 @@ eval
   -> a
 eval = Multi.eval'
 
--- | Substitute another polynomials instead of variables.
+-- | Substitute other polynomials instead of the variables.
 --
 -- >>> :set -XDataKinds
 -- >>> import Data.Vector.Generic.Sized (fromTuple)
@@ -126,7 +126,7 @@ subst
   -> MultiPoly w m a
 subst = Multi.subst'
 
--- | Take a derivative with respect to the /i/-th variable.
+-- | Take the derivative of the polynomial with respect to the /i/-th variable.
 --
 -- >>> :set -XDataKinds
 -- >>> deriv 0 (X^3 + 3 * Y) :: UMultiPoly 2 Int
@@ -140,9 +140,9 @@ deriv
   -> MultiPoly v n a
 deriv = Multi.deriv'
 
--- | Compute an indefinite integral of a polynomial
--- by the /i/-th variable,
--- setting constant term to zero.
+-- | Compute an indefinite integral of the polynomial
+-- with respect to the /i/-th variable,
+-- setting the constant term to zero.
 --
 -- >>> :set -XDataKinds
 -- >>> integral 0 (3 * X^2 + 2 * Y) :: UMultiPoly 2 Double
