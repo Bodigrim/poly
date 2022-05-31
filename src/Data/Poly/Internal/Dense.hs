@@ -455,7 +455,9 @@ integral' (Poly xs)
       lenXs = G.length xs
 {-# INLINABLE integral' #-}
 
--- | Create an identity polynomial.
+-- | The polynomial 'X'.
+--
+-- > X == monomial 1 1
 pattern X :: (Eq a, Num a, G.Vector v a) => Poly v a
 pattern X <- (isVar -> True)
   where X = var
