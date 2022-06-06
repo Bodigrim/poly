@@ -45,6 +45,7 @@ monomial
   -> a
   -> Laurent v a
 monomial = Multi.monomial . SU.singleton
+{-# INLINABLE monomial #-}
 
 -- | Multiply a polynomial by a monomial, expressed as a power and a coefficient.
 --
@@ -57,6 +58,7 @@ scale
   -> Laurent v a
   -> Laurent v a
 scale = Multi.scale . SU.singleton
+{-# INLINABLE scale #-}
 
 -- | The polynomial 'X'.
 --
@@ -93,6 +95,7 @@ eval
   -> a
   -> a
 eval p = Multi.eval p . SV.singleton
+{-# INLINABLE eval #-}
 
 -- | Substitute another polynomial instead of 'X'.
 --
@@ -105,6 +108,7 @@ subst
   -> Laurent w a
   -> Laurent w a
 subst p = Multi.subst p . SV.singleton
+{-# INLINABLE subst #-}
 
 -- | Take the derivative of the polynomial.
 --
@@ -115,3 +119,4 @@ deriv
   => Laurent v a
   -> Laurent v a
 deriv = Multi.deriv 0
+{-# INLINABLE deriv #-}

@@ -122,9 +122,11 @@ type UPoly = Poly U.Vector
 -- 0
 toPoly :: (Eq a, Num a, G.Vector v a) => v a -> Poly v a
 toPoly = Poly . dropWhileEnd (== 0)
+{-# INLINABLE toPoly #-}
 
 toPoly' :: (Eq a, Semiring a, G.Vector v a) => v a -> Poly v a
 toPoly' = Poly . dropWhileEnd (== zero)
+{-# INLINABLE toPoly' #-}
 
 -- | Return the leading power and coefficient of a non-zero polynomial.
 --
@@ -136,6 +138,7 @@ leading :: G.Vector v a => Poly v a -> Maybe (Word, a)
 leading (Poly v)
   | G.null v  = Nothing
   | otherwise = Just (fromIntegral (G.length v - 1), G.last v)
+{-# INLINABLE leading #-}
 
 -- | Note that 'abs' = 'id' and 'signum' = 'const' 1.
 instance (Eq a, Num a, G.Vector v a) => Num (Poly v a) where
@@ -174,6 +177,7 @@ instance (Eq a, Semiring a, G.Vector v a) => Semiring (Poly v a) where
 
 instance (Eq a, Ring a, G.Vector v a) => Ring (Poly v a) where
   negate (Poly xs) = Poly $ G.map Semiring.negate xs
+  {-# INLINABLE negate #-}
 
 dropWhileEnd
   :: G.Vector v a

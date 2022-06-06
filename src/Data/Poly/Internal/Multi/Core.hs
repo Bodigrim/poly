@@ -44,6 +44,7 @@ normalize p add vs
     ws <- G.thaw vs
     l' <- normalizeM p add ws
     G.unsafeFreeze $ MG.unsafeSlice 0 l' ws
+{-# INLINABLE normalize #-}
 
 normalizeM
   :: (PrimMonad m, G.Vector v (t, a), Ord t)
@@ -72,6 +73,7 @@ normalizeM p add ws = do
     Tim.sortBy (comparing fst) ws
     wsHead <- MG.unsafeRead ws 0
     go 0 1 wsHead
+{-# INLINABLE normalizeM #-}
 
 plusPoly
   :: (G.Vector v (t, a), Ord t)
