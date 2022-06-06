@@ -154,6 +154,7 @@ type ULaurent = Laurent U.Vector
 -- Nothing
 leading :: G.Vector v a => Laurent v a -> Maybe (Int, a)
 leading (Laurent off poly) = first ((+ off) . fromIntegral) <$> Dense.leading poly
+{-# INLINABLE leading #-}
 
 -- | Note that 'abs' = 'id' and 'signum' = 'const' 1.
 instance (Eq a, Num a, G.Vector v a) => Num (Laurent v a) where
@@ -208,6 +209,7 @@ monomial p c
 -- 3 * X^2 + 0 * X + 3
 scale :: (Eq a, Semiring a, G.Vector v a) => Int -> a -> Laurent v a -> Laurent v a
 scale yp yc (Laurent off poly) = toLaurent (off + yp) (Dense.scale' 0 yc poly)
+{-# INLINABLE scale #-}
 
 -- | Evaluate the polynomial at a given point.
 --

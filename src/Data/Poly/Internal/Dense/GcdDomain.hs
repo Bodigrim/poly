@@ -33,6 +33,7 @@ import Data.Poly.Internal.Dense
 instance (Eq a, Ring a, GcdDomain a, G.Vector v a) => GcdDomain (Poly v a) where
   divide (Poly xs) (Poly ys) =
     toPoly' <$> quotient xs ys
+  {-# INLINABLE divide #-}
 
   gcd (Poly xs) (Poly ys)
     | G.null xs = Poly ys
@@ -45,8 +46,10 @@ instance (Eq a, Ring a, GcdDomain a, G.Vector v a) => GcdDomain (Poly v a) where
   lcm x@(Poly xs) y@(Poly ys)
     | G.null xs || G.null ys = zero
     | otherwise = (x `divide'` gcd x y) `times` y
+  {-# INLINABLE lcm #-}
 
   coprime x y = isJust (one `divide` gcd x y)
+  {-# INLINABLE coprime #-}
 
 gcdNonEmpty
   :: (Eq a, Ring a, GcdDomain a, G.Vector v a)

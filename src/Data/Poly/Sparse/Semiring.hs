@@ -55,6 +55,7 @@ toPoly
   => v (Word, a)
   -> Poly v a
 toPoly = Multi.toMultiPoly' . G.map (first SU.singleton)
+{-# INLINABLE toPoly #-}
 
 -- | Create a monomial from a power and a coefficient.
 monomial
@@ -63,6 +64,7 @@ monomial
   -> a
   -> Poly v a
 monomial = Multi.monomial' . SU.singleton
+{-# INLINABLE monomial #-}
 
 -- | Multiply a polynomial by a monomial, expressed as a power and a coefficient.
 --
@@ -75,6 +77,7 @@ scale
   -> Poly v a
   -> Poly v a
 scale = Multi.scale' . SU.singleton
+{-# INLINABLE scale #-}
 
 -- | The polynomial 'X'.
 --
@@ -94,6 +97,7 @@ eval
   -> a
   -> a
 eval p = Multi.eval' p . SV.singleton
+{-# INLINABLE eval #-}
 
 -- | Substitute another polynomial instead of 'X'.
 --
@@ -105,6 +109,7 @@ subst
   -> Poly w a
   -> Poly w a
 subst p = Multi.subst' p . SV.singleton
+{-# INLINABLE subst #-}
 
 -- | Take the derivative of the polynomial.
 --
@@ -115,6 +120,7 @@ deriv
   => Poly v a
   -> Poly v a
 deriv = Multi.deriv' 0
+{-# INLINABLE deriv #-}
 
 -- | Compute an indefinite integral of the polynomial,
 -- setting the constant term to zero.
@@ -126,6 +132,7 @@ integral
   => Poly v a
   -> Poly v a
 integral = Multi.integral' 0
+{-# INLINABLE integral #-}
 
 -- | Convert from dense to sparse polynomials.
 --
@@ -137,6 +144,7 @@ denseToSparse
   => Dense.Poly v a
   -> Multi.Poly v a
 denseToSparse = Convert.denseToSparse'
+{-# INLINABLE denseToSparse #-}
 
 -- | Convert from sparse to dense polynomials.
 --
@@ -148,3 +156,4 @@ sparseToDense
   => Multi.Poly v a
   -> Dense.Poly v a
 sparseToDense = Convert.sparseToDense'
+{-# INLINABLE sparseToDense #-}

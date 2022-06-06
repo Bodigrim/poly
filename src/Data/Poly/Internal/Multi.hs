@@ -191,12 +191,14 @@ toMultiPoly
   => v (SU.Vector n Word, a)
   -> MultiPoly v n a
 toMultiPoly = MultiPoly . normalize (/= 0) (+)
+{-# INLINABLE toMultiPoly #-}
 
 toMultiPoly'
   :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a))
   => v (SU.Vector n Word, a)
   -> MultiPoly v n a
 toMultiPoly' = MultiPoly . normalize (/= zero) plus
+{-# INLINABLE toMultiPoly' #-}
 
 -- | Note that 'abs' = 'id' and 'signum' = 'const' 1.
 instance (Eq a, Num a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Num (MultiPoly v n a) where
@@ -279,6 +281,7 @@ monomial
 monomial p c
   | c == 0    = MultiPoly G.empty
   | otherwise = MultiPoly $ G.singleton (p, c)
+{-# INLINABLE monomial #-}
 
 monomial'
   :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a))
@@ -288,6 +291,7 @@ monomial'
 monomial' p c
   | c == zero = MultiPoly G.empty
   | otherwise = MultiPoly $ G.singleton (p, c)
+{-# INLINABLE monomial' #-}
 
 -- | Evaluate the polynomial at a given point.
 --

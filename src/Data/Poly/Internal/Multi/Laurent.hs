@@ -209,6 +209,7 @@ toLaurent
   -> Poly v a
   -> Laurent v a
 toLaurent = toMultiLaurent . SU.singleton
+{-# INLINABLE toLaurent #-}
 
 instance NFData (v (SU.Vector n Word, a)) => NFData (MultiLaurent v n a) where
   rnf (MultiLaurent off poly) = rnf off `seq` rnf poly
