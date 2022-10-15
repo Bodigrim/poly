@@ -136,6 +136,7 @@ benchmark poly-bench
     poly,
     semirings >= 0.2,
     vector >= 0.12.0.2
+    , polynomial-algebra
   build-depends:
     tasty-bench
   mixins:
