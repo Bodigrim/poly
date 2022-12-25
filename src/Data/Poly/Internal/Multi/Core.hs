@@ -250,11 +250,10 @@ convolution p add mult xs ys
       gogo slices' buffer' bufferNew
 
     gogo
-      :: PrimMonad m
-      => U.Vector (Int, Int)
+      :: U.Vector (Int, Int)
       -> v (t, a)
-      -> G.Mutable v (PrimState m) (t, a)
-      -> m (v (t, a))
+      -> G.Mutable v s (t, a)
+      -> ST s (v (t, a))
     gogo slices buffer bufferNew
       | G.length slices == 0
       = pure G.empty
