@@ -202,6 +202,7 @@ toMultiPoly' = MultiPoly . normalize (/= zero) plus
 
 -- | Note that 'abs' = 'id' and 'signum' = 'const' 1.
 instance (Eq a, Num a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Num (MultiPoly v n a) where
+  {-# SPECIALISE instance Num (UMultiPoly 1 Int) #-}
   MultiPoly xs + MultiPoly ys = MultiPoly $ plusPoly (/= 0) (+) xs ys
   MultiPoly xs - MultiPoly ys = MultiPoly $ minusPoly (/= 0) negate (-) xs ys
   negate (MultiPoly xs) = MultiPoly $ G.map (fmap negate) xs
