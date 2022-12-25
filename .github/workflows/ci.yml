@@ -14,13 +14,13 @@ jobs:
         os: [ubuntu-latest]
         ghc: ['9.4.3']
     steps:
-    - uses: actions/checkout@v2
-    - uses: haskell/actions/setup@v1
+    - uses: actions/checkout@v3
+    - uses: haskell/actions/setup@v2
       id: setup-haskell-cabal
       with:
         ghc-version: ${{ matrix.ghc }}
         cabal-version: 'latest'
-    - uses: actions/cache@v2.1.5
+    - uses: actions/cache@v3
       name: Cache cabal stuff
       with:
         path: |
@@ -31,14 +31,14 @@ jobs:
           ${{ runner.os }}-${{ matrix.ghc }}-
     - name: Build without sparse
       run: |
-        cabal configure --enable-tests --enable-benchmarks --benchmark-option=-l -f-sparse
+        cabal configure --enable-tests --enable-benchmarks --benchmark-option=-l -f-sparse --ghc-options='-fcheck-prim-bounds' --constraint 'vector +unsafechecks +internalchecks'
         cabal build --write-ghc-environment-files=always
         cabal test
         cabal bench
         cabal haddock
     - name: Build with sparse
       run: |
-        cabal configure --enable-tests --enable-benchmarks --benchmark-option=-l
+        cabal configure --enable-tests --enable-benchmarks --benchmark-option=-l --ghc-options='-fcheck-prim-bounds' --constraint 'vector +unsafechecks +internalchecks'
         cabal build --write-ghc-environment-files=always
         cabal test
         cabal bench
