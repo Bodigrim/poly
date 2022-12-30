@@ -6,6 +6,8 @@
 --
 -- Dense polynomials and a 'Num'-based interface.
 --
+-- @since 0.1.0.0
+--
 
 {-# LANGUAGE CPP             #-}
 {-# LANGUAGE PatternSynonyms #-}

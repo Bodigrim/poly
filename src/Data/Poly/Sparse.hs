@@ -6,6 +6,8 @@
 --
 -- Sparse polynomials with a 'Num' instance.
 --
+-- @since 0.3.0.0
+--
 
 {-# LANGUAGE DataKinds        #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -48,6 +50,8 @@ import Data.Poly.Internal.Multi.GcdDomain ()
 -- 3 * X^2 + 2 * X + 1
 -- >>> toPoly [(0,0),(1,0),(2,0)] :: UPoly Int
 -- 0
+--
+-- @since 0.3.0.0
 toPoly
   :: (Eq a, Num a, G.Vector v (Word, a), G.Vector v (SU.Vector 1 Word, a))
   => v (Word, a)
@@ -56,6 +60,8 @@ toPoly = Multi.toMultiPoly . G.map (first SU.singleton)
 {-# INLINABLE toPoly #-}
 
 -- | Create a monomial from a power and a coefficient.
+--
+-- @since 0.3.0.0
 monomial
   :: (Eq a, Num a, G.Vector v (SU.Vector 1 Word, a))
   => Word
@@ -68,6 +74,8 @@ monomial = Multi.monomial . SU.singleton
 --
 -- >>> scale 2 3 (X^2 + 1) :: UPoly Int
 -- 3 * X^4 + 3 * X^2
+--
+-- @since 0.3.0.0
 scale
   :: (Eq a, Num a, G.Vector v (SU.Vector 1 Word, a))
   => Word
@@ -80,6 +88,8 @@ scale = Multi.scale . SU.singleton
 -- | The polynomial 'X'.
 --
 -- > X == monomial 1 1
+--
+-- @since 0.3.0.0
 pattern X
   :: (Eq a, Num a, G.Vector v (SU.Vector 1 Word, a))
   => Poly v a
@@ -89,6 +99,8 @@ pattern X = Multi.X
 --
 -- >>> eval (X^2 + 1 :: UPoly Int) 3
 -- 10
+--
+-- @since 0.3.0.0
 eval
   :: (Num a, G.Vector v (SU.Vector 1 Word, a))
   => Poly v a
@@ -101,6 +113,8 @@ eval p = Multi.eval p . SV.singleton
 --
 -- >>> subst (X^2 + 1 :: UPoly Int) (X + 1 :: UPoly Int)
 -- 1 * X^2 + 2 * X + 2
+--
+-- @since 0.3.3.0
 subst
   :: (Eq a, Num a, G.Vector v (SU.Vector 1 Word, a), G.Vector w (SU.Vector 1 Word, a))
   => Poly v a
@@ -113,6 +127,8 @@ subst p = Multi.subst p . SV.singleton
 --
 -- >>> deriv (X^3 + 3 * X) :: UPoly Int
 -- 3 * X^2 + 3
+--
+-- @since 0.3.0.0
 deriv
   :: (Eq a, Num a, G.Vector v (SU.Vector 1 Word, a))
   => Poly v a
@@ -125,6 +141,8 @@ deriv = Multi.deriv 0
 --
 -- >>> integral (3 * X^2 + 3) :: UPoly Double
 -- 1.0 * X^3 + 3.0 * X
+--
+-- @since 0.3.0.0
 integral
   :: (Fractional a, G.Vector v (SU.Vector 1 Word, a))
   => Poly v a

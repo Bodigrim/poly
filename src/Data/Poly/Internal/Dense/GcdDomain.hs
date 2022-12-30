@@ -30,6 +30,7 @@ import qualified Data.Vector.Generic.Mutable as MG
 
 import Data.Poly.Internal.Dense
 
+-- | @since 0.3.0.0
 instance (Eq a, Ring a, GcdDomain a, G.Vector v a) => GcdDomain (Poly v a) where
   divide (Poly xs) (Poly ys) =
     toPoly' <$> quotient xs ys

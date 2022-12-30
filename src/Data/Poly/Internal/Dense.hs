@@ -75,13 +75,20 @@ import GHC.Exts
 -- The 'Ord' instance does not make much sense mathematically,
 -- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
 --
+-- @since 0.1.0.0
 newtype Poly (v :: Type -> Type) (a :: Type) = Poly
   { unPoly :: v a
   -- ^ Convert a 'Poly' to a vector of coefficients
   -- (first element corresponds to the constant term).
+  --
+  -- @since 0.1.0.0
   }
-  deriving (Eq, NFData, Ord)
+  deriving
+  ( Eq, Ord
+  , NFData -- ^ @since 0.3.2.0
+  )
 
+-- | @since 0.3.1.0
 instance (Eq a, Semiring a, G.Vector v a) => IsList (Poly v a) where
   type Item (Poly v a) = a
   fromList = toPoly' . G.fromList
@@ -107,9 +114,13 @@ instance (Show a, G.Vector v a) => Show (Poly v a) where
       showCoeff i c = showsPrec 7 c . showString (" * X^" ++ show i)
 
 -- | Polynomials backed by boxed vectors.
+--
+-- @since 0.2.0.0
 type VPoly = Poly V.Vector
 
 -- | Polynomials backed by unboxed vectors.
+--
+-- @since 0.2.0.0
 type UPoly = Poly U.Vector
 
 -- | Make a 'Poly' from a list of coefficients
@@ -120,6 +131,8 @@ type UPoly = Poly U.Vector
 -- 3 * X^2 + 2 * X + 1
 -- >>> toPoly [0,0,0] :: UPoly Int
 -- 0
+--
+-- @since 0.1.0.0
 toPoly :: (Eq a, Num a, G.Vector v a) => v a -> Poly v a
 toPoly = Poly . dropWhileEnd (== 0)
 {-# INLINABLE toPoly #-}
@@ -134,6 +147,8 @@ toPoly' = Poly . dropWhileEnd (== zero)
 -- Just (3,4)
 -- >>> leading (0 :: UPoly Int)
 -- Nothing
+--
+-- @since 0.3.0.0
 leading :: G.Vector v a => Poly v a -> Maybe (Word, a)
 leading (Poly v)
   | G.null v  = Nothing
@@ -323,6 +338,8 @@ convolution zer add mul xs ys
 {-# INLINABLE convolution #-}
 
 -- | Create a monomial from a power and a coefficient.
+--
+-- @since 0.3.0.0
 monomial :: (Eq a, Num a, G.Vector v a) => Word -> a -> Poly v a
 monomial _ 0 = Poly G.empty
 monomial p c = Poly $ G.generate (fromIntegral p + 1) (\i -> if i == fromIntegral p then c else 0)
@@ -356,6 +373,8 @@ scaleInternal zer mul yp yc xs = runST $ do
 --
 -- >>> scale 2 3 (X^2 + 1) :: UPoly Int
 -- 3 * X^4 + 0 * X^3 + 3 * X^2 + 0 * X + 0
+--
+-- @since 0.3.0.0
 scale :: (Eq a, Num a, G.Vector v a) => Word -> a -> Poly v a -> Poly v a
 scale yp yc (Poly xs) = toPoly $ scaleInternal 0 (*) yp yc xs
 
@@ -382,6 +401,8 @@ fst' (a :*: _) = a
 --
 -- >>> eval (X^2 + 1 :: UPoly Int) 3
 -- 10
+--
+-- @since 0.2.0.0
 eval :: (Num a, G.Vector v a) => Poly v a -> a -> a
 eval = substitute (*)
 {-# INLINE eval #-}
@@ -394,6 +415,8 @@ eval' = substitute' times
 --
 -- >>> subst (X^2 + 1 :: UPoly Int) (X + 1 :: UPoly Int)
 -- 1 * X^2 + 2 * X + 2
+--
+-- @since 0.3.3.0
 subst :: (Eq a, Num a, G.Vector v a, G.Vector w a) => Poly v a -> Poly w a -> Poly w a
 subst = substitute (scale 0)
 {-# INLINE subst #-}
@@ -416,6 +439,8 @@ substitute' f (Poly cs) x = fst' $
 --
 -- >>> deriv (X^3 + 3 * X) :: UPoly Int
 -- 3 * X^2 + 0 * X + 3
+--
+-- @since 0.2.0.0
 deriv :: (Eq a, Num a, G.Vector v a) => Poly v a -> Poly v a
 deriv (Poly xs)
   | G.null xs = Poly G.empty
@@ -433,6 +458,8 @@ deriv' (Poly xs)
 --
 -- >>> integral (3 * X^2 + 3) :: UPoly Double
 -- 1.0 * X^3 + 0.0 * X^2 + 3.0 * X + 0.0
+--
+-- @since 0.2.0.0
 integral :: (Eq a, Fractional a, G.Vector v a) => Poly v a -> Poly v a
 integral (Poly xs)
   | G.null xs = Poly G.empty
@@ -462,6 +489,8 @@ integral' (Poly xs)
 -- | The polynomial 'X'.
 --
 -- > X == monomial 1 1
+--
+-- @since 0.2.0.0
 pattern X :: (Eq a, Num a, G.Vector v a) => Poly v a
 pattern X <- (isVar -> True)
   where X = var

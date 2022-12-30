@@ -6,6 +6,8 @@
 --
 -- <https://en.wikipedia.org/wiki/Laurent_polynomial Laurent polynomials>.
 --
+-- @since 0.4.0.0
+--
 
 {-# LANGUAGE PatternSynonyms            #-}
 
