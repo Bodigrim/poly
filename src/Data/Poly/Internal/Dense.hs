@@ -45,7 +45,6 @@ module Data.Poly.Internal.Dense
 import Prelude hiding (quotRem, quot, rem, gcd, lcm)
 import Control.DeepSeq (NFData)
 import Control.Monad
-import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.Bits
 import Data.Euclidean (Euclidean, Field, quot)
@@ -206,10 +205,10 @@ dropWhileEnd p xs = G.unsafeSlice 0 (go (G.length xs)) xs
 {-# INLINE dropWhileEnd #-}
 
 dropWhileEndM
-  :: (PrimMonad m, G.Vector v a)
+  :: G.Vector v a
   => (a -> Bool)
-  -> G.Mutable v (PrimState m) a
-  -> m (G.Mutable v (PrimState m) a)
+  -> G.Mutable v s a
+  -> ST s (G.Mutable v s a)
 dropWhileEndM p xs = go (MG.length xs)
   where
     go 0 = pure $ MG.unsafeSlice 0 0 xs

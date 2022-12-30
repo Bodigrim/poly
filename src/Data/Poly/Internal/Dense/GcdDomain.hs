@@ -20,7 +20,6 @@ module Data.Poly.Internal.Dense.GcdDomain
 import Prelude hiding (gcd, lcm, (^))
 import Control.Exception
 import Control.Monad
-import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.Euclidean
 import Data.Maybe
@@ -80,10 +79,10 @@ gcdNonEmpty xs ys = runST $ do
 {-# INLINABLE gcdNonEmpty #-}
 
 gcdM
-  :: (PrimMonad m, Eq a, Ring a, GcdDomain a, G.Vector v a)
-  => G.Mutable v (PrimState m) a
-  -> G.Mutable v (PrimState m) a
-  -> m (G.Mutable v (PrimState m) a)
+  :: (Eq a, Ring a, GcdDomain a, G.Vector v a)
+  => G.Mutable v s a
+  -> G.Mutable v s a
+  -> ST s (G.Mutable v s a)
 gcdM xs ys
   | MG.null xs = pure ys
   | MG.null ys = pure xs
@@ -147,9 +146,9 @@ divide' :: GcdDomain a => a -> a -> a
 divide' = (fromMaybe (error "gcd: violated internal invariant") .) . divide
 
 isZeroM
-  :: (Eq a, Semiring a, PrimMonad m, G.Vector v a)
-  => G.Mutable v (PrimState m) a
-  -> m Bool
+  :: (Eq a, Semiring a, G.Vector v a)
+  => G.Mutable v s a
+  -> ST s Bool
 isZeroM xs = go (MG.length xs)
   where
     go 0 = pure True

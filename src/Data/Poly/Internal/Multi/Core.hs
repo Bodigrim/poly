@@ -23,7 +23,6 @@ module Data.Poly.Internal.Multi.Core
   ) where
 
 import Control.Monad
-import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.Bits
 import Data.Ord
@@ -47,11 +46,11 @@ normalize p add vs
 {-# INLINABLE normalize #-}
 
 normalizeM
-  :: (PrimMonad m, G.Vector v (t, a), Ord t)
+  :: (G.Vector v (t, a), Ord t)
   => (a -> Bool)
   -> (a -> a -> a)
-  -> G.Mutable v (PrimState m) (t, a)
-  -> m Int
+  -> G.Mutable v s (t, a)
+  -> ST s Int
 normalizeM p add ws = do
     let l = MG.length ws
     let go i j acc@(accP, accC)
@@ -89,13 +88,13 @@ plusPoly p add = \xs ys -> runST $ do
 {-# INLINABLE plusPoly #-}
 
 plusPolyM
-  :: (PrimMonad m, G.Vector v (t, a), Ord t)
+  :: (G.Vector v (t, a), Ord t)
   => (a -> Bool)
   -> (a -> a -> a)
   -> v (t, a)
   -> v (t, a)
-  -> G.Mutable v (PrimState m) (t, a)
-  -> m Int
+  -> G.Mutable v s (t, a)
+  -> ST s Int
 plusPolyM p add xs ys zs = go 0 0 0
   where
     lenXs = G.length xs
@@ -176,13 +175,13 @@ minusPoly p neg sub = \xs ys -> runST $ do
 {-# INLINABLE minusPoly #-}
 
 scaleM
-  :: (PrimMonad m, G.Vector v (t, a), Num t)
+  :: (G.Vector v (t, a), Num t)
   => (a -> Bool)
   -> (a -> a -> a)
   -> v (t, a)
   -> (t, a)
-  -> G.Mutable v (PrimState m) (t, a)
-  -> m Int
+  -> G.Mutable v s (t, a)
+  -> ST s Int
 scaleM p mul xs (yp, yc) zs = go 0 0
   where
     lenXs = G.length xs

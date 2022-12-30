@@ -21,7 +21,6 @@ module Data.Poly.Internal.Dense.Field
 import Prelude hiding (quotRem, quot, rem, gcd)
 import Control.Exception
 import Control.Monad
-import Control.Monad.Primitive
 import Control.Monad.ST
 import Data.Euclidean (Euclidean(..), Field)
 import Data.Semiring (times, minus, zero, one)
@@ -112,10 +111,10 @@ remainder xs ys
 {-# INLINABLE remainder #-}
 
 remainderM
-  :: (PrimMonad m, Eq a, Field a, G.Vector v a)
-  => G.Mutable v (PrimState m) a
-  -> G.Mutable v (PrimState m) a
-  -> m ()
+  :: (Eq a, Field a, G.Vector v a)
+  => G.Mutable v s a
+  -> G.Mutable v s a
+  -> ST s ()
 remainderM xs ys
   | lenXs < lenYs = pure ()
   | lenYs == 0 = throw DivideByZero
