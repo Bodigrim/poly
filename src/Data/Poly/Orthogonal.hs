@@ -83,7 +83,7 @@ jacobi a b = xs
 -- | <https://en.wikipedia.org/wiki/Chebyshev_polynomials Chebyshev polynomials>
 -- of the first kind.
 --
--- >>> take 3 chebyshev1 :: [VPoly Integer]
+-- >>> take 3 chebyshev1 :: [Data.Poly.VPoly Integer]
 -- [1,1 * X + 0,2 * X^2 + 0 * X + (-1)]
 --
 -- @since 0.4.0.0
@@ -95,7 +95,7 @@ chebyshev1 = xs
 -- | <https://en.wikipedia.org/wiki/Chebyshev_polynomials Chebyshev polynomials>
 -- of the second kind.
 --
--- >>> take 3 chebyshev2 :: [VPoly Integer]
+-- >>> take 3 chebyshev2 :: [Data.Poly.VPoly Integer]
 -- [1,2 * X + 0,4 * X^2 + 0 * X + (-1)]
 --
 -- @since 0.4.0.0
@@ -106,7 +106,7 @@ chebyshev2 = xs
 
 -- | Probabilists' <https://en.wikipedia.org/wiki/Hermite_polynomials Hermite polynomials>.
 --
--- >>> take 3 hermiteProb :: [VPoly Integer]
+-- >>> take 3 hermiteProb :: [Data.Poly.VPoly Integer]
 -- [1,1 * X + 0,1 * X^2 + 0 * X + (-1)]
 --
 -- @since 0.4.0.0
@@ -118,7 +118,7 @@ hermiteProb = xs
 
 -- | Physicists' <https://en.wikipedia.org/wiki/Hermite_polynomials Hermite polynomials>.
 --
--- >>> take 3 hermitePhys :: [VPoly Double]
+-- >>> take 3 hermitePhys :: [Data.Poly.VPoly Double]
 -- [1.0,2.0 * X + 0.0,4.0 * X^2 + 0.0 * X + (-2.0)]
 --
 -- @since 0.4.0.0
@@ -130,7 +130,7 @@ hermitePhys = xs
 
 -- | <https://en.wikipedia.org/wiki/Laguerre_polynomials Laguerre polynomials>.
 --
--- >>> take 3 laguerre :: [VPoly Double]
+-- >>> take 3 laguerre :: [Data.Poly.VPoly Double]
 -- [1.0,(-1.0) * X + 1.0,0.5 * X^2 + (-2.0) * X + 1.0]
 --
 -- @since 0.4.0.0

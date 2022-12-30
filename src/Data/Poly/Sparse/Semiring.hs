@@ -155,7 +155,7 @@ integral = Multi.integral' 0
 -- | Convert from dense to sparse polynomials.
 --
 -- >>> :set -XFlexibleContexts
--- >>> denseToSparse (1 `plus` Data.Poly.X^2) :: Data.Poly.Sparse.UPoly Int
+-- >>> denseToSparse (1 `Data.Semiring.plus` Data.Poly.X^2) :: Data.Poly.Sparse.UPoly Int
 -- 1 * X^2 + 1
 --
 -- @since 0.5.0.0
@@ -169,7 +169,7 @@ denseToSparse = Convert.denseToSparse'
 -- | Convert from sparse to dense polynomials.
 --
 -- >>> :set -XFlexibleContexts
--- >>> sparseToDense (1 `plus` Data.Poly.Sparse.X^2) :: Data.Poly.UPoly Int
+-- >>> sparseToDense (1 `Data.Semiring.plus` Data.Poly.Sparse.X^2) :: Data.Poly.UPoly Int
 -- 1 * X^2 + 0 * X + 1
 --
 -- @since 0.5.0.0
