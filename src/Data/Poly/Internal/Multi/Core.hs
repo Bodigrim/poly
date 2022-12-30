@@ -82,7 +82,7 @@ plusPoly
   -> v (t, a)
   -> v (t, a)
   -> v (t, a)
-plusPoly p add xs ys = runST $ do
+plusPoly p add = \xs ys -> runST $ do
   zs <- MG.unsafeNew (G.length xs + G.length ys)
   lenZs <- plusPolyM p add xs ys zs
   G.unsafeFreeze $ MG.unsafeSlice 0 lenZs zs
@@ -139,7 +139,9 @@ minusPoly
   -> v (t, a)
   -> v (t, a)
   -> v (t, a)
-minusPoly p neg sub xs ys = runST $ do
+minusPoly p neg sub = \xs ys -> runST $ do
+  let lenXs = G.length xs
+      lenYs = G.length ys
   zs <- MG.unsafeNew (lenXs + lenYs)
   let go ix iy iz
         | ix == lenXs, iy == lenYs = pure iz
@@ -171,9 +173,6 @@ minusPoly p neg sub xs ys = runST $ do
             go ix (iy + 1) (iz + 1)
   lenZs <- go 0 0 0
   G.unsafeFreeze $ MG.unsafeSlice 0 lenZs zs
-  where
-    lenXs = G.length xs
-    lenYs = G.length ys
 {-# INLINABLE minusPoly #-}
 
 scaleM
@@ -223,11 +222,10 @@ convolution
   -> v (t, a)
   -> v (t, a)
   -> v (t, a)
-convolution p add mult xs ys
-  | G.length xs >= G.length ys
-  = go mult xs ys
-  | otherwise
-  = go (flip mult) ys xs
+convolution p add mult = \xs ys ->
+  if G.length xs >= G.length ys
+  then go mult xs ys
+  else go (flip mult) ys xs
   where
     go :: (a -> a -> a) -> v (t, a) -> v (t, a) -> v (t, a)
     go mul long short = runST $ do

@@ -15,6 +15,7 @@
 {-# LANGUAGE PolyKinds                  #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TypeApplications           #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
 {-# LANGUAGE UndecidableInstances       #-}
@@ -62,6 +63,7 @@ module Data.Poly.Internal.Multi
 import Prelude hiding (quot, gcd)
 import Control.Arrow
 import Control.DeepSeq
+import Data.Coerce
 import Data.Euclidean (Field, quot)
 import Data.Finite
 import Data.Kind
@@ -218,15 +220,18 @@ toMultiPoly' = MultiPoly . normalize (/= zero) plus
 
 -- | Note that 'abs' = 'id' and 'signum' = 'const' 1.
 instance (Eq a, Num a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Num (MultiPoly v n a) where
-  MultiPoly xs + MultiPoly ys = MultiPoly $ plusPoly (/= 0) (+) xs ys
-  MultiPoly xs - MultiPoly ys = MultiPoly $ minusPoly (/= 0) negate (-) xs ys
+
+  (+) = coerce (plusPoly    @v @(SU.Vector n Word) @a (/= 0) (+))
+  (-) = coerce (minusPoly   @v @(SU.Vector n Word) @a (/= 0) negate (-))
+  (*) = coerce (convolution @v @(SU.Vector n Word) @a (/= 0) (+) (*))
+
   negate (MultiPoly xs) = MultiPoly $ G.map (fmap negate) xs
   abs = id
   signum = const 1
   fromInteger n = case fromInteger n of
     0 -> MultiPoly G.empty
     m -> MultiPoly $ G.singleton (0, m)
-  MultiPoly xs * MultiPoly ys = MultiPoly $ convolution (/= 0) (+) (*) xs ys
+
   {-# INLINE (+) #-}
   {-# INLINE (-) #-}
   {-# INLINE negate #-}
@@ -238,8 +243,10 @@ instance (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Sem
   one
     | (one :: a) == zero = zero
     | otherwise = MultiPoly $ G.singleton (0, one)
-  plus (MultiPoly xs) (MultiPoly ys) = MultiPoly $ plusPoly (/= zero) plus xs ys
-  times (MultiPoly xs) (MultiPoly ys) = MultiPoly $ convolution (/= zero) plus times xs ys
+
+  plus  = coerce (plusPoly    @v @(SU.Vector n Word) @a (/= zero) plus)
+  times = coerce (convolution @v @(SU.Vector n Word) @a (/= zero) plus times)
+
   {-# INLINE zero #-}
   {-# INLINE one #-}
   {-# INLINE plus #-}
