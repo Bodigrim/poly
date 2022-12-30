@@ -26,6 +26,8 @@ import qualified Data.Vector.Generic.Mutable as MG
 
 -- | <https://en.wikipedia.org/wiki/Fast_Fourier_transform Discrete Fourier transform>
 -- \( y_k = \sum_{j=0}^{N-1} x_j \sqrt[N]{1}^{jk} \).
+--
+-- @since 0.5.0.0
 dft
   :: (Ring a, G.Vector v a)
   => a   -- ^ primitive root \( \sqrt[N]{1} \), otherwise behaviour is undefined
@@ -71,6 +73,8 @@ dft primRoot (xs :: v a)
 
 -- | Inverse <https://en.wikipedia.org/wiki/Fast_Fourier_transform discrete Fourier transform>
 -- \( x_k = {1\over N} \sum_{j=0}^{N-1} y_j \sqrt[N]{1}^{-jk} \).
+--
+-- @since 0.5.0.0
 inverseDft
   :: (Field a, G.Vector v a)
   => a   -- ^ primitive root \( \sqrt[N]{1} \), otherwise behaviour is undefined

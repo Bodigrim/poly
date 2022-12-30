@@ -6,6 +6,7 @@
 --
 -- Sparse multivariate polynomials with 'Num' instance.
 --
+-- @since 0.5.0.0
 
 {-# LANGUAGE DataKinds        #-}
 {-# LANGUAGE FlexibleContexts #-}

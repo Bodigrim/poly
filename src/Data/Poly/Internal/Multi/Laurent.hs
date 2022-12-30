@@ -95,6 +95,7 @@ import Data.Poly.Internal.Multi.GcdDomain ()
 -- The 'Ord' instance does not make much sense mathematically,
 -- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
 --
+-- @since 0.5.0.0
 data MultiLaurent (v :: Type -> Type) (n :: Nat) (a :: Type) =
   MultiLaurent !(SU.Vector n Int) !(MultiPoly v n a)
 
@@ -102,9 +103,13 @@ deriving instance Eq  (v (SU.Vector n Word, a)) => Eq  (MultiLaurent v n a)
 deriving instance Ord (v (SU.Vector n Word, a)) => Ord (MultiLaurent v n a)
 
 -- | Multivariate Laurent polynomials backed by boxed vectors.
+--
+-- @since 0.5.0.0
 type VMultiLaurent (n :: Nat) (a :: Type) = MultiLaurent V.Vector n a
 
 -- | Multivariate Laurent polynomials backed by unboxed vectors.
+--
+-- @since 0.5.0.0
 type UMultiLaurent (n :: Nat) (a :: Type) = MultiLaurent U.Vector n a
 
 -- | <https://en.wikipedia.org/wiki/Laurent_polynomial Laurent polynomials>
@@ -124,12 +129,17 @@ type UMultiLaurent (n :: Nat) (a :: Type) = MultiLaurent U.Vector n a
 -- The 'Ord' instance does not make much sense mathematically,
 -- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
 --
+-- @since 0.4.0.0
 type Laurent (v :: Type -> Type) (a :: Type) = MultiLaurent v 1 a
 
 -- | Laurent polynomials backed by boxed vectors.
+--
+-- @since 0.4.0.0
 type VLaurent (a :: Type) = Laurent V.Vector a
 
 -- | Laurent polynomials backed by unboxed vectors.
+--
+-- @since 0.4.0.0
 type ULaurent (a :: Type) = Laurent U.Vector a
 
 instance (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Int, a), G.Vector v (SU.Vector n Word, a)) => IsList (MultiLaurent v n a) where
@@ -155,6 +165,8 @@ instance (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Int, a), G.Vecto
 -- (Vector [1,0],2 * X + 1)
 -- >>> unMultiLaurent (0 :: UMultiLaurent 2 Int)
 -- (Vector [0,0],0)
+--
+-- @since 0.5.0.0
 unMultiLaurent :: MultiLaurent v n a -> (SU.Vector n Int, MultiPoly v n a)
 unMultiLaurent (MultiLaurent off poly) = (off, poly)
 
@@ -169,6 +181,8 @@ unMultiLaurent (MultiLaurent off poly) = (off, poly)
 -- (1,2 * X + 1)
 -- >>> unLaurent (0 :: ULaurent Int)
 -- (0,0)
+--
+-- @since 0.4.0.0
 unLaurent :: Laurent v a -> (Int, Poly v a)
 unLaurent = first SU.head . unMultiLaurent
 
@@ -203,6 +217,8 @@ toMultiLaurent off (MultiPoly xs)
 -- 2 * X^3 + 1 * X^2
 -- >>> toLaurent (-2) (2 * Data.Poly.Sparse.X + 1) :: ULaurent Int
 -- 2 * X^-1 + 1 * X^-2
+--
+-- @since 0.4.0.0
 toLaurent
   :: G.Vector v (SU.Vector 1 Word, a)
   => Int
@@ -248,6 +264,8 @@ instance (Show a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Show (MultiLa
 -- Just (3,4)
 -- >>> leading (0 :: ULaurent Int)
 -- Nothing
+--
+-- @since 0.4.0.0
 leading :: G.Vector v (SU.Vector 1 Word, a) => Laurent v a -> Maybe (Int, a)
 leading (MultiLaurent off poly) = first ((+ SU.head off) . fromIntegral) <$> Multi.leading poly
 
@@ -295,6 +313,8 @@ instance (Eq a, Ring a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Ring (M
   negate (MultiLaurent off poly) = MultiLaurent off (Semiring.negate poly)
 
 -- | Create a monomial from a power and a coefficient.
+--
+-- @since 0.5.0.0
 monomial
   :: (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
   => SU.Vector n Int
@@ -311,6 +331,8 @@ monomial p c
 -- >>> import Data.Vector.Generic.Sized (fromTuple)
 -- >>> scale (fromTuple (1, 1)) 3 (X^-2 + Y) :: UMultiLaurent 2 Int
 -- 3 * X * Y^2 + 3 * X^-1 * Y
+--
+-- @since 0.5.0.0
 scale
   :: (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
   => SU.Vector n Int
@@ -325,6 +347,8 @@ scale yp yc (MultiLaurent off poly) = toMultiLaurent (off + yp) (Multi.scale' 0 
 -- >>> import Data.Vector.Generic.Sized (fromTuple)
 -- >>> eval (X^2 + Y^-1 :: UMultiLaurent 2 Double) (fromTuple (3, 4) :: Data.Vector.Sized.Vector 2 Double)
 -- 9.25
+--
+-- @since 0.5.0.0
 eval
   :: (Field a, G.Vector v (SU.Vector n Word, a), G.Vector u a)
   => MultiLaurent v n a
@@ -341,6 +365,8 @@ eval (MultiLaurent off poly) xs = Multi.eval' poly xs `times`
 -- >>> import Data.Poly.Multi (UMultiPoly)
 -- >>> subst (Data.Poly.Multi.X * Data.Poly.Multi.Y :: UMultiPoly 2 Int) (fromTuple (X + Y^-1, Y + X^-1 :: UMultiLaurent 2 Int))
 -- 1 * X * Y + 2 + 1 * X^-1 * Y^-1
+--
+-- @since 0.5.0.0
 subst
   :: (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a), G.Vector w (SU.Vector n Word, a))
   => MultiPoly v n a
@@ -356,6 +382,8 @@ subst = Multi.substitute' (scale 0)
 -- 3 * X^2
 -- >>> deriv 1 (X^3 + 3 * Y) :: UMultiLaurent 2 Int
 -- 3
+--
+-- @since 0.5.0.0
 deriv
   :: (Eq a, Ring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
   => Finite n
@@ -370,6 +398,8 @@ deriv i (MultiLaurent off (MultiPoly xs)) =
 {-# INLINE deriv #-}
 
 -- | Create a polynomial equal to the first variable.
+--
+-- @since 0.5.0.0
 pattern X
   :: (Eq a, Semiring a, KnownNat n, 1 <= n, G.Vector v (SU.Vector n Word, a))
   => MultiLaurent v n a
@@ -377,6 +407,8 @@ pattern X <- (isVar 0 -> True)
   where X = var 0
 
 -- | Create a polynomial equal to the second variable.
+--
+-- @since 0.5.0.0
 pattern Y
   :: (Eq a, Semiring a, KnownNat n, 2 <= n, G.Vector v (SU.Vector n Word, a))
   => MultiLaurent v n a
@@ -384,6 +416,8 @@ pattern Y <- (isVar 1 -> True)
   where Y = var 1
 
 -- | Create a polynomial equal to the third variable.
+--
+-- @since 0.5.0.0
 pattern Z
   :: (Eq a, Semiring a, KnownNat n, 3 <= n, G.Vector v (SU.Vector n Word, a))
   => MultiLaurent v n a
@@ -425,6 +459,8 @@ isVar i (MultiLaurent off (MultiPoly xs))
 -- 1 * X^-3 * Y^-1
 -- >>> 3 * X^-1 + 2 * (Y^2)^-2 :: UMultiLaurent 2 Int
 -- 2 * Y^-4 + 3 * X^-1
+--
+-- @since 0.5.0.0
 (^-)
   :: (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
   => MultiLaurent v n a
@@ -479,6 +515,8 @@ instance (Eq a, Ring a, GcdDomain a, KnownNat n, v ~ V.Vector) => GcdDomain (Mul
 -- | Interpret a multivariate Laurent polynomial over 1+/m/ variables
 -- as a univariate Laurent polynomial, whose coefficients are
 -- multivariate Laurent polynomials over the last /m/ variables.
+--
+-- @since 0.5.0.0
 segregate
   :: (KnownNat m, G.Vector v (SU.Vector (1 + m) Word, a), G.Vector v (SU.Vector m Word, a))
   => MultiLaurent v (1 + m) a
@@ -493,6 +531,8 @@ segregate (MultiLaurent off poly)
 -- | Interpret a univariate Laurent polynomials, whose coefficients are
 -- multivariate Laurent polynomials over the first /m/ variables,
 -- as a multivariate polynomial over 1+/m/ variables.
+--
+-- @since 0.5.0.0
 unsegregate
   :: forall v m a.
      (KnownNat m, KnownNat (1 + m), G.Vector v (SU.Vector (1 + m) Word, a), G.Vector v (SU.Vector m Word, a))

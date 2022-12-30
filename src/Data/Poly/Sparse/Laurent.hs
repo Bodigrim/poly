@@ -7,6 +7,7 @@
 -- Sparse
 -- <https://en.wikipedia.org/wiki/Laurent_polynomial Laurent polynomials>.
 --
+-- @since 0.4.0.0
 
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE FlexibleContexts           #-}
@@ -39,6 +40,8 @@ import qualified Data.Poly.Internal.Multi.Laurent as Multi
 import Data.Poly.Internal.Multi (Poly)
 
 -- | Create a monomial from a power and a coefficient.
+--
+-- @since 0.4.0.0
 monomial
   :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a))
   => Int
@@ -51,6 +54,8 @@ monomial = Multi.monomial . SU.singleton
 --
 -- >>> scale 2 3 (X^-2 + 1) :: ULaurent Int
 -- 3 * X^2 + 3
+--
+-- @since 0.4.0.0
 scale
   :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a))
   => Int
@@ -63,6 +68,8 @@ scale = Multi.scale . SU.singleton
 -- | The polynomial 'X'.
 --
 -- > X == monomial 1 one
+--
+-- @since 0.4.0.0
 pattern X
   :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a))
   => Laurent v a
@@ -78,6 +85,8 @@ pattern X = Multi.X
 -- 1 * X^-3
 -- >>> X + 2 + 3 * (X^2)^-1 :: ULaurent Int
 -- 1 * X + 2 + 3 * X^-2
+--
+-- @since 0.4.0.0
 (^-)
   :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a))
   => Laurent v a
@@ -89,6 +98,8 @@ pattern X = Multi.X
 --
 -- >>> eval (X^-2 + 1 :: ULaurent Double) 2
 -- 1.25
+--
+-- @since 0.4.0.0
 eval
   :: (Field a, G.Vector v (SU.Vector 1 Word, a))
   => Laurent v a
@@ -102,6 +113,8 @@ eval p = Multi.eval p . SV.singleton
 -- >>> import Data.Poly.Sparse (UPoly)
 -- >>> subst (Data.Poly.Sparse.X^2 + 1 :: UPoly Int) (X^-1 + 1 :: ULaurent Int)
 -- 2 + 2 * X^-1 + 1 * X^-2
+--
+-- @since 0.4.0.0
 subst
   :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a), G.Vector w (SU.Vector 1 Word, a))
   => Poly v a
@@ -114,6 +127,8 @@ subst p = Multi.subst p . SV.singleton
 --
 -- >>> deriv (X^-3 + 3 * X) :: ULaurent Int
 -- 3 + (-3) * X^-4
+--
+-- @since 0.4.0.0
 deriv
   :: (Eq a, Ring a, G.Vector v (SU.Vector 1 Word, a))
   => Laurent v a

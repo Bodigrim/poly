@@ -5,7 +5,7 @@
 * Implement multivariate polynomials (usual and Laurent).
 * Reimplement sparse univariate polynomials as a special case of multivariate ones.
 * Speed up `gcd` calculations for all flavours of polynomials.
-* Decomission `PolyOverField`: it does not improve performance any more.
+* Decomission `PolyOverField` and `LaurentOverField`: they do not improve performance any more.
 * Add function `quotRemFractional`.
 * Add an experimental implementation of the discrete Fourier transform.
 * Add conversion functions between dense and sparse polynomials.
@@ -43,9 +43,13 @@
 
 # 0.2.0.0
 
+* Parametrize `Poly` by underlying vector type.
+* Introduce `Data.Poly.Semiring` module.
 * Fix a bug in `Num.(-)`.
 * Add functions `constant`, `eval`, `deriv`, `integral`.
 * Add a handy pattern synonym `X`.
+* Add type synonyms `VPoly` and `UPoly`.
+* Remove function `toPoly'`.
 
 # 0.1.0.0
 

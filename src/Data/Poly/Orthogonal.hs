@@ -6,6 +6,7 @@
 --
 -- Classical orthogonal polynomials.
 --
+-- @since 0.4.0.0
 
 {-# LANGUAGE OverloadedLists     #-}
 {-# LANGUAGE RebindableSyntax    #-}
@@ -34,6 +35,8 @@ import Data.Vector.Generic (Vector, fromListN)
 --
 -- >>> take 3 legendre :: [Data.Poly.VPoly Double]
 -- [1.0,1.0 * X + 0.0,1.5 * X^2 + 0.0 * X + (-0.5)]
+--
+-- @since 0.4.0.0
 legendre :: (Eq a, Field a, Vector v a) => [Poly v a]
 legendre = map (`subst'` toPoly [1 `quot` 2, 1 `quot` 2]) legendreShifted
   where
@@ -44,6 +47,8 @@ legendre = map (`subst'` toPoly [1 `quot` 2, 1 `quot` 2]) legendreShifted
 --
 -- >>> take 3 legendreShifted :: [Data.Poly.VPoly Integer]
 -- [1,2 * X + (-1),6 * X^2 + (-6) * X + 1]
+--
+-- @since 0.4.0.0
 legendreShifted :: (Eq a, Euclidean a, Ring a, Vector v a) => [Poly v a]
 legendreShifted = xs
   where
@@ -51,12 +56,16 @@ legendreShifted = xs
     rec n pm1 p = unscale' 0 (n + 1) (toPoly [-1 - 2 * n, 2 + 4 * n] * p - scale 0 n pm1)
 
 -- | <https://en.wikipedia.org/wiki/Gegenbauer_polynomials Gegenbauer polynomials>.
+--
+-- @since 0.4.0.0
 gegenbauer :: (Eq a, Field a, Vector v a) => a -> [Poly v a]
 gegenbauer g = jacobi a a
   where
     a = g - 1 `quot` 2
 
 -- | <https://en.wikipedia.org/wiki/Jacobi_polynomials Jacobi polynomials>.
+--
+-- @since 0.4.0.0
 jacobi :: (Eq a, Field a, Vector v a) => a -> a -> [Poly v a]
 jacobi a b = xs
   where
@@ -76,6 +85,8 @@ jacobi a b = xs
 --
 -- >>> take 3 chebyshev1 :: [VPoly Integer]
 -- [1,1 * X + 0,2 * X^2 + 0 * X + (-1)]
+--
+-- @since 0.4.0.0
 chebyshev1 :: (Eq a, Ring a, Vector v a) => [Poly v a]
 chebyshev1 = xs
   where
@@ -86,6 +97,8 @@ chebyshev1 = xs
 --
 -- >>> take 3 chebyshev2 :: [VPoly Integer]
 -- [1,2 * X + 0,4 * X^2 + 0 * X + (-1)]
+--
+-- @since 0.4.0.0
 chebyshev2 :: (Eq a, Ring a, Vector v a) => [Poly v a]
 chebyshev2 = xs
   where
@@ -95,6 +108,8 @@ chebyshev2 = xs
 --
 -- >>> take 3 hermiteProb :: [VPoly Integer]
 -- [1,1 * X + 0,1 * X^2 + 0 * X + (-1)]
+--
+-- @since 0.4.0.0
 hermiteProb :: (Eq a, Ring a, Vector v a) => [Poly v a]
 hermiteProb = xs
   where
@@ -105,6 +120,8 @@ hermiteProb = xs
 --
 -- >>> take 3 hermitePhys :: [VPoly Double]
 -- [1.0,2.0 * X + 0.0,4.0 * X^2 + 0.0 * X + (-2.0)]
+--
+-- @since 0.4.0.0
 hermitePhys :: (Eq a, Ring a, Vector v a) => [Poly v a]
 hermitePhys = xs
   where
@@ -115,10 +132,14 @@ hermitePhys = xs
 --
 -- >>> take 3 laguerre :: [VPoly Double]
 -- [1.0,(-1.0) * X + 1.0,0.5 * X^2 + (-2.0) * X + 1.0]
+--
+-- @since 0.4.0.0
 laguerre :: (Eq a, Field a, Vector v a) => [Poly v a]
 laguerre = laguerreGen 0
 
 -- | <https://en.wikipedia.org/wiki/Laguerre_polynomials#Generalized_Laguerre_polynomials Generalized Laguerre polynomials>
+--
+-- @since 0.4.0.0
 laguerreGen :: (Eq a, Field a, Vector v a) => a -> [Poly v a]
 laguerreGen a = xs
   where

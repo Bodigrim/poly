@@ -98,9 +98,12 @@ import Data.Poly.Internal.Multi.Core
 -- The 'Ord' instance does not make much sense mathematically,
 -- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
 --
+-- @since 0.5.0.0
 newtype MultiPoly (v :: Type -> Type) (n :: Nat) (a :: Type) = MultiPoly
   { unMultiPoly :: v (SU.Vector n Word, a)
   -- ^ Convert a 'MultiPoly' to a vector of (powers, coefficient) pairs.
+  --
+  -- @since 0.5.0.0
   }
 
 deriving instance Eq     (v (SU.Vector n Word, a)) => Eq     (MultiPoly v n a)
@@ -108,9 +111,13 @@ deriving instance Ord    (v (SU.Vector n Word, a)) => Ord    (MultiPoly v n a)
 deriving instance NFData (v (SU.Vector n Word, a)) => NFData (MultiPoly v n a)
 
 -- | Multivariate polynomials backed by boxed vectors.
+--
+-- @since 0.5.0.0
 type VMultiPoly (n :: Nat) (a :: Type) = MultiPoly V.Vector n a
 
 -- | Multivariate polynomials backed by unboxed vectors.
+--
+-- @since 0.5.0.0
 type UMultiPoly (n :: Nat) (a :: Type) = MultiPoly U.Vector n a
 
 -- | Sparse univariate polynomials with coefficients from @a@,
@@ -129,15 +136,22 @@ type UMultiPoly (n :: Nat) (a :: Type) = MultiPoly U.Vector n a
 -- 'Ord' instance does not make much sense mathematically,
 -- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
 --
+-- @since 0.3.0.0
 type Poly (v :: Type -> Type) (a :: Type) = MultiPoly v 1 a
 
 -- | Polynomials backed by boxed vectors.
+--
+-- @since 0.3.0.0
 type VPoly (a :: Type) = Poly V.Vector a
 
 -- | Polynomials backed by unboxed vectors.
+--
+-- @since 0.3.0.0
 type UPoly (a :: Type) = Poly U.Vector a
 
 -- | Convert a 'Poly' to a vector of coefficients.
+--
+-- @since 0.3.0.0
 unPoly
   :: (G.Vector v (Word, a), G.Vector v (SU.Vector 1 Word, a))
   => Poly v a
@@ -186,6 +200,8 @@ instance (Show a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Show (MultiPo
 -- 3 * X + 2 * Y + 1
 -- >>> toMultiPoly [(fromTuple (0,0),0),(fromTuple (0,1),0),(fromTuple (1,0),0)] :: UMultiPoly 2 Int
 -- 0
+--
+-- @since 0.5.0.0
 toMultiPoly
   :: (Eq a, Num a, G.Vector v (SU.Vector n Word, a))
   => v (SU.Vector n Word, a)
@@ -246,6 +262,8 @@ instance (Eq a, Ring a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Ring (M
 -- Just (3,4)
 -- >>> leading (0 :: UPoly Int)
 -- Nothing
+--
+-- @since 0.3.0.0
 leading :: G.Vector v (SU.Vector 1 Word, a) => Poly v a -> Maybe (Word, a)
 leading (MultiPoly v)
   | G.null v  = Nothing
@@ -257,6 +275,8 @@ leading (MultiPoly v)
 -- >>> import Data.Vector.Generic.Sized (fromTuple)
 -- >>> scale (fromTuple (1, 1)) 3 (X^2 + Y) :: UMultiPoly 2 Int
 -- 3 * X^3 * Y + 3 * X * Y^2
+--
+-- @since 0.5.0.0
 scale
   :: (Eq a, Num a, KnownNat n, G.Vector v (SU.Vector n Word, a))
   => SU.Vector n Word
@@ -274,6 +294,8 @@ scale'
 scale' yp yc = MultiPoly . scaleInternal (/= zero) times yp yc . unMultiPoly
 
 -- | Create a monomial from powers and a coefficient.
+--
+-- @since 0.5.0.0
 monomial
   :: (Eq a, Num a, G.Vector v (SU.Vector n Word, a))
   => SU.Vector n Word
@@ -300,6 +322,8 @@ monomial' p c
 -- >>> import Data.Vector.Generic.Sized (fromTuple)
 -- >>> eval (X^2 + Y^2 :: UMultiPoly 2 Int) (fromTuple (3, 4) :: Data.Vector.Sized.Vector 2 Int)
 -- 25
+--
+-- @since 0.5.0.0
 eval
   :: (Num a, G.Vector v (SU.Vector n Word, a), G.Vector u a)
   => MultiPoly v n a
@@ -322,6 +346,8 @@ eval' = substitute' times
 -- >>> import Data.Vector.Generic.Sized (fromTuple)
 -- >>> subst (X^2 + Y^2 + Z^2 :: UMultiPoly 3 Int) (fromTuple (X + 1, Y + 1, X + Y :: UMultiPoly 2 Int))
 -- 2 * X^2 + 2 * X * Y + 2 * X + 2 * Y^2 + 2 * Y + 2
+--
+-- @since 0.5.0.0
 subst
   :: (Eq a, Num a, KnownNat m, G.Vector v (SU.Vector n Word, a), G.Vector w (SU.Vector m Word, a))
   => MultiPoly v n a
@@ -377,6 +403,8 @@ substitute' f (MultiPoly cs) xs = G.foldl' go zero cs
 -- 3 * X^2
 -- >>> deriv 1 (X^3 + 3 * Y) :: UMultiPoly 2 Int
 -- 3
+--
+-- @since 0.5.0.0
 deriv
   :: (Eq a, Num a, G.Vector v (SU.Vector n Word, a))
   => Finite n
@@ -410,6 +438,8 @@ deriv' i (MultiPoly xs) = MultiPoly $ derivPoly
 -- 1.0 * X^3 + 2.0 * X * Y
 -- >>> integral 1 (3 * X^2 + 2 * Y) :: UMultiPoly 2 Double
 -- 3.0 * X^2 * Y + 1.0 * Y^2
+--
+-- @since 0.5.0.0
 integral
   :: (Fractional a, G.Vector v (SU.Vector n Word, a))
   => Finite n
@@ -433,6 +463,8 @@ integral' i (MultiPoly xs)
 {-# INLINE integral' #-}
 
 -- | Create a polynomial equal to the first variable.
+--
+-- @since 0.5.0.0
 pattern X
   :: (Eq a, Num a, KnownNat n, 1 <= n, G.Vector v (SU.Vector n Word, a))
   => MultiPoly v n a
@@ -446,6 +478,8 @@ pattern X' <- (isVar' 0 -> True)
   where X' = var' 0
 
 -- | Create a polynomial equal to the second variable.
+--
+-- @since 0.5.0.0
 pattern Y
   :: (Eq a, Num a, KnownNat n, 2 <= n, G.Vector v (SU.Vector n Word, a))
   => MultiPoly v n a
@@ -459,6 +493,8 @@ pattern Y' <- (isVar' 1 -> True)
   where Y' = var' 1
 
 -- | Create a polynomial equal to the third variable.
+--
+-- @since 0.5.0.0
 pattern Z
   :: (Eq a, Num a, KnownNat n, 3 <= n, G.Vector v (SU.Vector n Word, a))
   => MultiPoly v n a
@@ -532,6 +568,8 @@ groupOn f = go
 -- | Interpret a multivariate polynomial over 1+/m/ variables
 -- as a univariate polynomial, whose coefficients are
 -- multivariate polynomials over the last /m/ variables.
+--
+-- @since 0.5.0.0
 segregate
   :: (G.Vector v (SU.Vector (1 + m) Word, a), G.Vector v (SU.Vector m Word, a))
   => MultiPoly v (1 + m) a
@@ -546,6 +584,8 @@ segregate
 -- | Interpret a univariate polynomials, whose coefficients are
 -- multivariate polynomials over the first /m/ variables,
 -- as a multivariate polynomial over 1+/m/ variables.
+--
+-- @since 0.5.0.0
 unsegregate
   :: (G.Vector v (SU.Vector (1 + m) Word, a), G.Vector v (SU.Vector m Word, a))
   => VPoly (MultiPoly v m a)

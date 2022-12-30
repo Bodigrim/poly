@@ -32,6 +32,8 @@ import Data.Poly.Internal.Dense
 import Data.Poly.Internal.Dense.GcdDomain ()
 
 -- | Note that 'degree' 0 = 0.
+--
+-- @since 0.3.0.0
 instance (Eq a, Field a, G.Vector v a) => Euclidean (Poly v a) where
   degree (Poly xs)
     | G.null xs = 0
@@ -49,6 +51,8 @@ instance (Eq a, Field a, G.Vector v a) => Euclidean (Poly v a) where
 --
 -- >>> quotRemFractional (X^3 + 2) (X^2 - 1 :: UPoly Double)
 -- (1.0 * X + 0.0,1.0 * X + 2.0)
+--
+-- @since 0.5.0.0
 quotRemFractional :: (Eq a, Fractional a, G.Vector v a) => Poly v a -> Poly v a -> (Poly v a, Poly v a)
 quotRemFractional (Poly xs) (Poly ys) = (toPoly qs, toPoly rs)
   where

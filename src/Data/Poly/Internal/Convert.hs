@@ -31,6 +31,8 @@ import qualified Data.Poly.Internal.Multi as Sparse
 -- >>> :set -XFlexibleContexts
 -- >>> denseToSparse (1 + Data.Poly.X^2) :: Data.Poly.Sparse.UPoly Int
 -- 1 * X^2 + 1
+--
+-- @since 0.5.0.0
 denseToSparse
   :: (Eq a, Num a, G.Vector v a, G.Vector v (SU.Vector 1 Word, a))
   => Dense.Poly v a
@@ -55,6 +57,8 @@ denseToSparseInternal z = Sparse.MultiPoly . G.imapMaybe (\i c -> if c == z then
 -- >>> :set -XFlexibleContexts
 -- >>> sparseToDense (1 + Data.Poly.Sparse.X^2) :: Data.Poly.UPoly Int
 -- 1 * X^2 + 0 * X + 1
+--
+-- @since 0.5.0.0
 sparseToDense
   :: (Num a, G.Vector v a, G.Vector v (SU.Vector 1 Word, a))
   => Sparse.Poly v a

@@ -6,6 +6,7 @@
 --
 -- Sparse multivariate polynomials with a 'Semiring' instance.
 --
+-- @since 0.5.0.0
 
 {-# LANGUAGE DataKinds        #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -54,6 +55,8 @@ import Data.Poly.Internal.Multi.GcdDomain ()
 -- 3 * X + 2 * Y + 1
 -- >>> toMultiPoly [(fromTuple (0,0),0),(fromTuple (0,1),0),(fromTuple (1,0),0)] :: UMultiPoly 2 Int
 -- 0
+--
+-- @since 0.5.0.0
 toMultiPoly
   :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a))
   => v (SU.Vector n Word, a)
@@ -61,6 +64,8 @@ toMultiPoly
 toMultiPoly = Multi.toMultiPoly'
 
 -- | Create a monomial from powers and a coefficient.
+--
+-- @since 0.5.0.0
 monomial
   :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a))
   => SU.Vector n Word
@@ -74,6 +79,8 @@ monomial = Multi.monomial'
 -- >>> import Data.Vector.Generic.Sized (fromTuple)
 -- >>> scale (fromTuple (1, 1)) 3 (X^2 + Y) :: UMultiPoly 2 Int
 -- 3 * X^3 * Y + 3 * X * Y^2
+--
+-- @since 0.5.0.0
 scale
   :: (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
   => SU.Vector n Word
@@ -83,18 +90,24 @@ scale
 scale = Multi.scale'
 
 -- | Create a polynomial equal to the first variable.
+--
+-- @since 0.5.0.0
 pattern X
   :: (Eq a, Semiring a, KnownNat n, 1 <= n, G.Vector v (SU.Vector n Word, a))
   => MultiPoly v n a
 pattern X = Multi.X'
 
 -- | Create a polynomial equal to the second variable.
+--
+-- @since 0.5.0.0
 pattern Y
   :: (Eq a, Semiring a, KnownNat n, 2 <= n, G.Vector v (SU.Vector n Word, a))
   => MultiPoly v n a
 pattern Y = Multi.Y'
 
 -- | Create a polynomial equal to the third variable.
+--
+-- @since 0.5.0.0
 pattern Z
   :: (Eq a, Semiring a, KnownNat n, 3 <= n, G.Vector v (SU.Vector n Word, a))
   => MultiPoly v n a
@@ -106,6 +119,8 @@ pattern Z = Multi.Z'
 -- >>> import Data.Vector.Generic.Sized (fromTuple)
 -- >>> eval (X^2 + Y^2 :: UMultiPoly 2 Int) (fromTuple (3, 4) :: Data.Vector.Sized.Vector 2 Int)
 -- 25
+--
+-- @since 0.5.0.0
 eval
   :: (Semiring a, G.Vector v (SU.Vector n Word, a), G.Vector u a)
   => MultiPoly v n a
@@ -119,6 +134,8 @@ eval = Multi.eval'
 -- >>> import Data.Vector.Generic.Sized (fromTuple)
 -- >>> subst (X^2 + Y^2 + Z^2 :: UMultiPoly 3 Int) (fromTuple (X + 1, Y + 1, X + Y :: UMultiPoly 2 Int))
 -- 2 * X^2 + 2 * X * Y + 2 * X + 2 * Y^2 + 2 * Y + 2
+--
+-- @since 0.5.0.0
 subst
   :: (Eq a, Semiring a, KnownNat m, G.Vector v (SU.Vector n Word, a), G.Vector w (SU.Vector m Word, a))
   => MultiPoly v n a
@@ -133,6 +150,8 @@ subst = Multi.subst'
 -- 3 * X^2
 -- >>> deriv 1 (X^3 + 3 * Y) :: UMultiPoly 2 Int
 -- 3
+--
+-- @since 0.5.0.0
 deriv
   :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a))
   => Finite n
@@ -149,6 +168,8 @@ deriv = Multi.deriv'
 -- 1.0 * X^3 + 2.0 * X * Y
 -- >>> integral 1 (3 * X^2 + 2 * Y) :: UMultiPoly 2 Double
 -- 3.0 * X^2 * Y + 1.0 * Y^2
+--
+-- @since 0.5.0.0
 integral
   :: (Field a, G.Vector v (SU.Vector n Word, a))
   => Finite n

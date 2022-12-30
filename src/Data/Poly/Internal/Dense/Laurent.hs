@@ -65,6 +65,8 @@ import Data.Poly.Internal.Dense.GcdDomain ()
 -- The 'Ord' instance does not make much sense mathematically,
 -- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
 --
+-- @since 0.4.0.0
+--
 data Laurent (v :: Type -> Type) (a :: Type) = Laurent !Int !(Poly v a)
   deriving (Eq, Ord)
 
@@ -79,6 +81,8 @@ data Laurent (v :: Type -> Type) (a :: Type) = Laurent !Int !(Poly v a)
 -- (1,2 * X + 1)
 -- >>> unLaurent (0 :: ULaurent Int)
 -- (0,0)
+--
+-- @since 0.4.0.0
 unLaurent :: Laurent v a -> (Int, Poly v a)
 unLaurent (Laurent off poly) = (off, poly)
 
@@ -89,6 +93,8 @@ unLaurent (Laurent off poly) = (off, poly)
 -- 2 * X^3 + 1 * X^2
 -- >>> toLaurent (-2) (2 * Data.Poly.X + 1) :: ULaurent Int
 -- 2 * X^-1 + 1 * X^-2
+--
+-- @since 0.4.0.0
 toLaurent
   :: (Eq a, Semiring a, G.Vector v a)
   => Int
@@ -141,9 +147,13 @@ instance (Show a, G.Vector v a) => Show (Laurent v a) where
       showCoeff i c = showsPrec 7 c . showString (" * X^" ++ show i)
 
 -- | Laurent polynomials backed by boxed vectors.
+--
+-- @since 0.4.0.0
 type VLaurent = Laurent V.Vector
 
 -- | Laurent polynomials backed by unboxed vectors.
+--
+-- @since 0.4.0.0
 type ULaurent = Laurent U.Vector
 
 -- | Return the leading power and coefficient of a non-zero polynomial.
@@ -152,6 +162,8 @@ type ULaurent = Laurent U.Vector
 -- Just (3,4)
 -- >>> leading (0 :: ULaurent Int)
 -- Nothing
+--
+-- @since 0.4.0.0
 leading :: G.Vector v a => Laurent v a -> Maybe (Int, a)
 leading (Laurent off poly) = first ((+ off) . fromIntegral) <$> Dense.leading poly
 {-# INLINABLE leading #-}
@@ -197,6 +209,8 @@ instance (Eq a, Ring a, G.Vector v a) => Ring (Laurent v a) where
   negate (Laurent off poly) = Laurent off (Semiring.negate poly)
 
 -- | Create a monomial from a power and a coefficient.
+--
+-- @since 0.4.0.0
 monomial :: (Eq a, Semiring a, G.Vector v a) => Int -> a -> Laurent v a
 monomial p c
   | c == zero = Laurent 0 zero
@@ -207,6 +221,8 @@ monomial p c
 --
 -- >>> scale 2 3 (X^-2 + 1) :: ULaurent Int
 -- 3 * X^2 + 0 * X + 3
+--
+-- @since 0.4.0.0
 scale :: (Eq a, Semiring a, G.Vector v a) => Int -> a -> Laurent v a -> Laurent v a
 scale yp yc (Laurent off poly) = toLaurent (off + yp) (Dense.scale' 0 yc poly)
 {-# INLINABLE scale #-}
@@ -215,6 +231,8 @@ scale yp yc (Laurent off poly) = toLaurent (off + yp) (Dense.scale' 0 yc poly)
 --
 -- >>> eval (X^-2 + 1 :: ULaurent Double) 2
 -- 1.25
+--
+-- @since 0.4.0.0
 eval :: (Field a, G.Vector v a) => Laurent v a -> a -> a
 eval (Laurent off poly) x = Dense.eval' poly x `times`
   (if off >= 0 then x Semiring.^ off else quot one x Semiring.^ (- off))
@@ -225,6 +243,8 @@ eval (Laurent off poly) x = Dense.eval' poly x `times`
 -- >>> import Data.Poly (UPoly)
 -- >>> subst (Data.Poly.X^2 + 1 :: UPoly Int) (X^-1 + 1 :: ULaurent Int)
 -- 2 + 2 * X^-1 + 1 * X^-2
+--
+-- @since 0.4.0.0
 subst :: (Eq a, Semiring a, G.Vector v a, G.Vector w a) => Poly v a -> Laurent w a -> Laurent w a
 subst = Dense.substitute' (scale 0)
 {-# INLINE subst #-}
@@ -233,6 +253,8 @@ subst = Dense.substitute' (scale 0)
 --
 -- >>> deriv (X^-1 + 3 * X) :: ULaurent Int
 -- 3 + 0 * X^-1 + (-1) * X^-2
+--
+-- @since 0.4.0.0
 deriv :: (Eq a, Ring a, G.Vector v a) => Laurent v a -> Laurent v a
 deriv (Laurent off (Poly xs)) =
   toLaurent (off - 1) $ Dense.toPoly' $ G.imap (times . Semiring.fromIntegral . (+ off)) xs
@@ -241,6 +263,8 @@ deriv (Laurent off (Poly xs)) =
 -- | The polynomial 'X'.
 --
 -- > X == monomial 1 one
+--
+-- @since 0.4.0.0
 pattern X :: (Eq a, Semiring a, G.Vector v a) => Laurent v a
 pattern X <- (isVar -> True)
   where X = var
@@ -267,6 +291,8 @@ isVar (Laurent off (Poly xs))
 -- 1 * X^-3
 -- >>> X + 2 + 3 * (X^2)^-1 :: ULaurent Int
 -- 1 * X + 2 + 0 * X^-1 + 3 * X^-2
+--
+-- @since 0.4.0.0
 (^-)
   :: (Eq a, Num a, G.Vector v a)
   => Laurent v a

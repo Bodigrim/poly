@@ -44,6 +44,8 @@ instance (Eq a, Field a, G.Vector v (SU.Vector 1 Word, a)) => Euclidean (Poly v 
 --
 -- >>> quotRemFractional (X^3 + 2) (X^2 - 1 :: UPoly Double)
 -- (1.0 * X,1.0 * X + 2.0)
+--
+-- @since 0.5.0.0
 quotRemFractional :: (Eq a, Fractional a, G.Vector v (SU.Vector 1 Word, a)) => Poly v a -> Poly v a -> (Poly v a, Poly v a)
 quotRemFractional = quotientRemainder 0 (+) (-) (*) (/)
 {-# INLINE quotRemFractional #-}
