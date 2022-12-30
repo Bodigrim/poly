@@ -12,14 +12,11 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE QuantifiedConstraints      #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeOperators              #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
-
-#if __GLASGOW_HASKELL__ >= 806
-{-# LANGUAGE QuantifiedConstraints      #-}
-#endif
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -39,10 +36,6 @@ import GHC.TypeNats (KnownNat, type (+), SomeNat(..), natVal, sameNat, someNatVa
 import Unsafe.Coerce
 
 import Data.Poly.Internal.Multi
-
-#if __GLASGOW_HASKELL__ < 806
-import qualified Data.Vector as V
-#endif
 
 instance {-# OVERLAPPING #-} (Eq a, Ring a, GcdDomain a, G.Vector v (SU.Vector 1 Word, a)) => GcdDomain (Poly v a) where
   divide xs ys
@@ -71,11 +64,7 @@ isSucc :: forall n. KnownNat n => IsSucc n
 isSucc = case someNatVal (natVal (Proxy :: Proxy n) - 1) of
   SomeNat (_ :: Proxy m) -> IsSucc (unsafeCoerce Refl :: n :~: 1 + m)
 
-#if __GLASGOW_HASKELL__ >= 806
 instance (Eq a, Ring a, GcdDomain a, KnownNat n, forall m. KnownNat m => G.Vector v (SU.Vector m Word, a), forall m. KnownNat m => Eq (v (SU.Vector m Word, a))) => GcdDomain (MultiPoly v n a) where
-#else
-instance (Eq a, Ring a, GcdDomain a, KnownNat n, v ~ V.Vector) => GcdDomain (MultiPoly v n a) where
-#endif
   divide xs ys
     | G.null (unMultiPoly ys) = throw DivideByZero
     | G.length (unMultiPoly ys) == 1 = divideSingleton xs (G.unsafeHead (unMultiPoly ys))

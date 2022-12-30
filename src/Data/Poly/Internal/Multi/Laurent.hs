@@ -14,16 +14,13 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE PatternSynonyms            #-}
+{-# LANGUAGE QuantifiedConstraints      #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
 {-# LANGUAGE UndecidableInstances       #-}
 {-# LANGUAGE ViewPatterns               #-}
-
-#if __GLASGOW_HASKELL__ >= 806
-{-# LANGUAGE QuantifiedConstraints      #-}
-#endif
 
 module Data.Poly.Internal.Multi.Laurent
   ( MultiLaurent
@@ -489,11 +486,7 @@ instance {-# OVERLAPPING #-} (Eq a, Ring a, GcdDomain a, G.Vector v (SU.Vector 1
     coprime poly1 poly2
   {-# INLINE coprime #-}
 
-#if __GLASGOW_HASKELL__ >= 806
 instance (Eq a, Ring a, GcdDomain a, KnownNat n, forall m. KnownNat m => G.Vector v (SU.Vector m Word, a), forall m. KnownNat m => Eq (v (SU.Vector m Word, a))) => GcdDomain (MultiLaurent v n a) where
-#else
-instance (Eq a, Ring a, GcdDomain a, KnownNat n, v ~ V.Vector) => GcdDomain (MultiLaurent v n a) where
-#endif
   divide (MultiLaurent off1 poly1) (MultiLaurent off2 poly2) =
     toMultiLaurent (off1 - off2) <$> divide poly1 poly2
   {-# INLINE divide #-}
