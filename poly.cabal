@@ -25,6 +25,7 @@ flag sparse
   description:
     Enable sparse and multivariate polynomials, incurring a larger dependency footprint.
   default: True
+  manual: True
 
 library
   hs-source-dirs: src
