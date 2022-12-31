@@ -1,6 +1,7 @@
 # 0.5.1.0
 
 * Add function `timesRing`.
+* Tweak inlining pragmas.
 
 # 0.5.0.0
 
