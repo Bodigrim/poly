@@ -128,7 +128,7 @@ plusPolyM p add xs ys zs = go 0 0 0
         GT -> do
           MG.unsafeWrite zs iz (yp, yc)
           go ix (iy + 1) (iz + 1)
-{-# INLINABLE plusPolyM #-}
+{-# INLINE plusPolyM #-}
 
 minusPoly
   :: (G.Vector v (t, a), Ord t)
