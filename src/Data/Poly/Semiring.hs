@@ -27,6 +27,7 @@ module Data.Poly.Semiring
   , subst
   , deriv
   , integral
+  , timesRing
 #ifdef SupportSparse
   , denseToSparse
   , sparseToDense
@@ -41,7 +42,7 @@ import Data.Euclidean (Field)
 import Data.Semiring (Semiring(..))
 import qualified Data.Vector.Generic as G
 
-import Data.Poly.Internal.Dense (Poly(..), VPoly, UPoly, leading)
+import Data.Poly.Internal.Dense (Poly(..), VPoly, UPoly, leading, timesRing)
 import qualified Data.Poly.Internal.Dense as Dense
 import Data.Poly.Internal.Dense.Field ()
 import Data.Poly.Internal.Dense.DFT

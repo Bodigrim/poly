@@ -11,6 +11,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE PatternSynonyms            #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TypeApplications           #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE ViewPatterns               #-}
 
@@ -40,6 +41,7 @@ module Data.Poly.Internal.Dense
   , deriv'
   , unscale'
   , integral'
+  , timesRing
   ) where
 
 import Prelude hiding (quotRem, quot, rem, gcd, lcm)
@@ -50,7 +52,7 @@ import Data.Bits
 import Data.Euclidean (Euclidean, Field, quot)
 import Data.Kind
 import Data.List (foldl', intersperse)
-import Data.Semiring (Semiring(..), Ring())
+import Data.Semiring (Semiring(..), Ring(), minus)
 import qualified Data.Semiring as Semiring
 import qualified Data.Vector as V
 import qualified Data.Vector.Generic as G
@@ -160,28 +162,35 @@ leading (Poly v)
 
 -- | Note that 'abs' = 'id' and 'signum' = 'const' 1.
 instance (Eq a, Num a, G.Vector v a) => Num (Poly v a) where
-  Poly xs + Poly ys = toPoly $ plusPoly (+) xs ys
-  Poly xs - Poly ys = toPoly $ minusPoly negate (-) xs ys
+  (+) = (toPoly .) . coerce (plusPoly @v @a (+))
+  (-) = (toPoly .) . coerce (minusPoly @v @a negate (-))
+  (*) = (toPoly .) . coerce (inline (karatsuba @v @a 0 (+) (-) (*)))
+
   negate (Poly xs) = Poly $ G.map negate xs
   abs = id
   signum = const 1
   fromInteger n = case fromInteger n of
     0 -> Poly G.empty
     m -> Poly $ G.singleton m
-  Poly xs * Poly ys = toPoly $ karatsuba xs ys
+
   {-# INLINE (+) #-}
   {-# INLINE (-) #-}
   {-# INLINE negate #-}
   {-# INLINE fromInteger #-}
   {-# INLINE (*) #-}
 
+-- | Note that 'times' is significantly slower than '(*)' for large polynomials,
+-- because Karatsuba multiplication algorithm requires subtraction, which is not
+-- provided by 'Semiring' class. Use 'timesRing' instead.
 instance (Eq a, Semiring a, G.Vector v a) => Semiring (Poly v a) where
   zero = Poly G.empty
   one
     | (one :: a) == zero = zero
     | otherwise = Poly $ G.singleton one
-  plus (Poly xs) (Poly ys) = toPoly' $ plusPoly plus xs ys
-  times (Poly xs) (Poly ys) = toPoly' $ convolution zero plus times xs ys
+
+  plus  = (toPoly' .) . coerce (plusPoly @v @a plus)
+  times = (toPoly' .) . coerce (inline (convolution @v @a zero plus times))
+
   {-# INLINE zero #-}
   {-# INLINE one #-}
   {-# INLINE plus #-}
@@ -196,6 +205,11 @@ instance (Eq a, Semiring a, G.Vector v a) => Semiring (Poly v a) where
 instance (Eq a, Ring a, G.Vector v a) => Ring (Poly v a) where
   negate (Poly xs) = Poly $ G.map Semiring.negate xs
   {-# INLINABLE negate #-}
+
+-- | Karatsuba multiplication algorithm for polynomials over rings.
+timesRing :: forall v a. (Eq a, Ring a, G.Vector v a) => Poly v a -> Poly v a -> Poly v a
+timesRing = (toPoly' .) . coerce (inline (karatsuba @v @a zero plus minus times))
+{-# INLINE timesRing #-}
 
 dropWhileEnd
   :: G.Vector v a
@@ -274,50 +288,57 @@ karatsubaThreshold :: Int
 karatsubaThreshold = 32
 
 karatsuba
-  :: (Eq a, Num a, G.Vector v a)
-  => v a
+  :: G.Vector v a
+  => a
+  -> (a -> a -> a)
+  -> (a -> a -> a)
+  -> (a -> a -> a)
   -> v a
   -> v a
-karatsuba xs ys
-  | lenXs <= karatsubaThreshold || lenYs <= karatsubaThreshold
-  = convolution 0 (+) (*) xs ys
-  | otherwise = runST $ do
-    zs <- MG.unsafeNew lenZs
-    forM_ [0 .. lenZs - 1] $ \k -> do
-      let z0 = if k < G.length zs0
-               then G.unsafeIndex zs0 k
-               else 0
-          z11 = if k - m >= 0 && k - m < G.length zs11
-               then G.unsafeIndex zs11 (k - m)
-               else 0
-          z10 = if k - m >= 0 && k - m < G.length zs0
-               then G.unsafeIndex zs0 (k - m)
-               else 0
-          z12 = if k - m >= 0 && k - m < G.length zs2
-               then G.unsafeIndex zs2 (k - m)
-               else 0
-          z2 = if k - 2 * m >= 0 && k - 2 * m < G.length zs2
-               then G.unsafeIndex zs2 (k - 2 * m)
-               else 0
-      MG.unsafeWrite zs k (z0 + (z11 - z10 - z12) + z2)
-    G.unsafeFreeze zs
+  -> v a
+karatsuba zer add sub mul = go
   where
-    lenXs = G.length xs
-    lenYs = G.length ys
-    lenZs = lenXs + lenYs - 1
+    conv = inline convolution zer add mul
+    go xs ys
+      | lenXs <= karatsubaThreshold || lenYs <= karatsubaThreshold
+      = conv xs ys
+      | otherwise = runST $ do
+        zs <- MG.unsafeNew lenZs
+        forM_ [0 .. lenZs - 1] $ \k -> do
+          let z0 = if k < G.length zs0
+                   then G.unsafeIndex zs0 k
+                   else zer
+              z11 = if k - m >= 0 && k - m < G.length zs11
+                   then G.unsafeIndex zs11 (k - m)
+                   else zer
+              z10 = if k - m >= 0 && k - m < G.length zs0
+                   then G.unsafeIndex zs0 (k - m)
+                   else zer
+              z12 = if k - m >= 0 && k - m < G.length zs2
+                   then G.unsafeIndex zs2 (k - m)
+                   else zer
+              z2 = if k - 2 * m >= 0 && k - 2 * m < G.length zs2
+                   then G.unsafeIndex zs2 (k - 2 * m)
+                   else zer
+          MG.unsafeWrite zs k (z0 `add` (z11 `sub` (z10 `add` z12)) `add` z2)
+        G.unsafeFreeze zs
+      where
+        lenXs = G.length xs
+        lenYs = G.length ys
+        lenZs = lenXs + lenYs - 1
 
-    m    = ((lenXs `min` lenYs) + 1) `shiftR` 1
+        m    = ((lenXs `min` lenYs) + 1) `shiftR` 1
 
-    xs0  = G.slice 0 m xs
-    xs1  = G.slice m (lenXs - m) xs
-    ys0  = G.slice 0 m ys
-    ys1  = G.slice m (lenYs - m) ys
+        xs0  = G.slice 0 m xs
+        xs1  = G.slice m (lenXs - m) xs
+        ys0  = G.slice 0 m ys
+        ys1  = G.slice m (lenYs - m) ys
 
-    xs01 = plusPoly (+) xs0 xs1
-    ys01 = plusPoly (+) ys0 ys1
-    zs0  = karatsuba xs0 ys0
-    zs2  = karatsuba xs1 ys1
-    zs11 = karatsuba xs01 ys01
+        xs01 = plusPoly add xs0 xs1
+        ys01 = plusPoly add ys0 ys1
+        zs0  = go xs0 ys0
+        zs2  = go xs1 ys1
+        zs11 = go xs01 ys01
 {-# INLINABLE karatsuba #-}
 
 convolution
@@ -328,16 +349,16 @@ convolution
   -> v a
   -> v a
   -> v a
-convolution zer add mul xs ys
-  | lenXs == 0 || lenYs == 0 = G.empty
-  | otherwise = G.generate lenZs $ \k -> foldl'
+convolution zer add mul = \xs ys ->
+  let lenXs = G.length xs
+      lenYs = G.length ys
+      lenZs = lenXs + lenYs - 1 in
+  if lenXs == 0 || lenYs == 0
+  then G.empty
+  else G.generate lenZs $ \k -> foldl'
     (\acc i -> acc `add` mul (G.unsafeIndex xs i) (G.unsafeIndex ys (k - i)))
     zer
     [max (k - lenYs + 1) 0 .. min k (lenXs - 1)]
-  where
-    lenXs = G.length xs
-    lenYs = G.length ys
-    lenZs = lenXs + lenYs - 1
 {-# INLINABLE convolution #-}
 
 -- | Create a monomial from a power and a coefficient.
