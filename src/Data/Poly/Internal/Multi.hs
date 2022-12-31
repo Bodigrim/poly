@@ -100,6 +100,10 @@ import Data.Poly.Internal.Multi.Core
 -- The 'Ord' instance does not make much sense mathematically,
 -- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
 --
+-- Due to being polymorphic by multiple axis, the performance of `MultiPoly` crucially
+-- depends on specialisation of instances. Clients are strongly recommended
+-- to compile with @ghc-options:@ @-fspecialise-aggressively@ and suggested to enable @-O2@.
+--
 -- @since 0.5.0.0
 newtype MultiPoly (v :: Type -> Type) (n :: Nat) (a :: Type) = MultiPoly
   { unMultiPoly :: v (SU.Vector n Word, a)
@@ -137,6 +141,10 @@ type UMultiPoly (n :: Nat) (a :: Type) = MultiPoly U.Vector n a
 --
 -- 'Ord' instance does not make much sense mathematically,
 -- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
+--
+-- Due to being polymorphic by multiple axis, the performance of `Poly` crucially
+-- depends on specialisation of instances. Clients are strongly recommended
+-- to compile with @ghc-options:@ @-fspecialise-aggressively@ and suggested to enable @-O2@.
 --
 -- @since 0.3.0.0
 type Poly (v :: Type -> Type) (a :: Type) = MultiPoly v 1 a

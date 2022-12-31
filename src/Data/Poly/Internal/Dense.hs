@@ -74,6 +74,10 @@ import GHC.Exts
 -- The 'Ord' instance does not make much sense mathematically,
 -- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
 --
+-- Due to being polymorphic by multiple axis, the performance of `Poly` crucially
+-- depends on specialisation of instances. Clients are strongly recommended
+-- to compile with @ghc-options:@ @-fspecialise-aggressively@ and suggested to enable @-O2@.
+--
 -- @since 0.1.0.0
 newtype Poly (v :: Type -> Type) (a :: Type) = Poly
   { unPoly :: v a

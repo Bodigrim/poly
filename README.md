@@ -163,6 +163,8 @@ Here are a couple of benchmarks for `UPoly Int`:
 | multiplication, 100 coeffs.   |            1733 |      33  |  52x
 | multiplication, 1000 coeffs.  |          442000 |    1456  | 303x
 
+Due to being polymorphic by multiple axis, the performance of `poly` crucially depends on specialisation of instances. Clients are strongly recommended to compile with `ghc-options: -fspecialise-aggressively` and suggested to enable `-O2`.
+
 ## Additional resources
 
 * __Polynomials in Haskell__, MuniHac, 12.09.2020:

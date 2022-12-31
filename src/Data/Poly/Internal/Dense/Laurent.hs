@@ -65,6 +65,10 @@ import Data.Poly.Internal.Dense.GcdDomain ()
 -- The 'Ord' instance does not make much sense mathematically,
 -- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
 --
+-- Due to being polymorphic by multiple axis, the performance of `Laurent` crucially
+-- depends on specialisation of instances. Clients are strongly recommended
+-- to compile with @ghc-options:@ @-fspecialise-aggressively@ and suggested to enable @-O2@.
+--
 -- @since 0.4.0.0
 --
 data Laurent (v :: Type -> Type) (a :: Type) = Laurent !Int !(Poly v a)

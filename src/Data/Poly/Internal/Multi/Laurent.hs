@@ -92,6 +92,10 @@ import Data.Poly.Internal.Multi.GcdDomain ()
 -- The 'Ord' instance does not make much sense mathematically,
 -- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
 --
+-- Due to being polymorphic by multiple axis, the performance of `MultiLaurent` crucially
+-- depends on specialisation of instances. Clients are strongly recommended
+-- to compile with @ghc-options:@ @-fspecialise-aggressively@ and suggested to enable @-O2@.
+--
 -- @since 0.5.0.0
 data MultiLaurent (v :: Type -> Type) (n :: Nat) (a :: Type) =
   MultiLaurent !(SU.Vector n Int) !(MultiPoly v n a)
@@ -125,6 +129,10 @@ type UMultiLaurent (n :: Nat) (a :: Type) = MultiLaurent U.Vector n a
 --
 -- The 'Ord' instance does not make much sense mathematically,
 -- it is defined only for the sake of 'Data.Set.Set', 'Data.Map.Map', etc.
+--
+-- Due to being polymorphic by multiple axis, the performance of `Laurent` crucially
+-- depends on specialisation of instances. Clients are strongly recommended
+-- to compile with @ghc-options:@ @-fspecialise-aggressively@ and suggested to enable @-O2@.
 --
 -- @since 0.4.0.0
 type Laurent (v :: Type -> Type) (a :: Type) = MultiLaurent v 1 a
