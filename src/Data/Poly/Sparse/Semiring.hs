@@ -31,7 +31,7 @@ module Data.Poly.Sparse.Semiring
   , sparseToDense
   ) where
 
-import Control.Arrow
+import Data.Bifunctor
 import Data.Euclidean (Field)
 import Data.Semiring (Semiring(..))
 import qualified Data.Vector.Generic as G

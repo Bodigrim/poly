@@ -32,7 +32,7 @@ module Data.Poly.Sparse
   , sparseToDense
   ) where
 
-import Control.Arrow
+import Data.Bifunctor
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed.Sized as SU
 import qualified Data.Vector.Sized as SV

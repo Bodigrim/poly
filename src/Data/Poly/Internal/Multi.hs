@@ -61,7 +61,7 @@ module Data.Poly.Internal.Multi
   ) where
 
 import Prelude hiding (quot, gcd)
-import Control.Arrow
+import Data.Bifunctor
 import Control.DeepSeq
 import Data.Coerce
 import Data.Euclidean (Field, quot)

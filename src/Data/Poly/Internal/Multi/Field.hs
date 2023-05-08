@@ -22,7 +22,7 @@ module Data.Poly.Internal.Multi.Field
   ) where
 
 import Prelude hiding (quotRem, quot, rem, div, gcd)
-import Control.Arrow
+import Data.Bifunctor
 import Control.Exception
 import Data.Euclidean (Euclidean(..), Field)
 import Data.Semiring (Semiring(..), minus)

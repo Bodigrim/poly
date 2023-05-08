@@ -30,7 +30,7 @@ module Data.Poly.Internal.Dense.Laurent
   ) where
 
 import Prelude hiding (quotRem, quot, rem, gcd, lcm)
-import Control.Arrow (first)
+import Data.Bifunctor (first)
 import Control.DeepSeq (NFData(..))
 import Control.Exception
 import Data.Euclidean (GcdDomain(..), Euclidean(..), Field)

@@ -42,7 +42,7 @@ import qualified Data.Poly.Semiring as Dense
 import qualified Data.Poly.Laurent as DenseLaurent
 
 #ifdef SupportSparse
-import Control.Arrow
+import Data.Bifunctor
 import Data.Finite
 import qualified Data.Vector.Generic.Sized as SG
 import qualified Data.Vector.Unboxed.Sized as SU
