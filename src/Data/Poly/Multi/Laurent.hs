@@ -14,6 +14,7 @@ module Data.Poly.Multi.Laurent
   ( MultiLaurent
   , VMultiLaurent
   , UMultiLaurent
+  , Monom
   , unMultiLaurent
   , toMultiLaurent
   , monomial

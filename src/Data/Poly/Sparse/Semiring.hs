@@ -31,7 +31,6 @@ module Data.Poly.Sparse.Semiring
   , sparseToDense
   ) where
 
-import Data.Bifunctor
 import Data.Euclidean (Field)
 import Data.Semiring (Semiring(..))
 import qualified Data.Vector.Generic as G
@@ -55,17 +54,17 @@ import Data.Poly.Internal.Multi.GcdDomain ()
 --
 -- @since 0.3.0.0
 toPoly
-  :: (Eq a, Semiring a, G.Vector v (Word, a), G.Vector v (SU.Vector 1 Word, a))
+  :: (Eq a, Semiring a, G.Vector v (Word, a), G.Vector v (Multi.Monom 1 a))
   => v (Word, a)
   -> Poly v a
-toPoly = Multi.toMultiPoly' . G.map (first SU.singleton)
+toPoly = Multi.toMultiPoly' . G.map (\(p, c) -> Multi.Monom (SU.singleton p) c)
 {-# INLINABLE toPoly #-}
 
 -- | Create a monomial from a power and a coefficient.
 --
 -- @since 0.3.0.0
 monomial
-  :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Eq a, Semiring a, G.Vector v (Multi.Monom 1 a))
   => Word
   -> a
   -> Poly v a
@@ -79,7 +78,7 @@ monomial = Multi.monomial' . SU.singleton
 --
 -- @since 0.3.0.0
 scale
-  :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Eq a, Semiring a, G.Vector v (Multi.Monom 1 a))
   => Word
   -> a
   -> Poly v a
@@ -93,7 +92,7 @@ scale = Multi.scale' . SU.singleton
 --
 -- @since 0.3.0.0
 pattern X
-  :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Eq a, Semiring a, G.Vector v (Multi.Monom 1 a))
   => Poly v a
 pattern X = Multi.X'
 
@@ -104,7 +103,7 @@ pattern X = Multi.X'
 --
 -- @since 0.3.0.0
 eval
-  :: (Semiring a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Semiring a, G.Vector v (Multi.Monom 1 a))
   => Poly v a
   -> a
   -> a
@@ -118,7 +117,7 @@ eval p = Multi.eval' p . SV.singleton
 --
 -- @since 0.3.3.0
 subst
-  :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a), G.Vector w (SU.Vector 1 Word, a))
+  :: (Eq a, Semiring a, G.Vector v (Multi.Monom 1 a), G.Vector w (Multi.Monom 1 a))
   => Poly v a
   -> Poly w a
   -> Poly w a
@@ -132,7 +131,7 @@ subst p = Multi.subst' p . SV.singleton
 --
 -- @since 0.3.0.0
 deriv
-  :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Eq a, Semiring a, G.Vector v (Multi.Monom 1 a))
   => Poly v a
   -> Poly v a
 deriv = Multi.deriv' 0
@@ -146,7 +145,7 @@ deriv = Multi.deriv' 0
 --
 -- @since 0.3.2.0
 integral
-  :: (Field a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Field a, G.Vector v (Multi.Monom 1 a))
   => Poly v a
   -> Poly v a
 integral = Multi.integral' 0
@@ -160,7 +159,7 @@ integral = Multi.integral' 0
 --
 -- @since 0.5.0.0
 denseToSparse
-  :: (Eq a, Semiring a, G.Vector v a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Eq a, Semiring a, G.Vector v a, G.Vector v (Multi.Monom 1 a))
   => Dense.Poly v a
   -> Multi.Poly v a
 denseToSparse = Convert.denseToSparse'
@@ -174,7 +173,7 @@ denseToSparse = Convert.denseToSparse'
 --
 -- @since 0.5.0.0
 sparseToDense
-  :: (Semiring a, G.Vector v a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Semiring a, G.Vector v a, G.Vector v (Multi.Monom 1 a))
   => Multi.Poly v a
   -> Dense.Poly v a
 sparseToDense = Convert.sparseToDense'

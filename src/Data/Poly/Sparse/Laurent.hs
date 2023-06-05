@@ -43,7 +43,7 @@ import Data.Poly.Internal.Multi (Poly)
 --
 -- @since 0.4.0.0
 monomial
-  :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Eq a, Semiring a, G.Vector v (Monom 1 a))
   => Int
   -> a
   -> Laurent v a
@@ -57,7 +57,7 @@ monomial = Multi.monomial . SU.singleton
 --
 -- @since 0.4.0.0
 scale
-  :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Eq a, Semiring a, G.Vector v (Monom 1 a))
   => Int
   -> a
   -> Laurent v a
@@ -71,7 +71,7 @@ scale = Multi.scale . SU.singleton
 --
 -- @since 0.4.0.0
 pattern X
-  :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Eq a, Semiring a, G.Vector v (Monom 1 a))
   => Laurent v a
 pattern X = Multi.X
 
@@ -88,7 +88,7 @@ pattern X = Multi.X
 --
 -- @since 0.4.0.0
 (^-)
-  :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Eq a, Semiring a, G.Vector v (Monom 1 a))
   => Laurent v a
   -> Int
   -> Laurent v a
@@ -101,7 +101,7 @@ pattern X = Multi.X
 --
 -- @since 0.4.0.0
 eval
-  :: (Field a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Field a, G.Vector v (Monom 1 a))
   => Laurent v a
   -> a
   -> a
@@ -116,7 +116,7 @@ eval p = Multi.eval p . SV.singleton
 --
 -- @since 0.4.0.0
 subst
-  :: (Eq a, Semiring a, G.Vector v (SU.Vector 1 Word, a), G.Vector w (SU.Vector 1 Word, a))
+  :: (Eq a, Semiring a, G.Vector v (Monom 1 a), G.Vector w (Monom 1 a))
   => Poly v a
   -> Laurent w a
   -> Laurent w a
@@ -130,7 +130,7 @@ subst p = Multi.subst p . SV.singleton
 --
 -- @since 0.4.0.0
 deriv
-  :: (Eq a, Ring a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Eq a, Ring a, G.Vector v (Monom 1 a))
   => Laurent v a
   -> Laurent v a
 deriv = Multi.deriv 0

@@ -32,7 +32,6 @@ module Data.Poly.Sparse
   , sparseToDense
   ) where
 
-import Data.Bifunctor
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Unboxed.Sized as SU
 import qualified Data.Vector.Sized as SV
@@ -53,17 +52,17 @@ import Data.Poly.Internal.Multi.GcdDomain ()
 --
 -- @since 0.3.0.0
 toPoly
-  :: (Eq a, Num a, G.Vector v (Word, a), G.Vector v (SU.Vector 1 Word, a))
+  :: (Eq a, Num a, G.Vector v (Word, a), G.Vector v (Multi.Monom 1 a))
   => v (Word, a)
   -> Poly v a
-toPoly = Multi.toMultiPoly . G.map (first SU.singleton)
+toPoly = Multi.toMultiPoly . G.map (\(p, c) -> Multi.Monom (SU.singleton p) c)
 {-# INLINABLE toPoly #-}
 
 -- | Create a monomial from a power and a coefficient.
 --
 -- @since 0.3.0.0
 monomial
-  :: (Eq a, Num a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Eq a, Num a, G.Vector v (Multi.Monom 1 a))
   => Word
   -> a
   -> Poly v a
@@ -77,7 +76,7 @@ monomial = Multi.monomial . SU.singleton
 --
 -- @since 0.3.0.0
 scale
-  :: (Eq a, Num a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Eq a, Num a, G.Vector v (Multi.Monom 1 a))
   => Word
   -> a
   -> Poly v a
@@ -91,7 +90,7 @@ scale = Multi.scale . SU.singleton
 --
 -- @since 0.3.0.0
 pattern X
-  :: (Eq a, Num a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Eq a, Num a, G.Vector v (Multi.Monom 1 a))
   => Poly v a
 pattern X = Multi.X
 
@@ -102,7 +101,7 @@ pattern X = Multi.X
 --
 -- @since 0.3.0.0
 eval
-  :: (Num a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Num a, G.Vector v (Multi.Monom 1 a))
   => Poly v a
   -> a
   -> a
@@ -116,7 +115,7 @@ eval p = Multi.eval p . SV.singleton
 --
 -- @since 0.3.3.0
 subst
-  :: (Eq a, Num a, G.Vector v (SU.Vector 1 Word, a), G.Vector w (SU.Vector 1 Word, a))
+  :: (Eq a, Num a, G.Vector v (Multi.Monom 1 a), G.Vector w (Multi.Monom 1 a))
   => Poly v a
   -> Poly w a
   -> Poly w a
@@ -130,7 +129,7 @@ subst p = Multi.subst p . SV.singleton
 --
 -- @since 0.3.0.0
 deriv
-  :: (Eq a, Num a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Eq a, Num a, G.Vector v (Multi.Monom 1 a))
   => Poly v a
   -> Poly v a
 deriv = Multi.deriv 0
@@ -144,7 +143,7 @@ deriv = Multi.deriv 0
 --
 -- @since 0.3.0.0
 integral
-  :: (Fractional a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Fractional a, G.Vector v (Multi.Monom 1 a))
   => Poly v a
   -> Poly v a
 integral = Multi.integral 0

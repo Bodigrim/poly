@@ -58,14 +58,16 @@ module Data.Poly.Internal.Multi
   -- * Conversions
   , segregate
   , unsegregate
+  -- * Monom
+  , Monom(..)
   ) where
 
 import Prelude hiding (quot, gcd)
-import Data.Bifunctor
 import Control.DeepSeq
 import Data.Coerce
 import Data.Euclidean (Field, quot)
 import Data.Finite
+import Data.Function (on)
 import Data.Kind
 import Data.List (intersperse)
 import Data.Semiring (Semiring(..), Ring())
@@ -106,15 +108,17 @@ import Data.Poly.Internal.Multi.Core
 --
 -- @since 0.5.0.0
 newtype MultiPoly (v :: Type -> Type) (n :: Nat) (a :: Type) = MultiPoly
-  { unMultiPoly :: v (SU.Vector n Word, a)
-  -- ^ Convert a 'MultiPoly' to a vector of (powers, coefficient) pairs.
-  --
-  -- @since 0.5.0.0
+  { unMultiPoly :: v (Monom n a)
   }
 
-deriving instance Eq     (v (SU.Vector n Word, a)) => Eq     (MultiPoly v n a)
-deriving instance Ord    (v (SU.Vector n Word, a)) => Ord    (MultiPoly v n a)
-deriving instance NFData (v (SU.Vector n Word, a)) => NFData (MultiPoly v n a)
+instance (Eq a, G.Vector v (Monom n a)) => Eq (MultiPoly v n a) where
+  (==) = G.eqBy (\(Monom p c) (Monom p' c') -> c == c' && p == p') `on` unMultiPoly
+
+instance (Ord a, G.Vector v (Monom n a)) => Ord (MultiPoly v n a) where
+  compare = G.cmpBy (\(Monom p c) (Monom p' c') -> compare c c' <> compare p p') `on` unMultiPoly
+
+instance (NFData a, NFData1 v) => NFData (MultiPoly v n a) where
+  rnf = liftRnf (\(Monom _ a) -> rnf a) . unMultiPoly
 
 -- | Multivariate polynomials backed by boxed vectors.
 --
@@ -163,18 +167,18 @@ type UPoly (a :: Type) = Poly U.Vector a
 --
 -- @since 0.3.0.0
 unPoly
-  :: (G.Vector v (Word, a), G.Vector v (SU.Vector 1 Word, a))
+  :: (G.Vector v (Word, a), G.Vector v (Monom 1 a))
   => Poly v a
   -> v (Word, a)
-unPoly = G.map (first SU.head) . unMultiPoly
+unPoly = G.map (\(Monom p c) -> (SU.head p, c)) . unMultiPoly
 
-instance (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a)) => IsList (MultiPoly v n a) where
+instance (Eq a, Semiring a, G.Vector v (Monom n a)) => IsList (MultiPoly v n a) where
   type Item (MultiPoly v n a) = (SU.Vector n Word, a)
-  fromList = toMultiPoly' . G.fromList
-  fromListN = (toMultiPoly' .) . G.fromListN
-  toList = G.toList . unMultiPoly
+  fromList = toMultiPoly' . G.fromList . map (uncurry Monom)
+  fromListN = (toMultiPoly' .) . (. map (uncurry Monom)) . G.fromListN
+  toList = map (\(Monom p c) -> (p, c)) . G.toList . unMultiPoly
 
-instance (Show a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Show (MultiPoly v n a) where
+instance (Show a, KnownNat n, G.Vector v (Monom n a)) => Show (MultiPoly v n a) where
   showsPrec d (MultiPoly xs)
     | G.null xs
       = showString "0"
@@ -182,7 +186,7 @@ instance (Show a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Show (MultiPo
       = showParen (d > 0)
       $ foldl (.) id
       $ intersperse (showString " + ")
-      $ G.foldl (\acc (is, c) -> showCoeff is c : acc) [] xs
+      $ G.foldl (\acc (Monom is c) -> showCoeff is c : acc) [] xs
     where
       showCoeff is c
         = showsPrec 7 c . foldl (.) id
@@ -202,43 +206,33 @@ instance (Show a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Show (MultiPo
         2 -> "Z"
         k -> "X" ++ show k
 
--- | Make a 'MultiPoly' from a list of (powers, coefficient) pairs.
---
--- >>> :set -XOverloadedLists -XDataKinds
--- >>> import Data.Vector.Generic.Sized (fromTuple)
--- >>> toMultiPoly [(fromTuple (0,0),1),(fromTuple (0,1),2),(fromTuple (1,0),3)] :: VMultiPoly 2 Integer
--- 3 * X + 2 * Y + 1
--- >>> toMultiPoly [(fromTuple (0,0),0),(fromTuple (0,1),0),(fromTuple (1,0),0)] :: UMultiPoly 2 Int
--- 0
---
--- @since 0.5.0.0
 toMultiPoly
-  :: (Eq a, Num a, G.Vector v (SU.Vector n Word, a))
-  => v (SU.Vector n Word, a)
+  :: (Eq a, Num a, G.Vector v (Monom n a))
+  => v (Monom n a)
   -> MultiPoly v n a
 toMultiPoly = MultiPoly . normalize (/= 0) (+)
 {-# INLINABLE toMultiPoly #-}
 
 toMultiPoly'
-  :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a))
-  => v (SU.Vector n Word, a)
+  :: (Eq a, Semiring a, G.Vector v (Monom n a))
+  => v (Monom n a)
   -> MultiPoly v n a
 toMultiPoly' = MultiPoly . normalize (/= zero) plus
 {-# INLINABLE toMultiPoly' #-}
 
 -- | Note that 'abs' = 'id' and 'signum' = 'const' 1.
-instance (Eq a, Num a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Num (MultiPoly v n a) where
+instance (Eq a, Num a, KnownNat n, G.Vector v (Monom n a)) => Num (MultiPoly v n a) where
 
-  (+) = coerce (plusPoly    @v @(SU.Vector n Word) @a (/= 0) (+))
-  (-) = coerce (minusPoly   @v @(SU.Vector n Word) @a (/= 0) negate (-))
-  (*) = coerce (convolution @v @(SU.Vector n Word) @a (/= 0) (+) (*))
+  (+) = coerce (plusPoly    @v @n @a (/= 0) (+))
+  (-) = coerce (minusPoly   @v @n @a (/= 0) negate (-))
+  (*) = coerce (convolution @v @n @a (/= 0) (+) (*))
 
-  negate (MultiPoly xs) = MultiPoly $ G.map (fmap negate) xs
+  negate (MultiPoly xs) = MultiPoly $ G.map (\(Monom ps c) -> Monom ps (negate c)) xs
   abs = id
   signum = const 1
   fromInteger n = case fromInteger n of
     0 -> MultiPoly G.empty
-    m -> MultiPoly $ G.singleton (0, m)
+    m -> MultiPoly $ G.singleton (Monom 0 m)
 
   {-# INLINE (+) #-}
   {-# INLINE (-) #-}
@@ -246,28 +240,28 @@ instance (Eq a, Num a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Num (Mul
   {-# INLINE fromInteger #-}
   {-# INLINE (*) #-}
 
-instance (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Semiring (MultiPoly v n a) where
+instance (Eq a, Semiring a, KnownNat n, G.Vector v (Monom n a)) => Semiring (MultiPoly v n a) where
   zero = MultiPoly G.empty
   one
     | (one :: a) == zero = zero
-    | otherwise = MultiPoly $ G.singleton (0, one)
+    | otherwise = MultiPoly $ G.singleton (Monom 0 one)
 
-  plus  = coerce (plusPoly    @v @(SU.Vector n Word) @a (/= zero) plus)
-  times = coerce (convolution @v @(SU.Vector n Word) @a (/= zero) plus times)
+  plus  = coerce (plusPoly    @v @n @a (/= zero) plus)
+  times = coerce (convolution @v @n @a (/= zero) plus times)
 
   {-# INLINE zero #-}
   {-# INLINE one #-}
   {-# INLINE plus #-}
   {-# INLINE times #-}
 
-  fromNatural n = if n' == zero then zero else MultiPoly $ G.singleton (0, n')
+  fromNatural n = if n' == zero then zero else MultiPoly $ G.singleton (Monom 0 n')
     where
       n' :: a
       n' = fromNatural n
   {-# INLINE fromNatural #-}
 
-instance (Eq a, Ring a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Ring (MultiPoly v n a) where
-  negate (MultiPoly xs) = MultiPoly $ G.map (fmap Semiring.negate) xs
+instance (Eq a, Ring a, KnownNat n, G.Vector v (Monom n a)) => Ring (MultiPoly v n a) where
+  negate (MultiPoly xs) = MultiPoly $ G.map (\(Monom ps c) -> Monom ps (Semiring.negate c)) xs
 
 -- | Return the leading power and coefficient of a non-zero polynomial.
 --
@@ -278,10 +272,12 @@ instance (Eq a, Ring a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Ring (M
 -- Nothing
 --
 -- @since 0.3.0.0
-leading :: G.Vector v (SU.Vector 1 Word, a) => Poly v a -> Maybe (Word, a)
+leading :: G.Vector v (Monom 1 a) => Poly v a -> Maybe (Word, a)
 leading (MultiPoly v)
   | G.null v  = Nothing
-  | otherwise = Just $ first SU.head $ G.last v
+  | otherwise = Just (SU.head p, c)
+    where
+      Monom p c = G.last v
 
 -- | Multiply a polynomial by a monomial, expressed as powers and a coefficient.
 --
@@ -292,7 +288,7 @@ leading (MultiPoly v)
 --
 -- @since 0.5.0.0
 scale
-  :: (Eq a, Num a, KnownNat n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Num a, KnownNat n, G.Vector v (Monom n a))
   => SU.Vector n Word
   -> a
   -> MultiPoly v n a
@@ -300,7 +296,7 @@ scale
 scale yp yc = MultiPoly . scaleInternal (/= 0) (*) yp yc . unMultiPoly
 
 scale'
-  :: (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, KnownNat n, G.Vector v (Monom n a))
   => SU.Vector n Word
   -> a
   -> MultiPoly v n a
@@ -311,23 +307,23 @@ scale' yp yc = MultiPoly . scaleInternal (/= zero) times yp yc . unMultiPoly
 --
 -- @since 0.5.0.0
 monomial
-  :: (Eq a, Num a, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Num a, G.Vector v (Monom n a))
   => SU.Vector n Word
   -> a
   -> MultiPoly v n a
 monomial p c
   | c == 0    = MultiPoly G.empty
-  | otherwise = MultiPoly $ G.singleton (p, c)
+  | otherwise = MultiPoly $ G.singleton (Monom p c)
 {-# INLINABLE monomial #-}
 
 monomial'
-  :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, G.Vector v (Monom n a))
   => SU.Vector n Word
   -> a
   -> MultiPoly v n a
 monomial' p c
   | c == zero = MultiPoly G.empty
-  | otherwise = MultiPoly $ G.singleton (p, c)
+  | otherwise = MultiPoly $ G.singleton (Monom p c)
 {-# INLINABLE monomial' #-}
 
 -- | Evaluate the polynomial at a given point.
@@ -339,7 +335,7 @@ monomial' p c
 --
 -- @since 0.5.0.0
 eval
-  :: (Num a, G.Vector v (SU.Vector n Word, a), G.Vector u a)
+  :: (Num a, G.Vector v (Monom n a), G.Vector u a)
   => MultiPoly v n a
   -> SG.Vector u n a
   -> a
@@ -347,7 +343,7 @@ eval = substitute (*)
 {-# INLINE eval #-}
 
 eval'
-  :: (Semiring a, G.Vector v (SU.Vector n Word, a), G.Vector u a)
+  :: (Semiring a, G.Vector v (Monom n a), G.Vector u a)
   => MultiPoly v n a
   -> SG.Vector u n a
   -> a
@@ -363,7 +359,7 @@ eval' = substitute' times
 --
 -- @since 0.5.0.0
 subst
-  :: (Eq a, Num a, KnownNat m, G.Vector v (SU.Vector n Word, a), G.Vector w (SU.Vector m Word, a))
+  :: (Eq a, Num a, KnownNat m, G.Vector v (Monom n a), G.Vector w (Monom m a))
   => MultiPoly v n a
   -> SV.Vector n (MultiPoly w m a)
   -> MultiPoly w m a
@@ -371,7 +367,7 @@ subst = substitute (scale 0)
 {-# INLINE subst #-}
 
 subst'
-  :: (Eq a, Semiring a, KnownNat m, G.Vector v (SU.Vector n Word, a), G.Vector w (SU.Vector m Word, a))
+  :: (Eq a, Semiring a, KnownNat m, G.Vector v (Monom n a), G.Vector w (Monom m a))
   => MultiPoly v n a
   -> SV.Vector n (MultiPoly w m a)
   -> MultiPoly w m a
@@ -380,15 +376,15 @@ subst' = substitute' (scale' 0)
 
 substitute
   :: forall v u n a b.
-     (G.Vector v (SU.Vector n Word, a), G.Vector u b, Num b)
+     (G.Vector v (Monom n a), G.Vector u b, Num b)
   => (a -> b -> b)
   -> MultiPoly v n a
   -> SG.Vector u n b
   -> b
 substitute f (MultiPoly cs) xs = G.foldl' go 0 cs
   where
-    go :: b -> (SU.Vector n Word, a) -> b
-    go acc (ps, c) = acc + f c (doMonom ps)
+    go :: b -> (Monom n a) -> b
+    go acc (Monom ps c) = acc + f c (doMonom ps)
 
     doMonom :: SU.Vector n Word -> b
     doMonom = SU.ifoldl' (\acc i p -> acc * ((xs `SG.index` i) ^ p)) 1
@@ -396,15 +392,15 @@ substitute f (MultiPoly cs) xs = G.foldl' go 0 cs
 
 substitute'
   :: forall v u n a b.
-     (G.Vector v (SU.Vector n Word, a), G.Vector u b, Semiring b)
+     (G.Vector v (Monom n a), G.Vector u b, Semiring b)
   => (a -> b -> b)
   -> MultiPoly v n a
   -> SG.Vector u n b
   -> b
 substitute' f (MultiPoly cs) xs = G.foldl' go zero cs
   where
-    go :: b -> (SU.Vector n Word, a) -> b
-    go acc (ps, c) = acc `plus` f c (doMonom ps)
+    go :: b -> (Monom n a) -> b
+    go acc (Monom ps c) = acc `plus` f c (doMonom ps)
 
     doMonom :: SU.Vector n Word -> b
     doMonom = SU.ifoldl' (\acc i p -> acc `times` ((xs `SG.index` i) Semiring.^ p)) one
@@ -420,7 +416,7 @@ substitute' f (MultiPoly cs) xs = G.foldl' go zero cs
 --
 -- @since 0.5.0.0
 deriv
-  :: (Eq a, Num a, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Num a, G.Vector v (Monom n a))
   => Finite n
   -> MultiPoly v n a
   -> MultiPoly v n a
@@ -432,7 +428,7 @@ deriv i (MultiPoly xs) = MultiPoly $ derivPoly
 {-# INLINE deriv #-}
 
 deriv'
-  :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, G.Vector v (Monom n a))
   => Finite n
   -> MultiPoly v n a
   -> MultiPoly v n a
@@ -455,38 +451,38 @@ deriv' i (MultiPoly xs) = MultiPoly $ derivPoly
 --
 -- @since 0.5.0.0
 integral
-  :: (Fractional a, G.Vector v (SU.Vector n Word, a))
+  :: (Fractional a, G.Vector v (Monom n a))
   => Finite n
   -> MultiPoly v n a
   -> MultiPoly v n a
 integral i (MultiPoly xs)
   = MultiPoly
-  $ G.map (\(ps, c) -> let p = ps `SU.index` i in
-    (ps SU.// [(i, p + 1)], c / fromIntegral (p + 1))) xs
+  $ G.map (\(Monom ps c) -> let p = ps `SU.index` i in
+    (Monom (ps SU.// [(i, p + 1)]) (c / fromIntegral (p + 1)))) xs
 {-# INLINE integral #-}
 
 integral'
-  :: (Field a, G.Vector v (SU.Vector n Word, a))
+  :: (Field a, G.Vector v (Monom n a))
   => Finite n
   -> MultiPoly v n a
   -> MultiPoly v n a
 integral' i (MultiPoly xs)
   = MultiPoly
-  $ G.map (\(ps, c) -> let p = ps `SU.index` i in
-    (ps SU.// [(i, p + 1)], c `quot` Semiring.fromIntegral (p + 1))) xs
+  $ G.map (\(Monom ps c) -> let p = ps `SU.index` i in
+    (Monom (ps SU.// [(i, p + 1)]) (c `quot` Semiring.fromIntegral (p + 1)))) xs
 {-# INLINE integral' #-}
 
 -- | Create a polynomial equal to the first variable.
 --
 -- @since 0.5.0.0
 pattern X
-  :: (Eq a, Num a, KnownNat n, 1 <= n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Num a, KnownNat n, 1 <= n, G.Vector v (Monom n a))
   => MultiPoly v n a
 pattern X <- (isVar 0 -> True)
   where X = var 0
 
 pattern X'
-  :: (Eq a, Semiring a, KnownNat n, 1 <= n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, KnownNat n, 1 <= n, G.Vector v (Monom n a))
   => MultiPoly v n a
 pattern X' <- (isVar' 0 -> True)
   where X' = var' 0
@@ -495,13 +491,13 @@ pattern X' <- (isVar' 0 -> True)
 --
 -- @since 0.5.0.0
 pattern Y
-  :: (Eq a, Num a, KnownNat n, 2 <= n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Num a, KnownNat n, 2 <= n, G.Vector v (Monom n a))
   => MultiPoly v n a
 pattern Y <- (isVar 1 -> True)
   where Y = var 1
 
 pattern Y'
-  :: (Eq a, Semiring a, KnownNat n, 2 <= n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, KnownNat n, 2 <= n, G.Vector v (Monom n a))
   => MultiPoly v n a
 pattern Y' <- (isVar' 1 -> True)
   where Y' = var' 1
@@ -510,59 +506,67 @@ pattern Y' <- (isVar' 1 -> True)
 --
 -- @since 0.5.0.0
 pattern Z
-  :: (Eq a, Num a, KnownNat n, 3 <= n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Num a, KnownNat n, 3 <= n, G.Vector v (Monom n a))
   => MultiPoly v n a
 pattern Z <- (isVar 2 -> True)
   where Z = var 2
 
 pattern Z'
-  :: (Eq a, Semiring a, KnownNat n, 3 <= n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, KnownNat n, 3 <= n, G.Vector v (Monom n a))
   => MultiPoly v n a
 pattern Z' <- (isVar' 2 -> True)
   where Z' = var' 2
 
 var
   :: forall v n a.
-     (Eq a, Num a, KnownNat n, G.Vector v (SU.Vector n Word, a))
+     (Eq a, Num a, KnownNat n, G.Vector v (Monom n a))
   => Finite n
   -> MultiPoly v n a
 var i
   | (1 :: a) == 0 = MultiPoly G.empty
   | otherwise     = MultiPoly $ G.singleton
-    (SU.generate (\j -> if i == j then 1 else 0), 1)
+    (Monom (SU.generate (\j -> if i == j then 1 else 0)) 1)
 {-# INLINE var #-}
 
 var'
   :: forall v n a.
-     (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
+     (Eq a, Semiring a, KnownNat n, G.Vector v (Monom n a))
   => Finite n
   -> MultiPoly v n a
 var' i
   | (one :: a) == zero = MultiPoly G.empty
   | otherwise          = MultiPoly $ G.singleton
-    (SU.generate (\j -> if i == j then 1 else 0), one)
+    (Monom (SU.generate (\j -> if i == j then 1 else 0)) one)
 {-# INLINE var' #-}
 
 isVar
   :: forall v n a.
-     (Eq a, Num a, KnownNat n, G.Vector v (SU.Vector n Word, a))
+     (Eq a, Num a, KnownNat n, G.Vector v (Monom n a))
   => Finite n
   -> MultiPoly v n a
   -> Bool
 isVar i (MultiPoly xs)
   | (1 :: a) == 0 = G.null xs
-  | otherwise     = G.length xs == 1 && G.unsafeHead xs == (SU.generate (\j -> if i == j then 1 else 0), 1)
+  | otherwise     = G.length xs == 1 &&
+    monomCoeff mon == 1 &&
+    monomPower mon == SU.generate (\j -> if i == j then 1 else 0)
+    where
+      mon = G.unsafeHead xs
 {-# INLINE isVar #-}
 
 isVar'
   :: forall v n a.
-     (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
+     (Eq a, Semiring a, KnownNat n, G.Vector v (Monom n a))
   => Finite n
   -> MultiPoly v n a
   -> Bool
 isVar' i (MultiPoly xs)
   | (one :: a) == zero = G.null xs
-  | otherwise          = G.length xs == 1 && G.unsafeHead xs == (SU.generate (\j -> if i == j then 1 else 0), one)
+  | otherwise          = G.length xs == 1 &&
+    monomCoeff mon == one &&
+    monomPower mon == SU.generate (\j -> if i == j then 1 else 0)
+    where
+      mon = G.unsafeHead xs
 {-# INLINE isVar' #-}
 
 -------------------------------------------------------------------------------
@@ -585,14 +589,14 @@ groupOn f = go
 --
 -- @since 0.5.0.0
 segregate
-  :: (G.Vector v (SU.Vector (1 + m) Word, a), G.Vector v (SU.Vector m Word, a))
+  :: (G.Vector v (Monom (1 + m) a), G.Vector v (Monom m a))
   => MultiPoly v (1 + m) a
   -> VPoly (MultiPoly v m a)
 segregate
   = MultiPoly
   . G.fromList
-  . map (\vs -> (SU.take (fst (G.unsafeHead vs)), MultiPoly $ G.map (first SU.tail) vs))
-  . groupOn (SU.head . fst)
+  . map (\vs -> Monom (let Monom hp _ = G.unsafeHead vs in SU.take hp) (MultiPoly $ G.map (\(Monom p c) -> Monom (SU.tail p) c) vs))
+  . groupOn (\(Monom p _) -> SU.head p)
   . unMultiPoly
 
 -- | Interpret a univariate polynomials, whose coefficients are
@@ -601,12 +605,12 @@ segregate
 --
 -- @since 0.5.0.0
 unsegregate
-  :: (G.Vector v (SU.Vector (1 + m) Word, a), G.Vector v (SU.Vector m Word, a))
+  :: (G.Vector v (Monom (1 + m) a), G.Vector v (Monom m a))
   => VPoly (MultiPoly v m a)
   -> MultiPoly v (1 + m) a
 unsegregate
   = MultiPoly
   . G.concat
   . G.toList
-  . G.map (\(v, MultiPoly vs) -> G.map (first (v SU.++)) vs)
+  . G.map (\(Monom v (MultiPoly vs)) -> G.map (\(Monom p c) -> Monom (v SU.++ p) c) vs)
   . unMultiPoly

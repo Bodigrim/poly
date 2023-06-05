@@ -18,6 +18,7 @@ module Data.Poly.Multi.Semiring
   ( MultiPoly
   , VMultiPoly
   , UMultiPoly
+  , Multi.Monom
   , unMultiPoly
   , toMultiPoly
   , monomial
@@ -42,7 +43,7 @@ import qualified Data.Vector.Sized as SV
 import qualified Data.Vector.Unboxed.Sized as SU
 import GHC.TypeNats (KnownNat, type (<=))
 
-import Data.Poly.Internal.Multi (MultiPoly, VMultiPoly, UMultiPoly, unMultiPoly, segregate, unsegregate)
+import Data.Poly.Internal.Multi (MultiPoly, VMultiPoly, UMultiPoly, segregate, unsegregate)
 import qualified Data.Poly.Internal.Multi as Multi
 import Data.Poly.Internal.Multi.Field ()
 import Data.Poly.Internal.Multi.GcdDomain ()
@@ -58,16 +59,25 @@ import Data.Poly.Internal.Multi.GcdDomain ()
 --
 -- @since 0.5.0.0
 toMultiPoly
-  :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, G.Vector v (Multi.Monom n a), G.Vector v (SU.Vector n Word, a))
   => v (SU.Vector n Word, a)
   -> MultiPoly v n a
-toMultiPoly = Multi.toMultiPoly'
+toMultiPoly = Multi.toMultiPoly' . G.map (uncurry Multi.Monom)
+
+-- | Convert a 'MultiPoly' to a vector of (powers, coefficient) pairs.
+--
+-- @since 0.5.0.0
+unMultiPoly
+  :: (G.Vector v (Multi.Monom n a), G.Vector v (SU.Vector n Word, a))
+  => MultiPoly v n a
+  -> v (SU.Vector n Word, a)
+unMultiPoly = G.map (\(Multi.Monom p c) -> (p, c)) . Multi.unMultiPoly
 
 -- | Create a monomial from powers and a coefficient.
 --
 -- @since 0.5.0.0
 monomial
-  :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, G.Vector v (Multi.Monom n a))
   => SU.Vector n Word
   -> a
   -> MultiPoly v n a
@@ -82,7 +92,7 @@ monomial = Multi.monomial'
 --
 -- @since 0.5.0.0
 scale
-  :: (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, KnownNat n, G.Vector v (Multi.Monom n a))
   => SU.Vector n Word
   -> a
   -> MultiPoly v n a
@@ -93,7 +103,7 @@ scale = Multi.scale'
 --
 -- @since 0.5.0.0
 pattern X
-  :: (Eq a, Semiring a, KnownNat n, 1 <= n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, KnownNat n, 1 <= n, G.Vector v (Multi.Monom n a))
   => MultiPoly v n a
 pattern X = Multi.X'
 
@@ -101,7 +111,7 @@ pattern X = Multi.X'
 --
 -- @since 0.5.0.0
 pattern Y
-  :: (Eq a, Semiring a, KnownNat n, 2 <= n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, KnownNat n, 2 <= n, G.Vector v (Multi.Monom n a))
   => MultiPoly v n a
 pattern Y = Multi.Y'
 
@@ -109,7 +119,7 @@ pattern Y = Multi.Y'
 --
 -- @since 0.5.0.0
 pattern Z
-  :: (Eq a, Semiring a, KnownNat n, 3 <= n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, KnownNat n, 3 <= n, G.Vector v (Multi.Monom n a))
   => MultiPoly v n a
 pattern Z = Multi.Z'
 
@@ -122,7 +132,7 @@ pattern Z = Multi.Z'
 --
 -- @since 0.5.0.0
 eval
-  :: (Semiring a, G.Vector v (SU.Vector n Word, a), G.Vector u a)
+  :: (Semiring a, G.Vector v (Multi.Monom n a), G.Vector u a)
   => MultiPoly v n a
   -> SG.Vector u n a
   -> a
@@ -137,7 +147,7 @@ eval = Multi.eval'
 --
 -- @since 0.5.0.0
 subst
-  :: (Eq a, Semiring a, KnownNat m, G.Vector v (SU.Vector n Word, a), G.Vector w (SU.Vector m Word, a))
+  :: (Eq a, Semiring a, KnownNat m, G.Vector v (Multi.Monom n a), G.Vector w (Multi.Monom m a))
   => MultiPoly v n a
   -> SV.Vector n (MultiPoly w m a)
   -> MultiPoly w m a
@@ -153,7 +163,7 @@ subst = Multi.subst'
 --
 -- @since 0.5.0.0
 deriv
-  :: (Eq a, Semiring a, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, G.Vector v (Multi.Monom n a))
   => Finite n
   -> MultiPoly v n a
   -> MultiPoly v n a
@@ -171,7 +181,7 @@ deriv = Multi.deriv'
 --
 -- @since 0.5.0.0
 integral
-  :: (Field a, G.Vector v (SU.Vector n Word, a))
+  :: (Field a, G.Vector v (Multi.Monom n a))
   => Finite n
   -> MultiPoly v n a
   -> MultiPoly v n a
