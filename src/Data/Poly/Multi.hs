@@ -16,6 +16,7 @@ module Data.Poly.Multi
   ( MultiPoly
   , VMultiPoly
   , UMultiPoly
+  , Monom
   , unMultiPoly
   , toMultiPoly
   , monomial
@@ -31,6 +32,35 @@ module Data.Poly.Multi
   , unsegregate
   ) where
 
-import Data.Poly.Internal.Multi
+import qualified Data.Vector.Generic as G
+import qualified Data.Vector.Unboxed.Sized as SU
+
+import Data.Poly.Internal.Multi hiding (unMultiPoly, toMultiPoly)
+import qualified Data.Poly.Internal.Multi as Multi
 import Data.Poly.Internal.Multi.Field ()
 import Data.Poly.Internal.Multi.GcdDomain ()
+
+-- | Make a 'MultiPoly' from a list of (powers, coefficient) pairs.
+--
+-- >>> :set -XOverloadedLists -XDataKinds
+-- >>> import Data.Vector.Generic.Sized (fromTuple)
+-- >>> toMultiPoly [(fromTuple (0,0),1),(fromTuple (0,1),2),(fromTuple (1,0),3)] :: VMultiPoly 2 Integer
+-- 3 * X + 2 * Y + 1
+-- >>> toMultiPoly [(fromTuple (0,0),0),(fromTuple (0,1),0),(fromTuple (1,0),0)] :: UMultiPoly 2 Int
+-- 0
+--
+-- @since 0.5.0.0
+toMultiPoly
+  :: (Eq a, Num a, G.Vector v (Monom n a), G.Vector v (SU.Vector n Word, a))
+  => v (SU.Vector n Word, a)
+  -> MultiPoly v n a
+toMultiPoly = Multi.toMultiPoly . G.map (uncurry Monom)
+
+-- | Convert a 'MultiPoly' to a vector of (powers, coefficient) pairs.
+--
+-- @since 0.5.0.0
+unMultiPoly
+  :: (G.Vector v (Monom n a), G.Vector v (SU.Vector n Word, a))
+  => MultiPoly v n a
+  -> v (SU.Vector n Word, a)
+unMultiPoly = G.map (\(Monom p c) -> (p, c)) . Multi.unMultiPoly

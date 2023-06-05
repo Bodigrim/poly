@@ -18,6 +18,7 @@ import Data.Int
 import Data.List (sortOn)
 import qualified Data.List.NonEmpty as NE
 import Data.Mod.Word
+import Data.Poly.Multi (Monom)
 import Data.Poly.Sparse
 import qualified Data.Poly.Sparse.Semiring as S
 import Data.Proxy
@@ -213,7 +214,7 @@ evalTests = testGroup "eval" $ concat
 
 evalTestGroup
   :: forall v a.
-     (Eq a, Num a, Semiring a, Arbitrary a, Show a, Eq (v (Word, a)), Show (v (Word, a)), G.Vector v (Word, a), G.Vector v (SU.Vector 1 Word, a))
+     (Eq a, Num a, Semiring a, Arbitrary a, Show a, G.Vector v (Word, a), G.Vector v (SU.Vector 1 Word, a), G.Vector v (Monom 1 a))
   => Proxy (Poly v a)
   -> [TestTree]
 evalTestGroup _ =
@@ -244,7 +245,7 @@ evalTestGroup _ =
 
 substTestGroup
   :: forall v a.
-     (Eq a, Num a, Semiring a, Arbitrary a, Show a, Eq (v (SU.Vector 1 Word, a)), Show (v (SU.Vector 1 Word, a)), G.Vector v (Word, a), G.Vector v (SU.Vector 1 Word, a))
+     (Eq a, Num a, Semiring a, Arbitrary a, Show a, G.Vector v (Word, a), G.Vector v (SU.Vector 1 Word, a), G.Vector v (Monom 1 a))
   => Proxy (Poly v a)
   -> [TestTree]
 substTestGroup _ =

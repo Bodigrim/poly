@@ -20,23 +20,27 @@ module Data.Poly.Internal.Multi.Core
   , convolution
   , scaleInternal
   , derivPoly
+  , Monom(..)
   ) where
 
 import Control.Monad
 import Control.Monad.ST
 import Data.Bits
 import Data.Ord
+import Data.Poly.Internal.Multi.Monom
 import qualified Data.Vector.Algorithms.Tim as Tim
 import qualified Data.Vector.Generic as G
 import qualified Data.Vector.Generic.Mutable as MG
 import qualified Data.Vector.Unboxed as U
+import qualified Data.Vector.Unboxed.Sized as SU
+import GHC.TypeNats
 
 normalize
-  :: (G.Vector v (t, a), Ord t)
+  :: G.Vector v (Monom n a)
   => (a -> Bool)
   -> (a -> a -> a)
-  -> v (t, a)
-  -> v (t, a)
+  -> v (Monom n a)
+  -> v (Monom n a)
 normalize p add vs
   | G.null vs = vs
   | otherwise = runST $ do
@@ -46,14 +50,14 @@ normalize p add vs
 {-# INLINABLE normalize #-}
 
 normalizeM
-  :: (G.Vector v (t, a), Ord t)
+  :: G.Vector v (Monom n a)
   => (a -> Bool)
   -> (a -> a -> a)
-  -> G.Mutable v s (t, a)
+  -> G.Mutable v s (Monom n a)
   -> ST s Int
 normalizeM p add ws = do
     let l = MG.length ws
-    let go i j acc@(accP, accC)
+    let go i j acc@(Monom accP accC)
           | j >= l =
             if p accC
               then do
@@ -61,26 +65,26 @@ normalizeM p add ws = do
                 pure $ i + 1
               else pure i
           | otherwise = do
-            v@(vp, vc) <- MG.unsafeRead ws j
+            v@(Monom vp vc) <- MG.unsafeRead ws j
             if vp == accP
-              then go i (j + 1) (accP, accC `add` vc)
+              then go i (j + 1) (Monom accP (accC `add` vc))
               else if p accC
                 then do
                   MG.write ws i acc
                   go (i + 1) (j + 1) v
                 else go i (j + 1) v
-    Tim.sortBy (comparing fst) ws
+    Tim.sortBy (comparing (\(Monom w _) -> w)) ws
     wsHead <- MG.unsafeRead ws 0
     go 0 1 wsHead
 {-# INLINABLE normalizeM #-}
 
 plusPoly
-  :: (G.Vector v (t, a), Ord t)
+  :: G.Vector v (Monom n a)
   => (a -> Bool)
   -> (a -> a -> a)
-  -> v (t, a)
-  -> v (t, a)
-  -> v (t, a)
+  -> v (Monom n a)
+  -> v (Monom n a)
+  -> v (Monom n a)
 plusPoly p add = \xs ys -> runST $ do
   zs <- MG.unsafeNew (G.length xs + G.length ys)
   lenZs <- plusPolyM p add xs ys zs
@@ -88,12 +92,12 @@ plusPoly p add = \xs ys -> runST $ do
 {-# INLINABLE plusPoly #-}
 
 plusPolyM
-  :: (G.Vector v (t, a), Ord t)
+  :: G.Vector v (Monom n a)
   => (a -> Bool)
   -> (a -> a -> a)
-  -> v (t, a)
-  -> v (t, a)
-  -> G.Mutable v s (t, a)
+  -> v (Monom n a)
+  -> v (Monom n a)
+  -> G.Mutable v s (Monom n a)
   -> ST s Int
 plusPolyM p add xs ys zs = go 0 0 0
   where
@@ -112,32 +116,32 @@ plusPolyM p add xs ys zs = go 0 0 0
           (MG.unsafeSlice iz (lenXs - ix) zs)
           (G.unsafeSlice ix (lenXs - ix) xs)
         pure $ iz + lenXs - ix
-      | (xp, xc) <- G.unsafeIndex xs ix
-      , (yp, yc) <- G.unsafeIndex ys iy
+      | (Monom xp xc) <- G.unsafeIndex xs ix
+      , (Monom yp yc) <- G.unsafeIndex ys iy
       = case xp `compare` yp of
         LT -> do
-          MG.unsafeWrite zs iz (xp, xc)
+          MG.unsafeWrite zs iz (Monom xp xc)
           go (ix + 1) iy (iz + 1)
         EQ -> do
           let zc = xc `add` yc
           if p zc then do
-            MG.unsafeWrite zs iz (xp, zc)
+            MG.unsafeWrite zs iz (Monom xp zc)
             go (ix + 1) (iy + 1) (iz + 1)
           else
             go (ix + 1) (iy + 1) iz
         GT -> do
-          MG.unsafeWrite zs iz (yp, yc)
+          MG.unsafeWrite zs iz (Monom yp yc)
           go ix (iy + 1) (iz + 1)
 {-# INLINE plusPolyM #-}
 
 minusPoly
-  :: (G.Vector v (t, a), Ord t)
+  :: G.Vector v (Monom n a)
   => (a -> Bool)
   -> (a -> a)
   -> (a -> a -> a)
-  -> v (t, a)
-  -> v (t, a)
-  -> v (t, a)
+  -> v (Monom n a)
+  -> v (Monom n a)
+  -> v (Monom n a)
 minusPoly p neg sub = \xs ys -> runST $ do
   let lenXs = G.length xs
       lenYs = G.length ys
@@ -147,86 +151,86 @@ minusPoly p neg sub = \xs ys -> runST $ do
         | ix == lenXs = do
           forM_ [iy .. lenYs - 1] $ \i ->
             MG.unsafeWrite zs (iz + i - iy)
-              (fmap neg (G.unsafeIndex ys i))
+              ((\(Monom ps c) -> Monom ps (neg c)) (G.unsafeIndex ys i))
           pure $ iz + lenYs - iy
         | iy == lenYs = do
           G.unsafeCopy
             (MG.unsafeSlice iz (lenXs - ix) zs)
             (G.unsafeSlice ix (lenXs - ix) xs)
           pure $ iz + lenXs - ix
-        | (xp, xc) <- G.unsafeIndex xs ix
-        , (yp, yc) <- G.unsafeIndex ys iy
+        | (Monom xp xc) <- G.unsafeIndex xs ix
+        , (Monom yp yc) <- G.unsafeIndex ys iy
         = case xp `compare` yp of
           LT -> do
-            MG.unsafeWrite zs iz (xp, xc)
+            MG.unsafeWrite zs iz (Monom xp xc)
             go (ix + 1) iy (iz + 1)
           EQ -> do
             let zc = xc `sub` yc
             if p zc then do
-              MG.unsafeWrite zs iz (xp, zc)
+              MG.unsafeWrite zs iz (Monom xp zc)
               go (ix + 1) (iy + 1) (iz + 1)
             else
               go (ix + 1) (iy + 1) iz
           GT -> do
-            MG.unsafeWrite zs iz (yp, neg yc)
+            MG.unsafeWrite zs iz (Monom yp (neg yc))
             go ix (iy + 1) (iz + 1)
   lenZs <- go 0 0 0
   G.unsafeFreeze $ MG.unsafeSlice 0 lenZs zs
 {-# INLINABLE minusPoly #-}
 
 scaleM
-  :: (G.Vector v (t, a), Num t)
+  :: (KnownNat n, G.Vector v (Monom n a))
   => (a -> Bool)
   -> (a -> a -> a)
-  -> v (t, a)
-  -> (t, a)
-  -> G.Mutable v s (t, a)
+  -> v (Monom n a)
+  -> (Monom n a)
+  -> G.Mutable v s (Monom n a)
   -> ST s Int
-scaleM p mul xs (yp, yc) zs = go 0 0
+scaleM p mul xs (Monom yp yc) zs = go 0 0
   where
     lenXs = G.length xs
 
     go ix iz
       | ix == lenXs = pure iz
-      | (xp, xc) <- G.unsafeIndex xs ix
+      | (Monom xp xc) <- G.unsafeIndex xs ix
       = do
         let zc = xc `mul` yc
         if p zc then do
-          MG.unsafeWrite zs iz (xp + yp, zc)
+          MG.unsafeWrite zs iz (Monom (xp + yp) zc)
           go (ix + 1) (iz + 1)
         else
           go (ix + 1) iz
 {-# INLINABLE scaleM #-}
 
 scaleInternal
-  :: (G.Vector v (t, a), Num t)
+  :: (KnownNat n, G.Vector v (Monom n a))
   => (a -> Bool)
   -> (a -> a -> a)
-  -> t
+  -> SU.Vector n Word
   -> a
-  -> v (t, a)
-  -> v (t, a)
+  -> v (Monom n a)
+  -> v (Monom n a)
 scaleInternal p mul yp yc xs = runST $ do
   zs <- MG.unsafeNew (G.length xs)
-  len <- scaleM p (flip mul) xs (yp, yc) zs
+  len <- scaleM p (flip mul) xs (Monom yp yc) zs
   G.unsafeFreeze $ MG.unsafeSlice 0 len zs
 {-# INLINABLE scaleInternal #-}
 
 convolution
-  :: forall v t a.
-     (G.Vector v (t, a), Ord t, Num t)
+  :: forall v n a.
+     (KnownNat n, G.Vector v (Monom n a))
   => (a -> Bool)
   -> (a -> a -> a)
   -> (a -> a -> a)
-  -> v (t, a)
-  -> v (t, a)
-  -> v (t, a)
+  -> v (Monom n a)
+  -> v (Monom n a)
+  -> v (Monom n a)
 convolution p add mult = \xs ys ->
   if G.length xs >= G.length ys
   then go mult xs ys
   else go (flip mult) ys xs
   where
-    go :: (a -> a -> a) -> v (t, a) -> v (t, a) -> v (t, a)
+    go :: (a -> a -> a) -> v (Monom n a) -> v (Monom n a) -> v (Monom n a)
     go mul long short = runST $ do
       let lenLong   = G.length long
           lenShort  = G.length short
@@ -235,10 +239,10 @@ convolution p add mult = \xs ys ->
       buffer <- MG.unsafeNew lenBuffer
 
       forM_ [0 .. lenShort - 1] $ \iShort -> do
-        let (pShort, cShort) = G.unsafeIndex short iShort
+        let (Monom pShort cShort) = G.unsafeIndex short iShort
             from = iShort * lenLong
             bufferSlice = MG.unsafeSlice from lenLong buffer
-        len <- scaleM p mul long (pShort, cShort) bufferSlice
+        len <- scaleM p mul long (Monom pShort cShort) bufferSlice
         MG.unsafeWrite slices iShort (from, len)
 
       slices' <- G.unsafeFreeze slices
@@ -248,9 +252,9 @@ convolution p add mult = \xs ys ->
 
     gogo
       :: U.Vector (Int, Int)
-      -> v (t, a)
-      -> G.Mutable v s (t, a)
-      -> ST s (v (t, a))
+      -> v (Monom n a)
+      -> G.Mutable v s (Monom n a)
+      -> ST s (v (Monom n a))
     gogo slices buffer bufferNew
       | G.length slices == 0
       = pure G.empty
@@ -283,12 +287,15 @@ convolution p add mult = \xs ys ->
 {-# INLINABLE convolution #-}
 
 derivPoly
-  :: (G.Vector v (t, a))
-  => (a -> Bool)   -- ^ is coefficient non-zero?
-  -> (t -> t)      -- ^ how to modify powers?
-  -> (t -> a -> a) -- ^ how to modify coefficient?
-  -> v (t, a)
-  -> v (t, a)
+  :: G.Vector v (Monom n a)
+  => (a -> Bool)
+  -- ^ is coefficient non-zero?
+  -> (SU.Vector n Word -> SU.Vector n Word)
+  -- ^ how to modify powers?
+  -> (SU.Vector n Word -> a -> a)
+  -- ^ how to modify coefficient?
+  -> v (Monom n a)
+  -> v (Monom n a)
 derivPoly p dec mul xs
   | G.null xs = G.empty
   | otherwise = runST $ do
@@ -296,11 +303,11 @@ derivPoly p dec mul xs
     zs <- MG.unsafeNew lenXs
     let go ix iz
           | ix == lenXs = pure iz
-          | (xp, xc) <- G.unsafeIndex xs ix
+          | (Monom xp xc) <- G.unsafeIndex xs ix
           = do
             let zc = xp `mul` xc
             if p zc then do
-              MG.unsafeWrite zs iz (dec xp, zc)
+              MG.unsafeWrite zs iz (Monom (dec xp) zc)
               go (ix + 1) (iz + 1)
             else
               go (ix + 1) iz

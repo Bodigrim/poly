@@ -49,7 +49,6 @@ import Data.Poly.Internal.Dense.DFT
 import Data.Poly.Internal.Dense.GcdDomain ()
 
 #ifdef SupportSparse
-import qualified Data.Vector.Unboxed.Sized as SU
 import qualified Data.Poly.Internal.Multi as Sparse
 import qualified Data.Poly.Internal.Convert as Convert
 #endif
@@ -163,7 +162,7 @@ dftMult getPrimRoot (Poly xs) (Poly ys) =
 -- 1 * X^2 + 1
 --
 -- @since 0.5.0.0
-denseToSparse :: (Eq a, Semiring a, G.Vector v a, G.Vector v (SU.Vector 1 Word, a)) => Dense.Poly v a -> Sparse.Poly v a
+denseToSparse :: (Eq a, Semiring a, G.Vector v a, G.Vector v (Sparse.Monom 1 a)) => Dense.Poly v a -> Sparse.Poly v a
 denseToSparse = Convert.denseToSparse'
 
 -- | Convert from sparse to dense polynomials.
@@ -173,6 +172,6 @@ denseToSparse = Convert.denseToSparse'
 -- 1 * X^2 + 0 * X + 1
 --
 -- @since 0.5.0.0
-sparseToDense :: (Semiring a, G.Vector v a, G.Vector v (SU.Vector 1 Word, a)) => Sparse.Poly v a -> Dense.Poly v a
+sparseToDense :: (Semiring a, G.Vector v a, G.Vector v (Sparse.Monom 1 a)) => Sparse.Poly v a -> Dense.Poly v a
 sparseToDense = Convert.sparseToDense'
 #endif

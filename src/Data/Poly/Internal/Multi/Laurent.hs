@@ -26,6 +26,7 @@ module Data.Poly.Internal.Multi.Laurent
   ( MultiLaurent
   , VMultiLaurent
   , UMultiLaurent
+  , Multi.Monom
   , unMultiLaurent
   , toMultiLaurent
   , leading
@@ -51,7 +52,7 @@ module Data.Poly.Internal.Multi.Laurent
 
 import Prelude hiding (quotRem, quot, rem, gcd, lcm)
 import Data.Bifunctor (first)
-import Control.DeepSeq (NFData(..))
+import Control.DeepSeq (NFData(..), NFData1)
 import Control.Exception
 import Data.Euclidean (GcdDomain(..), Euclidean(..), Field)
 import Data.Finite
@@ -73,6 +74,7 @@ import Data.Poly.Internal.Multi (Poly, MultiPoly(..))
 import qualified Data.Poly.Internal.Multi as Multi
 import Data.Poly.Internal.Multi.Field ()
 import Data.Poly.Internal.Multi.GcdDomain ()
+import Data.Poly.Internal.Multi.Monom
 
 -- | Sparse
 -- <https://en.wikipedia.org/wiki/Laurent_polynomial Laurent polynomials>
@@ -100,8 +102,11 @@ import Data.Poly.Internal.Multi.GcdDomain ()
 data MultiLaurent (v :: Type -> Type) (n :: Nat) (a :: Type) =
   MultiLaurent !(SU.Vector n Int) !(MultiPoly v n a)
 
-deriving instance Eq  (v (SU.Vector n Word, a)) => Eq  (MultiLaurent v n a)
-deriving instance Ord (v (SU.Vector n Word, a)) => Ord (MultiLaurent v n a)
+deriving instance (Eq a, G.Vector v (Monom n a)) => Eq (MultiLaurent v n a)
+deriving instance (Ord a, G.Vector v (Monom n a)) => Ord (MultiLaurent v n a)
+
+instance (NFData a, NFData1 v) => NFData (MultiLaurent v n a) where
+  rnf (MultiLaurent off poly) = rnf off `seq` rnf poly
 
 -- | Multivariate Laurent polynomials backed by boxed vectors.
 --
@@ -147,17 +152,17 @@ type VLaurent (a :: Type) = Laurent V.Vector a
 -- @since 0.4.0.0
 type ULaurent (a :: Type) = Laurent U.Vector a
 
-instance (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Int, a), G.Vector v (SU.Vector n Word, a)) => IsList (MultiLaurent v n a) where
+instance (Eq a, Semiring a, KnownNat n, G.Vector v (Monom n a)) => IsList (MultiLaurent v n a) where
   type Item (MultiLaurent v n a) = (SU.Vector n Int, a)
 
   fromList [] = MultiLaurent 0 zero
   fromList xs = toMultiLaurent minPow (fromList ys)
     where
       minPow = foldl1' (SU.zipWith min) (map fst xs)
-      ys = map (first (SU.map fromIntegral . subtract minPow)) xs
+      ys = map (\(p, c) -> (SU.map fromIntegral (p - minPow), c)) xs
 
   toList (MultiLaurent off (MultiPoly poly)) =
-    map (first ((+ off) . SU.map fromIntegral)) $ G.toList poly
+    map (\(Monom p c) -> (off + SU.map fromIntegral p, c)) $ G.toList poly
 
 -- | Deconstruct a 'MultiLaurent' polynomial into an offset (largest possible)
 -- and a regular polynomial.
@@ -201,7 +206,7 @@ unLaurent = first SU.head . unMultiLaurent
 -- >>> toMultiLaurent (fromTuple (0, -2)) (2 * Data.Poly.Multi.X + 1) :: UMultiLaurent 2 Int
 -- 2 * X * Y^-2 + 1 * Y^-2
 toMultiLaurent
-  :: (KnownNat n, G.Vector v (SU.Vector n Word, a))
+  :: (KnownNat n, G.Vector v (Monom n a))
   => SU.Vector n Int
   -> MultiPoly v n a
   -> MultiLaurent v n a
@@ -209,10 +214,10 @@ toMultiLaurent off (MultiPoly xs)
   | G.null xs = MultiLaurent 0 (MultiPoly G.empty)
   | otherwise = MultiLaurent (SU.zipWith (\o m -> o + fromIntegral m) off minPow) (MultiPoly ys)
     where
-      minPow = G.foldl'(\acc (x, _) -> SU.zipWith min acc x) (SU.replicate maxBound) xs
+      minPow = G.foldl' (\acc (Monom x _) -> SU.zipWith min acc x) (SU.replicate maxBound) xs
       ys
         | SU.all (== 0) minPow = xs
-        | otherwise = G.map (first (SU.zipWith subtract minPow)) xs
+        | otherwise = G.map (\(Monom p c) -> Monom (SU.zipWith subtract minPow p) c) xs
 {-# INLINE toMultiLaurent #-}
 
 -- | Construct a 'Laurent' polynomial from an offset and a regular polynomial.
@@ -225,17 +230,14 @@ toMultiLaurent off (MultiPoly xs)
 --
 -- @since 0.4.0.0
 toLaurent
-  :: G.Vector v (SU.Vector 1 Word, a)
+  :: G.Vector v (Monom 1 a)
   => Int
   -> Poly v a
   -> Laurent v a
 toLaurent = toMultiLaurent . SU.singleton
 {-# INLINABLE toLaurent #-}
 
-instance NFData (v (SU.Vector n Word, a)) => NFData (MultiLaurent v n a) where
-  rnf (MultiLaurent off poly) = rnf off `seq` rnf poly
-
-instance (Show a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Show (MultiLaurent v n a) where
+instance (Show a, KnownNat n, G.Vector v (Monom n a)) => Show (MultiLaurent v n a) where
   showsPrec d (MultiLaurent off (MultiPoly xs))
     | G.null xs
       = showString "0"
@@ -243,7 +245,7 @@ instance (Show a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Show (MultiLa
       = showParen (d > 0)
       $ foldl (.) id
       $ intersperse (showString " + ")
-      $ G.foldl (\acc (is, c) -> showCoeff (SU.map fromIntegral is + off) c : acc) [] xs
+      $ G.foldl (\acc (Monom is c) -> showCoeff (SU.map fromIntegral is + off) c : acc) [] xs
     where
       showCoeff is c
         = showsPrec 7 c . foldl (.) id
@@ -271,11 +273,11 @@ instance (Show a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Show (MultiLa
 -- Nothing
 --
 -- @since 0.4.0.0
-leading :: G.Vector v (SU.Vector 1 Word, a) => Laurent v a -> Maybe (Int, a)
+leading :: G.Vector v (Monom 1 a) => Laurent v a -> Maybe (Int, a)
 leading (MultiLaurent off poly) = first ((+ SU.head off) . fromIntegral) <$> Multi.leading poly
 
 -- | Note that 'abs' = 'id' and 'signum' = 'const' 1.
-instance (Eq a, Num a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Num (MultiLaurent v n a) where
+instance (Eq a, Num a, KnownNat n, G.Vector v (Monom n a)) => Num (MultiLaurent v n a) where
   MultiLaurent off1 poly1 * MultiLaurent off2 poly2 = toMultiLaurent (off1 + off2) (poly1 * poly2)
   MultiLaurent off1 poly1 + MultiLaurent off2 poly2 = toMultiLaurent off (poly1' + poly2')
     where
@@ -297,7 +299,7 @@ instance (Eq a, Num a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Num (Mul
   {-# INLINE fromInteger #-}
   {-# INLINE (*) #-}
 
-instance (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Semiring (MultiLaurent v n a) where
+instance (Eq a, Semiring a, KnownNat n, G.Vector v (Monom n a)) => Semiring (MultiLaurent v n a) where
   zero = MultiLaurent 0 zero
   one  = MultiLaurent 0 one
   MultiLaurent off1 poly1 `times` MultiLaurent off2 poly2 =
@@ -314,14 +316,14 @@ instance (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Sem
   {-# INLINE times #-}
   {-# INLINE fromNatural #-}
 
-instance (Eq a, Ring a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Ring (MultiLaurent v n a) where
+instance (Eq a, Ring a, KnownNat n, G.Vector v (Monom n a)) => Ring (MultiLaurent v n a) where
   negate (MultiLaurent off poly) = MultiLaurent off (Semiring.negate poly)
 
 -- | Create a monomial from a power and a coefficient.
 --
 -- @since 0.5.0.0
 monomial
-  :: (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, KnownNat n, G.Vector v (Monom n a))
   => SU.Vector n Int
   -> a
   -> MultiLaurent v n a
@@ -339,7 +341,7 @@ monomial p c
 --
 -- @since 0.5.0.0
 scale
-  :: (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, KnownNat n, G.Vector v (Monom n a))
   => SU.Vector n Int
   -> a
   -> MultiLaurent v n a
@@ -355,7 +357,7 @@ scale yp yc (MultiLaurent off poly) = toMultiLaurent (off + yp) (Multi.scale' 0 
 --
 -- @since 0.5.0.0
 eval
-  :: (Field a, G.Vector v (SU.Vector n Word, a), G.Vector u a)
+  :: (Field a, G.Vector v (Monom n a), G.Vector u a)
   => MultiLaurent v n a
   -> SG.Vector u n a
   -> a
@@ -373,7 +375,7 @@ eval (MultiLaurent off poly) xs = Multi.eval' poly xs `times`
 --
 -- @since 0.5.0.0
 subst
-  :: (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a), G.Vector w (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, KnownNat n, G.Vector v (Monom n a), G.Vector w (Monom n a))
   => MultiPoly v n a
   -> SV.Vector n (MultiLaurent w n a)
   -> MultiLaurent w n a
@@ -390,7 +392,7 @@ subst = Multi.substitute' (scale 0)
 --
 -- @since 0.5.0.0
 deriv
-  :: (Eq a, Ring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Ring a, KnownNat n, G.Vector v (Monom n a))
   => Finite n
   -> MultiLaurent v n a
   -> MultiLaurent v n a
@@ -406,7 +408,7 @@ deriv i (MultiLaurent off (MultiPoly xs)) =
 --
 -- @since 0.5.0.0
 pattern X
-  :: (Eq a, Semiring a, KnownNat n, 1 <= n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, KnownNat n, 1 <= n, G.Vector v (Monom n a))
   => MultiLaurent v n a
 pattern X <- (isVar 0 -> True)
   where X = var 0
@@ -415,7 +417,7 @@ pattern X <- (isVar 0 -> True)
 --
 -- @since 0.5.0.0
 pattern Y
-  :: (Eq a, Semiring a, KnownNat n, 2 <= n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, KnownNat n, 2 <= n, G.Vector v (Monom n a))
   => MultiLaurent v n a
 pattern Y <- (isVar 1 -> True)
   where Y = var 1
@@ -424,14 +426,14 @@ pattern Y <- (isVar 1 -> True)
 --
 -- @since 0.5.0.0
 pattern Z
-  :: (Eq a, Semiring a, KnownNat n, 3 <= n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, KnownNat n, 3 <= n, G.Vector v (Monom n a))
   => MultiLaurent v n a
 pattern Z <- (isVar 2 -> True)
   where Z = var 2
 
 var
   :: forall v n a.
-     (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
+     (Eq a, Semiring a, KnownNat n, G.Vector v (Monom n a))
   => Finite n
   -> MultiLaurent v n a
 var i
@@ -442,7 +444,7 @@ var i
 
 isVar
   :: forall v n a.
-     (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
+     (Eq a, Semiring a, KnownNat n, G.Vector v (Monom n a))
   => Finite n
   -> MultiLaurent v n a
   -> Bool
@@ -451,7 +453,11 @@ isVar i (MultiLaurent off (MultiPoly xs))
   = off == 0 && G.null xs
   | otherwise
   = off == SU.generate (\j -> if i == j then 1 else 0)
-  && G.length xs == 1 && G.unsafeHead xs == (0, one)
+  && G.length xs == 1
+  && monomCoeff mon == one
+  && monomPower mon == 0
+  where
+    mon = G.unsafeHead xs
 {-# INLINE isVar #-}
 
 -- | Used to construct monomials with negative powers.
@@ -467,17 +473,20 @@ isVar i (MultiLaurent off (MultiPoly xs))
 --
 -- @since 0.5.0.0
 (^-)
-  :: (Eq a, Semiring a, KnownNat n, G.Vector v (SU.Vector n Word, a))
+  :: (Eq a, Semiring a, KnownNat n, G.Vector v (Monom n a))
   => MultiLaurent v n a
   -> Int
   -> MultiLaurent v n a
 MultiLaurent off (MultiPoly xs) ^- n
-  | G.length xs == 1, G.unsafeHead xs == (0, one)
+  | G.length xs == 1
+  , mon <- G.unsafeHead xs
+  , monomCoeff mon == one
+  , monomPower mon == 0
   = MultiLaurent (SU.map (* (-n)) off) (MultiPoly xs)
   | otherwise
   = throw $ PatternMatchFail "(^-) can be applied only to a monom with unit coefficient"
 
-instance {-# OVERLAPPING #-} (Eq a, Ring a, GcdDomain a, G.Vector v (SU.Vector 1 Word, a)) => GcdDomain (Laurent v a) where
+instance {-# OVERLAPPING #-} (Eq a, Ring a, GcdDomain a, G.Vector v (Monom 1 a)) => GcdDomain (Laurent v a) where
   divide (MultiLaurent off1 poly1) (MultiLaurent off2 poly2) =
     toMultiLaurent (off1 - off2) <$> divide poly1 poly2
   {-# INLINE divide #-}
@@ -494,7 +503,7 @@ instance {-# OVERLAPPING #-} (Eq a, Ring a, GcdDomain a, G.Vector v (SU.Vector 1
     coprime poly1 poly2
   {-# INLINE coprime #-}
 
-instance (Eq a, Ring a, GcdDomain a, KnownNat n, forall m. KnownNat m => G.Vector v (SU.Vector m Word, a), forall m. KnownNat m => Eq (v (SU.Vector m Word, a))) => GcdDomain (MultiLaurent v n a) where
+instance (Eq a, Ring a, GcdDomain a, KnownNat n, forall m. KnownNat m => G.Vector v (Monom m a)) => GcdDomain (MultiLaurent v n a) where
   divide (MultiLaurent off1 poly1) (MultiLaurent off2 poly2) =
     toMultiLaurent (off1 - off2) <$> divide poly1 poly2
   {-# INLINE divide #-}
@@ -519,13 +528,13 @@ instance (Eq a, Ring a, GcdDomain a, KnownNat n, forall m. KnownNat m => G.Vecto
 --
 -- @since 0.5.0.0
 segregate
-  :: (KnownNat m, G.Vector v (SU.Vector (1 + m) Word, a), G.Vector v (SU.Vector m Word, a))
+  :: (KnownNat m, G.Vector v (Monom (1 + m) a), G.Vector v (Monom m a))
   => MultiLaurent v (1 + m) a
   -> VLaurent (MultiLaurent v m a)
 segregate (MultiLaurent off poly)
   = toMultiLaurent (SU.take off)
   $ MultiPoly
-  $ G.map (fmap (toMultiLaurent (SU.tail off)))
+  $ G.map (\(Monom p c) -> Monom p (toMultiLaurent (SU.tail off) c))
   $ Multi.unMultiPoly
   $ Multi.segregate poly
 
@@ -536,7 +545,7 @@ segregate (MultiLaurent off poly)
 -- @since 0.5.0.0
 unsegregate
   :: forall v m a.
-     (KnownNat m, KnownNat (1 + m), G.Vector v (SU.Vector (1 + m) Word, a), G.Vector v (SU.Vector m Word, a))
+     (KnownNat m, KnownNat (1 + m), G.Vector v (Monom (1 + m) a), G.Vector v (Monom m a))
   => VLaurent (MultiLaurent v m a)
   -> MultiLaurent v (1 + m) a
 unsegregate (MultiLaurent off poly)
@@ -545,9 +554,9 @@ unsegregate (MultiLaurent off poly)
   | otherwise
   = toMultiLaurent (off SU.++ offs) (MultiPoly (G.concat (G.toList ys)))
   where
-    xs :: V.Vector (SU.Vector 1 Word, (SU.Vector m Int, MultiPoly v m a))
-    xs = G.map (fmap unMultiLaurent) $ Multi.unMultiPoly poly
+    xs :: V.Vector (Monom 1 (SU.Vector m Int, MultiPoly v m a))
+    xs = G.map (\(Monom p c) -> Monom p (unMultiLaurent c)) $ Multi.unMultiPoly poly
     offs :: SU.Vector m Int
-    offs = G.foldl' (\acc (_, (v, _)) -> SU.zipWith min acc v) (SU.replicate maxBound) xs
-    ys :: V.Vector (v (SU.Vector (1 + m) Word, a))
-    ys = G.map (\(v, (vs, p)) -> G.map (first ((v SU.++) . SU.zipWith3 (\a b c -> c + fromIntegral (b - a)) offs vs)) (unMultiPoly p)) xs
+    offs = G.foldl' (\acc (Monom _ (v, _)) -> SU.zipWith min acc v) (SU.replicate maxBound) xs
+    ys :: V.Vector (v (Monom (1 + m) a))
+    ys = G.map (\(Monom v (vs, p)) -> G.map (\(Monom r s) -> Monom (v SU.++ SU.zipWith3 (\a b c -> c + fromIntegral (b - a)) offs vs r) s) (unMultiPoly p)) xs

@@ -37,7 +37,7 @@ import Unsafe.Coerce
 
 import Data.Poly.Internal.Multi
 
-instance {-# OVERLAPPING #-} (Eq a, Ring a, GcdDomain a, G.Vector v (SU.Vector 1 Word, a)) => GcdDomain (Poly v a) where
+instance {-# OVERLAPPING #-} (Eq a, Ring a, GcdDomain a, G.Vector v (Monom 1 a)) => GcdDomain (Poly v a) where
   divide xs ys
     | G.null (unMultiPoly ys) = throw DivideByZero
     | G.length (unMultiPoly ys) == 1 = divideSingleton xs (G.unsafeHead (unMultiPoly ys))
@@ -64,7 +64,7 @@ isSucc :: forall n. KnownNat n => IsSucc n
 isSucc = case someNatVal (natVal (Proxy :: Proxy n) - 1) of
   SomeNat (_ :: Proxy m) -> IsSucc (unsafeCoerce Refl :: n :~: 1 + m)
 
-instance (Eq a, Ring a, GcdDomain a, KnownNat n, forall m. KnownNat m => G.Vector v (SU.Vector m Word, a), forall m. KnownNat m => Eq (v (SU.Vector m Word, a))) => GcdDomain (MultiPoly v n a) where
+instance (Eq a, Ring a, GcdDomain a, KnownNat n, forall m. KnownNat m => G.Vector v (Monom m a)) => GcdDomain (MultiPoly v n a) where
   divide xs ys
     | G.null (unMultiPoly ys) = throw DivideByZero
     | G.length (unMultiPoly ys) == 1 = divideSingleton xs (G.unsafeHead (unMultiPoly ys))
@@ -87,29 +87,29 @@ instance (Eq a, Ring a, GcdDomain a, KnownNat n, forall m. KnownNat m => G.Vecto
       IsSucc Refl -> unsegregate $ segregate xs `gcd` segregate ys
 
 divideSingleton
-  :: (GcdDomain a, G.Vector v (SU.Vector n Word, a))
+  :: (GcdDomain a, G.Vector v (Monom n a))
   => MultiPoly v n a
-  -> (SU.Vector n Word, a)
+  -> (Monom n a)
   -> Maybe (MultiPoly v n a)
-divideSingleton (MultiPoly pcs) (p, c) = MultiPoly <$> G.mapM divideMonomial pcs
+divideSingleton (MultiPoly pcs) (Monom p c) = MultiPoly <$> G.mapM divideMonomial pcs
   where
-    divideMonomial (p', c')
+    divideMonomial (Monom p' c')
       | SU.and (SU.zipWith (>=) p' p)
       , Just c'' <- c' `divide` c
-      = Just (SU.zipWith (-) p' p, c'')
+      = Just (Monom (SU.zipWith (-) p' p) c'')
       | otherwise
       = Nothing
 
 gcdSingleton
-  :: (Eq a, GcdDomain a, G.Vector v (SU.Vector n Word, a))
-  => (SU.Vector n Word, a)
+  :: (Eq a, GcdDomain a, G.Vector v (Monom n a))
+  => (Monom n a)
   -> MultiPoly v n a
   -> MultiPoly v n a
-gcdSingleton pc (MultiPoly pcs) = uncurry monomial' $
-  G.foldl' (\(accP, accC) (p, c) -> (SU.zipWith min accP p, gcd accC c)) pc pcs
+gcdSingleton pc (MultiPoly pcs) = (\(Monom p c) -> monomial' p c) $
+  G.foldl' (\(Monom accP accC) (Monom p c) -> Monom (SU.zipWith min accP p) (gcd accC c)) pc pcs
 
 divide1
-  :: (Eq a, GcdDomain a, Ring a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Eq a, GcdDomain a, Ring a, G.Vector v (Monom 1 a))
   => Poly v a
   -> Poly v a
   -> Maybe (Poly v a)
@@ -121,12 +121,12 @@ divide1 xs ys = case leading ys of
       | xp < yp -> Nothing
       | otherwise -> do
         zc <- divide xc yc
-        let z = MultiPoly $ G.singleton (SU.singleton (xp - yp), zc)
+        let z = MultiPoly $ G.singleton (Monom (SU.singleton (xp - yp)) zc)
         rest <- divide1 (xs `minus` z `times` ys) ys
         pure $ rest `plus` z
 
 gcd1
-  :: (Eq a, GcdDomain a, Ring a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Eq a, GcdDomain a, Ring a, G.Vector v (Monom 1 a))
   => Poly v a
   -> Poly v a
   -> Poly v a
@@ -137,11 +137,11 @@ gcd1 x@(MultiPoly xs) y@(MultiPoly ys) =
     xy = monomial' 0 (gcd (content xs) (content ys))
     divide1' = (fromMaybe (error "gcd: violated internal invariant") .) . divide1
 
-content :: (GcdDomain a, G.Vector v (t, a)) => v (t, a) -> a
-content = G.foldl' (\acc (_, t) -> gcd acc t) zero
+content :: (GcdDomain a, G.Vector v (Monom n a)) => v (Monom n a) -> a
+content = G.foldl' (\acc (Monom _ t) -> gcd acc t) zero
 
 gcdHelper
-  :: (Eq a, Ring a, GcdDomain a, G.Vector v (SU.Vector 1 Word, a))
+  :: (Eq a, Ring a, GcdDomain a, G.Vector v (Monom 1 a))
   => Poly v a
   -> Poly v a
   -> Poly v a

@@ -82,19 +82,19 @@ instance (Arbitrary a, KnownNat n, G.Vector v a) => Arbitrary (SG.Vector v n a) 
   arbitrary = SG.replicateM arbitrary
   shrink vs = [ vs SG.// [(i, x)] | i <- finites, x <- shrink (SG.index vs i) ]
 
-instance (Eq a, Semiring a, Arbitrary a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Arbitrary (MultiPoly v n a) where
+instance (Eq a, Semiring a, Arbitrary a, KnownNat n, G.Vector v (Monom n a), G.Vector v (SU.Vector n Word, a)) => Arbitrary (MultiPoly v n a) where
   arbitrary = toMultiPoly . G.fromList <$> arbitrary
   shrink = fmap (toMultiPoly . G.fromList) . shrink . G.toList . unMultiPoly
 
-instance (Eq a, Semiring a, Arbitrary a, KnownNat n, G.Vector v (SU.Vector n Word, a)) => Arbitrary (ShortPoly (MultiPoly v n a)) where
+instance (Eq a, Semiring a, Arbitrary a, KnownNat n, G.Vector v (Monom n a), G.Vector v (SU.Vector n Word, a)) => Arbitrary (ShortPoly (MultiPoly v n a)) where
   arbitrary = ShortPoly . toMultiPoly . G.fromList . (\xs -> take (length xs `mod` 4) (map (first (SU.map (`mod` 3))) xs)) <$> arbitrary
   shrink = fmap (ShortPoly . toMultiPoly . G.fromList) . shrink . G.toList . unMultiPoly . unShortPoly
 
-instance (Eq a, Semiring a, Arbitrary a, KnownNat n, G.Vector v (Word, a), G.Vector v (SU.Vector n Word, a)) => Arbitrary (MultiLaurent.MultiLaurent v n a) where
+instance (Eq a, Semiring a, Arbitrary a, KnownNat n, G.Vector v (Word, a), G.Vector v (Monom n a), G.Vector v (SU.Vector n Word, a)) => Arbitrary (MultiLaurent.MultiLaurent v n a) where
   arbitrary = MultiLaurent.toMultiLaurent <$> (SU.map (`rem` 10) <$> arbitrary) <*> arbitrary
   shrink = fmap (uncurry MultiLaurent.toMultiLaurent) . shrink . MultiLaurent.unMultiLaurent
 
-instance (Eq a, Semiring a, Arbitrary a, KnownNat n, G.Vector v (Word, a), G.Vector v (SU.Vector n Word, a)) => Arbitrary (ShortPoly (MultiLaurent.MultiLaurent v n a)) where
+instance (Eq a, Semiring a, Arbitrary a, KnownNat n, G.Vector v (Word, a), G.Vector v (Monom n a), G.Vector v (SU.Vector n Word, a)) => Arbitrary (ShortPoly (MultiLaurent.MultiLaurent v n a)) where
   arbitrary = (ShortPoly .) . MultiLaurent.toMultiLaurent <$> (SU.map (`rem` 10) <$> arbitrary) <*> (unShortPoly <$> arbitrary)
   shrink = fmap (ShortPoly . uncurry MultiLaurent.toMultiLaurent . fmap unShortPoly) . shrink . fmap ShortPoly . MultiLaurent.unMultiLaurent . unShortPoly
 
