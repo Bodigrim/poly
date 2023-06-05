@@ -193,7 +193,7 @@ evalTests = testGroup "eval" $ concat
 
 evalTestGroup
   :: forall v a.
-     (Eq a, Num a, Semiring a, Arbitrary a, Show a, Eq (v (SU.Vector 3 Word, a)), Show (v (SU.Vector 3 Word, a)), G.Vector v (SU.Vector 3 Word, a))
+     (Eq a, Num a, Semiring a, Arbitrary a, Show a, G.Vector v (SU.Vector 3 Word, a), G.Vector v (Monom 3 a))
   => Proxy (MultiPoly v 3 a)
   -> [TestTree]
 evalTestGroup _ =
@@ -223,7 +223,7 @@ evalTestGroup _ =
 
 substTestGroup
   :: forall v a.
-     (Eq a, Num a, Semiring a, Arbitrary a, Show a, Eq (v (SU.Vector 3 Word, a)), Show (v (SU.Vector 3 Word, a)), G.Vector v (SU.Vector 3 Word, a))
+     (Eq a, Num a, Semiring a, Arbitrary a, Show a, G.Vector v (SU.Vector 3 Word, a), G.Vector v (Monom 3 a))
   => Proxy (MultiPoly v 3 a)
   -> [TestTree]
 substTestGroup _ =

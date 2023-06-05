@@ -60,13 +60,14 @@ library
       Data.Poly.Internal.Multi.Field
       Data.Poly.Internal.Multi.GcdDomain
       Data.Poly.Internal.Multi.Laurent
+      Data.Poly.Internal.Multi.Monom
 
   build-depends:
     base >= 4.12 && < 5,
     deepseq >= 1.1 && < 1.5,
     primitive >= 0.6,
     semirings >= 0.5.2,
-    vector >= 0.12.0.2
+    vector >= 0.13
 
   if flag(sparse)
     build-depends:

@@ -93,6 +93,8 @@ newtype Poly (v :: Type -> Type) (a :: Type) = Poly
   , NFData -- ^ @since 0.3.2.0
   )
 
+-- TODO manual Eq, Ord, NFData, avoiding (Eq v a) etc.
+
 -- | @since 0.3.1.0
 instance (Eq a, Semiring a, G.Vector v a) => IsList (Poly v a) where
   type Item (Poly v a) = a
