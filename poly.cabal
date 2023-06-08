@@ -101,7 +101,7 @@ test-suite poly-tests
     base >=4.10 && <5,
     mod >=0.1.2,
     poly,
-    QuickCheck >=2.12,
+    QuickCheck >=2.12 && <2.14.3,
     quickcheck-classes-base,
     quickcheck-classes >=0.6.3,
     semirings >= 0.5.2,
