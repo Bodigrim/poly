@@ -52,7 +52,7 @@ legendre = map (`subst'` toPoly [1 `quot` 2, 1 `quot` 2]) legendreShifted
 legendreShifted :: (Eq a, Euclidean a, Ring a, Vector v a) => [Poly v a]
 legendreShifted = xs
   where
-    xs = 1 : toPoly [-1, 2] : zipWith3 rec (iterate (+ 1) 1) xs (tail xs)
+    xs = 1 : toPoly [-1, 2] : zipWith3 rec (iterate (+ 1) 1) xs (drop 1 xs)
     rec n pm1 p = unscale' 0 (n + 1) (toPoly [-1 - 2 * n, 2 + 4 * n] * p - scale 0 n pm1)
 
 -- | <https://en.wikipedia.org/wiki/Gegenbauer_polynomials Gegenbauer polynomials>.
@@ -71,7 +71,7 @@ jacobi a b = xs
   where
     x0 = 1
     x1 = toPoly [(a - b) `quot` 2, (a + b + 2) `quot` 2]
-    xs = x0 : x1 : zipWith3 rec (iterate (+ 1) 2) xs (tail xs)
+    xs = x0 : x1 : zipWith3 rec (iterate (+ 1) 2) xs (drop 1 xs)
     rec n pm1 p = toPoly [d, c] * p - scale 0 cm1 pm1
       where
         cp1 = 2 * n * (n + a + b) * (2 * n + a + b - 2)
@@ -90,7 +90,7 @@ jacobi a b = xs
 chebyshev1 :: (Eq a, Ring a, Vector v a) => [Poly v a]
 chebyshev1 = xs
   where
-    xs = 1 : monomial 1 1 : zipWith (\pm1 p -> scale 1 2 p - pm1) xs (tail xs)
+    xs = 1 : monomial 1 1 : zipWith (\pm1 p -> scale 1 2 p - pm1) xs (drop 1 xs)
 
 -- | <https://en.wikipedia.org/wiki/Chebyshev_polynomials Chebyshev polynomials>
 -- of the second kind.
@@ -102,7 +102,7 @@ chebyshev1 = xs
 chebyshev2 :: (Eq a, Ring a, Vector v a) => [Poly v a]
 chebyshev2 = xs
   where
-    xs = 1 : monomial 1 2 : zipWith (\pm1 p -> scale 1 2 p - pm1) xs (tail xs)
+    xs = 1 : monomial 1 2 : zipWith (\pm1 p -> scale 1 2 p - pm1) xs (drop 1 xs)
 
 -- | Probabilists' <https://en.wikipedia.org/wiki/Hermite_polynomials Hermite polynomials>.
 --
@@ -113,7 +113,7 @@ chebyshev2 = xs
 hermiteProb :: (Eq a, Ring a, Vector v a) => [Poly v a]
 hermiteProb = xs
   where
-    xs = 1 : monomial 1 1 : zipWith3 rec (iterate (+ 1) 1) xs (tail xs)
+    xs = 1 : monomial 1 1 : zipWith3 rec (iterate (+ 1) 1) xs (drop 1 xs)
     rec n pm1 p = scale 1 1 p - scale 0 n pm1
 
 -- | Physicists' <https://en.wikipedia.org/wiki/Hermite_polynomials Hermite polynomials>.
@@ -125,7 +125,7 @@ hermiteProb = xs
 hermitePhys :: (Eq a, Ring a, Vector v a) => [Poly v a]
 hermitePhys = xs
   where
-    xs = 1 : monomial 1 2 : zipWith3 rec (iterate (+ 1) 1) xs (tail xs)
+    xs = 1 : monomial 1 2 : zipWith3 rec (iterate (+ 1) 1) xs (drop 1 xs)
     rec n pm1 p = scale 1 2 p - scale 0 (2 * n) pm1
 
 -- | <https://en.wikipedia.org/wiki/Laguerre_polynomials Laguerre polynomials>.
@@ -145,5 +145,5 @@ laguerreGen a = xs
   where
     x0 = 1
     x1 = toPoly [1 + a, -1]
-    xs = x0 : x1 : zipWith3 rec (iterate (+ 1) 1) xs (tail xs)
+    xs = x0 : x1 : zipWith3 rec (iterate (+ 1) 1) xs (drop 1 xs)
     rec n pm1 p = toPoly [(2 * n + 1 + a) `quot` (n + 1), -1 `quot` (n + 1)] * p - scale 0 ((n + a) `quot` (n + 1)) pm1

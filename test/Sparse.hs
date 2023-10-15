@@ -15,7 +15,8 @@ import Control.Exception
 import Data.Euclidean (Euclidean(..), GcdDomain(..))
 import Data.Function
 import Data.Int
-import Data.List (groupBy, sortOn)
+import Data.List (sortOn)
+import qualified Data.List.NonEmpty as NE
 import Data.Mod.Word
 import Data.Poly.Sparse
 import qualified Data.Poly.Sparse.Semiring as S
@@ -158,8 +159,8 @@ subRef xs@((xp, xc) : xs') ys@((yp, yc) : ys') =
 
 mulRef :: Num a => [(Word, a)] -> [(Word, a)] -> [(Word, a)]
 mulRef xs ys
-  = map (\ws -> (fst (head ws), sum (map snd ws)))
-  $ groupBy ((==) `on` fst)
+  = map (\ws -> (fst (NE.head ws), sum (fmap snd ws)))
+  $ NE.groupBy ((==) `on` fst)
   $ sortOn fst
   $ [ (xp + yp, xc * yc) | (xp, xc) <- xs, (yp, yc) <- ys ]
 
