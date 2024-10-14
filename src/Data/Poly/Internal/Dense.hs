@@ -44,14 +44,15 @@ module Data.Poly.Internal.Dense
   , timesRing
   ) where
 
-import Prelude hiding (quotRem, quot, rem, gcd, lcm)
+import Prelude hiding (quotRem, quot, rem, gcd, lcm, Foldable(..))
 import Control.DeepSeq (NFData)
 import Control.Monad
 import Control.Monad.ST
 import Data.Bits
 import Data.Euclidean (Euclidean, Field, quot)
+import Data.Foldable
 import Data.Kind
-import Data.List (foldl', intersperse)
+import Data.List (intersperse)
 import Data.Semiring (Semiring(..), Ring(), minus)
 import qualified Data.Semiring as Semiring
 import qualified Data.Vector as V

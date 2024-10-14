@@ -4,11 +4,12 @@ module Orthogonal
   ( testSuite
   ) where
 
-import Test.Tasty
-
-import Data.List (foldl', tails)
+import Prelude hiding (Foldable(..))
+import Data.Foldable
+import Data.List (tails)
 import Data.Poly (VPoly, deriv, eval, integral)
 import Data.Poly.Orthogonal
+import Test.Tasty
 import Test.Tasty.QuickCheck
 
 testSuite :: TestTree
