@@ -1,13 +1,10 @@
-{-# LANGUAGE CPP #-}
-
 module Data.Poly.Interpolation
   ( lagrange
   , hermite
   ) where
 
-#if __GLASGOW_HASKELL__ < 910
-import Data.Foldable (foldl')
-#endif
+import Prelude hiding (Foldable(..))
+import Data.Foldable
 
 import Data.Poly.Internal.Dense
 import qualified Data.Vector.Generic as G
