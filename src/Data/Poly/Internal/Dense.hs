@@ -27,6 +27,7 @@ module Data.Poly.Internal.Dense
   , scale
   , pattern X
   , eval
+  , evalk
   , subst
   , deriv
   , integral
@@ -459,6 +460,14 @@ substitute' :: (G.Vector v a, Semiring b) => (a -> b -> b) -> Poly v a -> b -> b
 substitute' f (Poly cs) x = fst' $
   G.foldl' (\(acc :*: xn) cn -> acc `plus` f cn xn :*: x `times` xn) (zero :*: one) cs
 {-# INLINE substitute' #-}
+
+-- | Evaluate the kth derivative of the polynomial at a given point.
+evalk :: (G.Vector v a, Num a) => Int -> Poly v a -> a -> a
+evalk k (Poly cs) x = fst' $
+  G.ifoldl' (\(acc :*: xn) i cn -> acc + kth i * cn * xn :*: x * xn) (0 :*: 1) (G.drop k cs)
+  where
+    kth i = fromIntegral $ product [(i + 1)..(i + k)]
+{-# INLINE evalk #-}
 
 -- | Take the derivative of the polynomial.
 --

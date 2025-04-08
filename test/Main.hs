@@ -8,6 +8,7 @@ import qualified Dense
 import qualified DenseLaurent
 import qualified DFT
 import qualified Orthogonal
+import qualified Interpolation
 #ifdef SupportSparse
 import qualified Multi
 import qualified MultiLaurent
@@ -20,6 +21,7 @@ main = defaultMain $ testGroup "All"
     [ Dense.testSuite
     , DenseLaurent.testSuite
     , DFT.testSuite
+    , Interpolation.testSuite
     , Orthogonal.testSuite
 #ifdef SupportSparse
     , Sparse.testSuite
