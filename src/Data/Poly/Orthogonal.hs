@@ -59,9 +59,12 @@ legendreShifted = xs
 --
 -- @since 0.4.0.0
 gegenbauer :: (Eq a, Field a, Vector v a) => a -> [Poly v a]
-gegenbauer g = jacobi a a
+gegenbauer a = xs
   where
-    a = g - 1 `quot` 2
+    xs = 1 : toPoly [0, 2 * a] : zipWith3 recur (iterate (+ 1) 1) xs (drop 1 xs)
+    recur n c0 c1 = scale 1 (2 * (n + a) `quot` f) c1 - scale 0 ((n + 2 * a - 1) `quot` f) c0
+      where
+        f = n + 1
 
 -- | <https://en.wikipedia.org/wiki/Jacobi_polynomials Jacobi polynomials>.
 --
