@@ -38,6 +38,10 @@ testSuite = testGroup "Orthogonal"
     [ testProperty "hermiteProb" prop_hermiteProb
     , testProperty "hermitePhys" prop_hermitePhys
     ]
+  , testGroup "special cases"
+    [ testProperty "gegenbauer (1/2) = legendre" prop_gegenbauer_legendre
+    , testProperty "gegenbauer 1 = chebyshev2"   prop_gegenbauer_chebyshev
+    ]
   ]
 
 prop_jacobi_de :: Rational -> Rational -> Property
@@ -112,7 +116,7 @@ prop_gegenbauer_norm a = foldl' (.&&.) (property True) $
   zipWith (\n y -> norm n === eval y 1) [0..limit] (gegenbauer a :: [VPoly Rational])
   where
     prod n x = product $ take n $ iterate (subtract 1) (fromIntegral n + x)
-    norm n = prod n (a - 1 / 2) / prod n 0
+    norm n = prod n (2 * a - 1) / prod n 0
 
 prop_legendre_norm :: Property
 prop_legendre_norm = once $ foldl' (.&&.) (property True) $
@@ -146,6 +150,14 @@ prop_hermiteProb = once $ foldl' (.&&.) (property True) $
 prop_hermitePhys :: Property
 prop_hermitePhys = once $ foldl' (.&&.) (property True) $
   take limit $ zipWith (===) hermitePhys hermitePhysRef
+
+prop_gegenbauer_legendre :: Property
+prop_gegenbauer_legendre = once $ foldl' (.&&.) (property True) $
+  take limit $ zipWith (===) (gegenbauer (1/2)) (legendre :: [VPoly Rational])
+
+prop_gegenbauer_chebyshev :: Property
+prop_gegenbauer_chebyshev = once $ foldl' (.&&.) (property True) $
+  take limit $ zipWith (===) (gegenbauer 1) (chebyshev2 :: [VPoly Rational])
 
 integral11 :: VPoly Rational -> Rational
 integral11 x = eval y 1 - eval y (-1)
