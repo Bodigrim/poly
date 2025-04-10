@@ -44,8 +44,8 @@ testSuite = testGroup "Orthogonal"
     ]
   ]
 
-prop_jacobi_de :: Rational -> Rational -> Property
-prop_jacobi_de a b = foldl' (.&&.) (property True) $
+prop_jacobi_de :: NonNegative Rational -> NonNegative Rational -> Property
+prop_jacobi_de (NonNegative a) (NonNegative b) = foldl' (.&&.) (property True) $
   zipWith (((=== 0) .) . de) [0..limit] (jacobi a b)
   where
     de :: Rational -> VPoly Rational -> VPoly Rational
@@ -104,8 +104,8 @@ prop_laguerreGen_de a  = foldl' (.&&.) (property True) $
     de :: Rational -> VPoly Rational -> VPoly Rational
     de n y = [0, 1] * deriv (deriv y) + [1 + a, -1] * deriv y + [n] * y
 
-prop_jacobi_norm :: Rational -> Rational -> Property
-prop_jacobi_norm a b = foldl' (.&&.) (property True) $
+prop_jacobi_norm :: NonNegative Rational -> NonNegative Rational -> Property
+prop_jacobi_norm (NonNegative a) (NonNegative b) = foldl' (.&&.) (property True) $
   zipWith (\n y -> norm n === eval y 1) [0..limit] (jacobi a b :: [VPoly Rational])
   where
     prod n x = product $ take n $ iterate (subtract 1) (fromIntegral n + x)

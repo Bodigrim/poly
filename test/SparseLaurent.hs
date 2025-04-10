@@ -142,14 +142,14 @@ evalTests = testGroup "eval" $ concat
 
 evalTestGroup
   :: forall v a.
-     (Eq a, Field a, Arbitrary a, Show a, G.Vector v (Word, a), G.Vector v (SU.Vector 1 Word, a), G.Vector v (Monom 1 a))
+     (Eq a, Field a, Num a, Arbitrary a, Show a, G.Vector v (Word, a), G.Vector v (SU.Vector 1 Word, a), G.Vector v (Monom 1 a))
   => Proxy (Laurent v a)
   -> [TestTree]
 evalTestGroup _ =
   [ testProperty "eval (p + q) r = eval p r + eval q r" $
-    \(ShortPoly p) (ShortPoly q) r -> e (p `plus` q) r === e p r `plus` e q r
+    \(ShortPoly p) (ShortPoly q) (NonZero r) -> e (p `plus` q) r === e p r `plus` e q r
   , testProperty "eval (p * q) r = eval p r * eval q r" $
-    \(ShortPoly p) (ShortPoly q) r -> e (p `times` q) r === e p r `times` e q r
+    \(ShortPoly p) (ShortPoly q) (NonZero r) -> e (p `times` q) r === e p r `times` e q r
   , testProperty "eval x p = p" $
     \p -> e X p === p
   , testProperty "eval (monomial 0 c) p = c" $
