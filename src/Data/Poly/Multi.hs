@@ -12,6 +12,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE PatternSynonyms  #-}
 
+{-# OPTIONS_GHC -Wno-unrecognised-warning-flags -Wno-pattern-namespace-specifier #-}
+
 module Data.Poly.Multi
   ( MultiPoly
   , VMultiPoly

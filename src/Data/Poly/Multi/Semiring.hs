@@ -14,6 +14,8 @@
 {-# LANGUAGE TypeFamilies     #-}
 {-# LANGUAGE TypeOperators    #-}
 
+{-# OPTIONS_GHC -Wno-unrecognised-warning-flags -Wno-pattern-namespace-specifier #-}
+
 module Data.Poly.Multi.Semiring
   ( MultiPoly
   , VMultiPoly
