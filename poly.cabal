@@ -65,7 +65,6 @@ library
   build-depends:
     base >= 4.12 && < 5,
     deepseq >= 1.1 && < 1.6,
-    primitive >= 0.6,
     semirings >= 0.5.2,
     vector >= 0.13
 
